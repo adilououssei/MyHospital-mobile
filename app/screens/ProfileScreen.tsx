@@ -19,6 +19,7 @@ interface MenuItem {
   iconColor: string;
   bgColor: string;
   isLogout?: boolean;
+  screen?: string;
 }
 
 interface ProfileScreenProps {
@@ -42,6 +43,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
       label: 'Rendez-vous',
       iconColor: '#0077b6',
       bgColor: '#e4f4fcff',
+      screen: 'appointments',
     },
     {
       id: '3',
@@ -79,6 +81,8 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
       onPress={() => {
         if (item.isLogout) {
           setShowLogoutModal(true);
+        } else if (item.screen) {
+          onNavigate(item.screen);
         } else {
           console.log(`Navigation vers ${item.label}`);
         }
@@ -133,7 +137,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
             <View style={styles.statIconContainer}>
               <Ionicons name="heart" size={24} color="#fff" />
             </View>
-            <Text style={styles.statLabel}>Fréquence cardiaque</Text>
+            <Text style={styles.statLabel1}>Fréquence cardiaque</Text>
             <Text style={styles.statValue}>215bpm</Text>
           </View>
 
@@ -180,7 +184,10 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
         <TouchableOpacity style={styles.navItem}>
           <Ionicons name="chatbubble-outline" size={24} color="#999" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity 
+          style={styles.navItem}
+          onPress={() => onNavigate('appointments')}
+        >
           <Ionicons name="calendar-outline" size={24} color="#999" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem}>
@@ -230,7 +237,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
   },
   headerGradient: {
-    paddingTop: 10,
+    paddingTop: 15,
     paddingBottom: 30,
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
@@ -244,6 +251,7 @@ const styles = StyleSheet.create({
   profileImageContainer: {
     alignItems: 'center',
     marginTop: 20,
+    paddingTop: 10,
   },
   profileImageWrapper: {
     position: 'relative',
@@ -298,6 +306,13 @@ const styles = StyleSheet.create({
     opacity: 0.9,
     marginBottom: 4,
   },
+  statLabel1: {
+    fontSize: 11,
+    color: '#fff',
+    opacity: 0.9,
+    marginBottom: 4,
+    marginLeft: 20,
+  },
   statValue: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -312,10 +327,10 @@ const styles = StyleSheet.create({
   menuContainer: {
     flex: 1,
     backgroundColor: '#fff',
-    marginTop: 15,
+    marginTop: 5,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
-    paddingTop: 20,
+    paddingTop: 15,
   },
   menuItem: {
     flexDirection: 'row',
@@ -351,7 +366,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     backgroundColor: '#fff',
     paddingVertical: 15,
-    paddingBottom: 25,
+    paddingBottom: 50,
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
     shadowColor: '#000',

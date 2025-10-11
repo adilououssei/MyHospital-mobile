@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 
 interface Doctor {
   id: string;
@@ -23,9 +24,10 @@ interface Doctor {
 
 interface HomeScreenProps {
   onNavigate: (screen: string) => void;
+  unreadCount?: number;
 }
 
-const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
+const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
   const topDoctors: Doctor[] = [
     {
       id: '1',
@@ -42,7 +44,6 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
       rating: 4.8,
       distance: '1.5km',
       image: require('../../assets/doctor2.png'),
-      
     },
     {
       id: '3',
@@ -54,8 +55,11 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
     },
   ];
 
-  const ServiceButton = ({ icon, label }: { icon: string; label: string }) => (
-    <TouchableOpacity style={styles.serviceButton}>
+  const ServiceButton = ({ icon, label, screen }: { icon: string; label: string; screen?: string }) => (
+    <TouchableOpacity
+      style={styles.serviceButton}
+      onPress={() => screen && onNavigate(screen)}
+    >
       <View style={styles.serviceIconContainer}>
         <Ionicons name={icon as any} size={28} color="#0077b6" />
       </View>
@@ -67,7 +71,7 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
     <TouchableOpacity style={styles.doctorCard}>
       <View style={styles.doctorImageContainer}>
         <View style={styles.doctorImagePlaceholder}>
-          <Ionicons name="person" size={40} color="#0077b6" />
+          <FontAwesome5 name="user-md" size={40} color="#0077b6" />
         </View>
       </View>
       <Text style={styles.doctorName}>{doctor.name}</Text>
@@ -94,8 +98,18 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
             <Text style={styles.title}>Trouvez votre solution</Text>
             <Text style={styles.title}>santé désirée</Text>
           </View>
-          <TouchableOpacity style={styles.notificationButton}>
+          <TouchableOpacity
+            style={styles.notificationButton}
+            onPress={() => onNavigate('notifications')}
+          >
             <Ionicons name="notifications-outline" size={24} color="#000" />
+            {unreadCount > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -111,15 +125,15 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
 
         {/* Services */}
         <View style={styles.servicesContainer}>
-          <ServiceButton icon="medical-outline" label="Docteur" />
-          <ServiceButton icon="medkit-outline" label="Pharmacie" />
-          <ServiceButton icon="business-outline" label="Hôpital" />
+          <ServiceButton icon="medical-outline" label="Docteur" screen="doctorsList" />
+          <ServiceButton icon="medkit-outline" label="Pharmacie" screen="pharmacy" />
+          <ServiceButton icon="business-outline" label="Hôpital" screen="hospital" />
           <ServiceButton icon="car-outline" label="Ambulance" />
         </View>
 
         {/* Banner */}
         <LinearGradient
-          colors={['#0077b6', '#E8F9F5']}
+          colors={['#e4f4fcff', '#0077b6']}
           style={styles.banner}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
@@ -141,7 +155,7 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
         {/* Top Doctors */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Meilleurs Docteurs</Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => onNavigate('doctorsList')}>
             <Text style={styles.seeAllText}>Voir tout</Text>
           </TouchableOpacity>
         </View>
@@ -169,10 +183,13 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
         <TouchableOpacity style={styles.navItem}>
           <Ionicons name="chatbubble-outline" size={24} color="#999" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => onNavigate('appointments')}
+        >
           <Ionicons name="calendar-outline" size={24} color="#999" />
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.navItem}
           onPress={() => onNavigate('profile')}
         >
@@ -203,6 +220,26 @@ const styles = StyleSheet.create({
   },
   notificationButton: {
     padding: 8,
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: '#FF6B6B',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 5,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  notificationBadgeText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: 'bold',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -303,6 +340,8 @@ const styles = StyleSheet.create({
   },
   doctorsScroll: {
     paddingLeft: 20,
+    paddingBottom: 10,
+    paddingTop: 5,
   },
   doctorsScrollContent: {
     paddingRight: 20,
@@ -375,7 +414,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     backgroundColor: '#fff',
     paddingVertical: 15,
-    paddingBottom: 25,
+    paddingBottom: 50,
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
     shadowColor: '#000',
@@ -383,6 +422,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 10,
+
   },
   navItem: {
     padding: 5,
