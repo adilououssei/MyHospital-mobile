@@ -20,9 +20,11 @@ const WelcomeScreen = ({ onNavigate }: WelcomeScreenProps) => {
         {/* Logo */}
         <View style={styles.logoContainer}>
           <View style={styles.logoIcon}>
-            <Ionicons name="medical" size={60} color="#0077b6" />
+            <Image
+              source={require('../../assets/MyHospital1.png')}
+              style={{ width: 250, height: 200 }}
+            />
           </View>
-          <Text style={styles.logoText}>Medics</Text>
         </View>
 
         {/* Title and Description */}
@@ -70,14 +72,14 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 60,
+    marginBottom: 25,
   },
   logoIcon: {
     width: 100,
     height: 100,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
+
   },
   logoText: {
     fontSize: 32,

@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useApp } from '../context/AppContext';
 
 interface Notification {
   id: string;
@@ -24,6 +25,7 @@ interface NotificationsScreenProps {
 }
 
 const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsScreenProps) => {
+  const { colors } = useApp();
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: '1',
@@ -77,7 +79,6 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  // Mettre à jour le compteur quand les notifications changent
   useEffect(() => {
     if (onUpdateUnreadCount) {
       onUpdateUnreadCount(unreadCount);
@@ -98,13 +99,10 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
   };
 
   const handleNotificationPress = (notification: Notification) => {
-    // Marquer comme lu
     const updatedNotifications = notifications.map((n) =>
       n.id === notification.id ? { ...n, isRead: true } : n
     );
     setNotifications(updatedNotifications);
-
-    // Naviguer vers les détails
     onNavigate('notificationDetail', { notification });
   };
 
@@ -114,16 +112,16 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.card }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => onNavigate('home')}
         >
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Notifications</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Notifications</Text>
         <TouchableOpacity
           style={styles.markAllButton}
           onPress={markAllAsRead}
@@ -148,6 +146,7 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
               key={notification.id}
               style={[
                 styles.notificationCard,
+                { backgroundColor: colors.card },
                 !notification.isRead && styles.notificationCardUnread,
               ]}
               onPress={() => handleNotificationPress(notification)}
@@ -170,6 +169,7 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
                   <Text
                     style={[
                       styles.notificationTitle,
+                      { color: notification.isRead ? colors.subText : colors.text },
                       !notification.isRead && styles.notificationTitleUnread,
                     ]}
                   >
@@ -179,10 +179,10 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
                     <View style={styles.unreadDot} />
                   )}
                 </View>
-                <Text style={styles.notificationTime}>{notification.time}</Text>
+                <Text style={[styles.notificationTime, { color: colors.subText }]}>{notification.time}</Text>
               </View>
 
-              <Ionicons name="chevron-forward" size={20} color="#999" />
+              <Ionicons name="chevron-forward" size={20} color={colors.subText} />
             </TouchableOpacity>
           ))}
         </View>
@@ -196,7 +196,6 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   header: {
     flexDirection: 'row',
@@ -204,7 +203,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
   },
   backButton: {
     padding: 5,
@@ -212,7 +210,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
   },
   markAllButton: {
     padding: 5,
@@ -235,7 +232,6 @@ const styles = StyleSheet.create({
   notificationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 15,
     marginBottom: 10,
@@ -273,16 +269,13 @@ const styles = StyleSheet.create({
   notificationTitle: {
     fontSize: 15,
     fontWeight: '500',
-    color: '#666',
     flex: 1,
   },
   notificationTitleUnread: {
     fontWeight: '600',
-    color: '#000',
   },
   notificationTime: {
     fontSize: 13,
-    color: '#999',
   },
   unreadDot: {
     width: 8,

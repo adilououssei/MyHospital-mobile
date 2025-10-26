@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import { useApp } from '../context/AppContext';
 
 interface DoctorDetailScreenProps {
   onNavigate: (screen: string, params?: any) => void;
@@ -23,6 +24,7 @@ const DoctorDetailScreen = ({
   consultationType,
   description,
 }: DoctorDetailScreenProps) => {
+  const { colors } = useApp();
   const [selectedDate, setSelectedDate] = useState('23');
   const [selectedTime, setSelectedTime] = useState('14:00');
 
@@ -59,18 +61,18 @@ const DoctorDetailScreen = ({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.card }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => onNavigate('doctorsList')}
         >
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Détails du médecin</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Détails du médecin</Text>
         <TouchableOpacity style={styles.menuButton}>
-          <Ionicons name="ellipsis-vertical" size={24} color="#000" />
+          <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
 
@@ -92,21 +94,29 @@ const DoctorDetailScreen = ({
           </View>
 
           {/* Doctor Info */}
-          <View style={styles.doctorCard}>
+          <View style={[styles.doctorCard, { backgroundColor: colors.card }]}>
             <View style={styles.doctorImagePlaceholder}>
               <FontAwesome5 name="user-md" size={50} color="#0077b6" />
             </View>
             <View style={styles.doctorInfo}>
-              <Text style={styles.doctorName}>{doctor?.name || 'Dr. Marcus Horizon'}</Text>
-              <Text style={styles.doctorSpecialty}>{doctor?.specialty || 'Cardiologue'}</Text>
+              <Text style={[styles.doctorName, { color: colors.text }]}>
+                {doctor?.name || 'Dr. Marcus Horizon'}
+              </Text>
+              <Text style={[styles.doctorSpecialty, { color: colors.subText }]}>
+                {doctor?.specialty || 'Cardiologue'}
+              </Text>
               <View style={styles.doctorMeta}>
                 <View style={styles.ratingContainer}>
                   <Ionicons name="star" size={16} color="#FFA500" />
-                  <Text style={styles.rating}>{doctor?.rating || 4.7}</Text>
+                  <Text style={[styles.rating, { color: colors.text }]}>
+                    {doctor?.rating || 4.7}
+                  </Text>
                 </View>
                 <View style={styles.distanceContainer}>
-                  <Ionicons name="location-outline" size={16} color="#666" />
-                  <Text style={styles.distance}>{doctor?.distance || '800m'}</Text>
+                  <Ionicons name="location-outline" size={16} color={colors.subText} />
+                  <Text style={[styles.distance, { color: colors.subText }]}>
+                    {doctor?.distance || '800m'}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -114,8 +124,8 @@ const DoctorDetailScreen = ({
 
           {/* About */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>À propos</Text>
-            <Text style={styles.aboutText}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>À propos</Text>
+            <Text style={[styles.aboutText, { color: colors.subText }]}>
               Spécialiste en cardiologie avec plus de 15 ans d'expérience.
               Diplômé de l'université de médecine de Paris, le Dr. Marcus
               Horizon est reconnu pour son expertise...
@@ -127,7 +137,7 @@ const DoctorDetailScreen = ({
 
           {/* Date Selection */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Choisir une date</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Choisir une date</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -138,6 +148,7 @@ const DoctorDetailScreen = ({
                   key={index}
                   style={[
                     styles.dateCard,
+                    { backgroundColor: colors.card, borderColor: colors.border },
                     selectedDate === item.date && styles.dateCardActive,
                   ]}
                   onPress={() => setSelectedDate(item.date)}
@@ -145,6 +156,7 @@ const DoctorDetailScreen = ({
                   <Text
                     style={[
                       styles.dateDay,
+                      { color: colors.subText },
                       selectedDate === item.date && styles.dateDayActive,
                     ]}
                   >
@@ -153,6 +165,7 @@ const DoctorDetailScreen = ({
                   <Text
                     style={[
                       styles.dateNumber,
+                      { color: colors.text },
                       selectedDate === item.date && styles.dateNumberActive,
                     ]}
                   >
@@ -165,13 +178,17 @@ const DoctorDetailScreen = ({
 
           {/* Time Selection */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Choisir une heure</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Choisir une heure</Text>
             <View style={styles.timeGrid}>
               {timeSlots.map((time, index) => (
                 <TouchableOpacity
                   key={index}
                   style={[
                     styles.timeSlot,
+                    { 
+                      backgroundColor: colors.card,
+                      borderColor: colors.border
+                    },
                     selectedTime === time && styles.timeSlotActive,
                   ]}
                   onPress={() => setSelectedTime(time)}
@@ -179,6 +196,7 @@ const DoctorDetailScreen = ({
                   <Text
                     style={[
                       styles.timeText,
+                      { color: colors.subText },
                       selectedTime === time && styles.timeTextActive,
                     ]}
                   >
@@ -190,19 +208,27 @@ const DoctorDetailScreen = ({
           </View>
 
           {/* Pricing */}
-          <View style={styles.pricingCard}>
-            <Text style={styles.pricingTitle}>Détails des frais</Text>
+          <View style={[styles.pricingCard, { backgroundColor: colors.card }]}>
+            <Text style={[styles.pricingTitle, { color: colors.text }]}>Détails des frais</Text>
             <View style={styles.pricingRow}>
-              <Text style={styles.pricingLabel}>Prix de la consultation</Text>
-              <Text style={styles.pricingValue}>{doctor?.price || 15000} FCFA</Text>
+              <Text style={[styles.pricingLabel, { color: colors.subText }]}>
+                Prix de la consultation
+              </Text>
+              <Text style={[styles.pricingValue, { color: colors.text }]}>
+                {doctor?.price || 15000} FCFA
+              </Text>
             </View>
             <View style={styles.pricingRow}>
-              <Text style={styles.pricingLabel}>Frais de confirmation</Text>
-              <Text style={styles.pricingValue}>{confirmationFee} FCFA</Text>
+              <Text style={[styles.pricingLabel, { color: colors.subText }]}>
+                Frais de confirmation
+              </Text>
+              <Text style={[styles.pricingValue, { color: colors.text }]}>
+                {confirmationFee} FCFA
+              </Text>
             </View>
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
             <View style={styles.pricingRow}>
-              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={[styles.totalLabel, { color: colors.text }]}>Total</Text>
               <Text style={styles.totalValue}>
                 {(doctor?.price || 15000) + confirmationFee} FCFA
               </Text>
@@ -212,8 +238,8 @@ const DoctorDetailScreen = ({
           {/* Important Note */}
           <View style={styles.noteCard}>
             <Ionicons name="information-circle" size={24} color="#FFA500" />
-            <Text style={styles.noteText}>
-              <Text style={styles.noteBold}>NB : </Text>
+            <Text style={[styles.noteText, { color: colors.subText }]}>
+              <Text style={[styles.noteBold, { color: colors.text }]}>NB : </Text>
               Les frais de confirmation de {confirmationFee} FCFA ne sont pas
               remboursables, que le rendez-vous soit accepté ou refusé par le médecin.
             </Text>
@@ -222,7 +248,10 @@ const DoctorDetailScreen = ({
       </ScrollView>
 
       {/* Bottom Button */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { 
+        backgroundColor: colors.card,
+        borderTopColor: colors.border
+      }]}>
         <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
           <Text style={styles.nextButtonText}>Suivant</Text>
           <Ionicons name="arrow-forward" size={20} color="#fff" />
@@ -235,7 +264,6 @@ const DoctorDetailScreen = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
     paddingBottom: 30,
   },
   header: {
@@ -244,7 +272,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
   },
   backButton: {
     padding: 5,
@@ -252,7 +279,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
   },
   menuButton: {
     padding: 5,
@@ -295,7 +321,6 @@ const styles = StyleSheet.create({
   },
   doctorCard: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
     borderRadius: 15,
     padding: 15,
     marginBottom: 20,
@@ -321,12 +346,10 @@ const styles = StyleSheet.create({
   doctorName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 4,
   },
   doctorSpecialty: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 8,
   },
   doctorMeta: {
@@ -341,7 +364,6 @@ const styles = StyleSheet.create({
   rating: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000',
   },
   distanceContainer: {
     flexDirection: 'row',
@@ -350,7 +372,6 @@ const styles = StyleSheet.create({
   },
   distance: {
     fontSize: 14,
-    color: '#666',
   },
   section: {
     marginBottom: 25,
@@ -358,12 +379,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 15,
   },
   aboutText: {
     fontSize: 14,
-    color: '#666',
     lineHeight: 22,
     marginBottom: 8,
   },
@@ -376,14 +395,12 @@ const styles = StyleSheet.create({
     marginHorizontal: -5,
   },
   dateCard: {
-    backgroundColor: '#fff',
     borderRadius: 12,
     padding: 15,
     marginHorizontal: 5,
     alignItems: 'center',
     minWidth: 60,
     borderWidth: 2,
-    borderColor: 'transparent',
   },
   dateCardActive: {
     backgroundColor: '#0077b6',
@@ -391,7 +408,6 @@ const styles = StyleSheet.create({
   },
   dateDay: {
     fontSize: 12,
-    color: '#666',
     marginBottom: 4,
   },
   dateDayActive: {
@@ -400,7 +416,6 @@ const styles = StyleSheet.create({
   dateNumber: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#000',
   },
   dateNumberActive: {
     color: '#fff',
@@ -411,12 +426,10 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   timeSlot: {
-    backgroundColor: '#fff',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
   },
   timeSlotActive: {
     backgroundColor: '#0077b6',
@@ -424,7 +437,6 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 14,
-    color: '#666',
     fontWeight: '500',
   },
   timeTextActive: {
@@ -432,7 +444,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   pricingCard: {
-    backgroundColor: '#fff',
     borderRadius: 15,
     padding: 20,
     marginBottom: 15,
@@ -440,7 +451,6 @@ const styles = StyleSheet.create({
   pricingTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 15,
   },
   pricingRow: {
@@ -450,22 +460,18 @@ const styles = StyleSheet.create({
   },
   pricingLabel: {
     fontSize: 14,
-    color: '#666',
   },
   pricingValue: {
     fontSize: 14,
-    color: '#000',
     fontWeight: '500',
   },
   divider: {
     height: 1,
-    backgroundColor: '#E0E0E0',
     marginVertical: 10,
   },
   totalLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
   },
   totalValue: {
     fontSize: 18,
@@ -485,19 +491,15 @@ const styles = StyleSheet.create({
   noteText: {
     flex: 1,
     fontSize: 13,
-    color: '#666',
     lineHeight: 20,
   },
   noteBold: {
     fontWeight: '700',
-    color: '#000',
   },
   footer: {
     padding: 20,
     paddingBottom: 30,
-    backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
   },
   nextButton: {
     backgroundColor: '#0077b6',

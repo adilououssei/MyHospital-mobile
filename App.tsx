@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useState } from 'react';
+import { AppProvider } from './app/context/AppContext';
 import WelcomeScreen from './app/screens/WelcomeScreen';
 import LoginScreen from './app/screens/LoginScreen';
 import SignUpScreen from './app/screens/SignUpScreen';
@@ -18,11 +19,14 @@ import DoctorDetailScreen from './app/screens/DoctorDetailScreen';
 import PaymentMethodScreen from './app/screens/PaymentMethodScreen';
 import NotificationsScreen from './app/screens/NotificationsScreen';
 import NotificationDetailScreen from './app/screens/NotificationDetailScreen';
+import FavoritesScreen from './app/screens/FavoritesScreen';
+import LanguageScreen from './app/screens/LanguageScreen';
+import ThemeScreen from './app/screens/ThemeScreen';
 
-export default function App() {
+function AppContent() {
   const [currentScreen, setCurrentScreen] = useState('welcome');
   const [screenParams, setScreenParams] = useState<any>({});
-  const [unreadCount, setUnreadCount] = useState(2); // Nombre de notifications non lues
+  const [unreadCount, setUnreadCount] = useState(2);
 
   const handleNavigation = (screen: string, params?: any) => {
     setCurrentScreen(screen);
@@ -69,7 +73,7 @@ export default function App() {
       case 'hospital':
         return <HospitalScreen onNavigate={handleNavigation} />;
       case 'appointments':
-        return <AppointmentsScreen onNavigate={handleNavigation} unreadCount={unreadCount} />;
+        return <AppointmentsScreen onNavigate={handleNavigation} />;
       case 'bookingType':
         return <BookingTypeScreen onNavigate={handleNavigation} />;
       case 'doctorsList':
@@ -111,15 +115,31 @@ export default function App() {
             notification={screenParams.notification}
           />
         );
+      case 'favorites':
+        return <FavoritesScreen onNavigate={handleNavigation} />;
+      case 'language':
+        return <LanguageScreen onNavigate={handleNavigation} />;
+      case 'theme':
+        return <ThemeScreen onNavigate={handleNavigation} />;
       default:
         return <WelcomeScreen onNavigate={handleNavigation} />;
     }
   };
 
   return (
-    <SafeAreaProvider>
+    <>
       <StatusBar style={getStatusBarStyle()} />
       {renderScreen()}
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <AppProvider>
+        <AppContent />
+      </AppProvider>
     </SafeAreaProvider>
   );
 }

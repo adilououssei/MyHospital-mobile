@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import { useApp } from '../context/AppContext';
 
 interface Doctor {
   id: string;
@@ -32,6 +33,7 @@ const DoctorsListScreen = ({
   consultationType,
   description,
 }: DoctorsListScreenProps) => {
+  const { colors } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
 
   const doctors: Doctor[] = [
@@ -86,16 +88,19 @@ const DoctorsListScreen = ({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { 
+        backgroundColor: colors.card,
+        borderBottomColor: colors.border
+      }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => onNavigate('bookingType')}
         >
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Choisir un médecin</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Choisir un médecin</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -110,19 +115,22 @@ const DoctorsListScreen = ({
             <View style={styles.stepActive}>
               <Text style={styles.stepTextActive}>2</Text>
             </View>
-            <View style={styles.stepLine} />
-            <View style={styles.stepInactive}>
-              <Text style={styles.stepTextInactive}>3</Text>
+            <View style={[styles.stepLine, { backgroundColor: colors.border }]} />
+            <View style={[styles.stepInactive, { backgroundColor: colors.border }]}>
+              <Text style={[styles.stepTextInactive, { color: colors.subText }]}>3</Text>
             </View>
           </View>
 
           {/* Search Bar */}
-          <View style={styles.searchBar}>
-            <Ionicons name="search-outline" size={20} color="#999" />
+          <View style={[styles.searchBar, { 
+            backgroundColor: colors.inputBackground,
+            borderColor: colors.border
+          }]}>
+            <Ionicons name="search-outline" size={20} color={colors.subText} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: colors.text }]}
               placeholder="Rechercher un médecin..."
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.subText}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
@@ -133,7 +141,7 @@ const DoctorsListScreen = ({
             {filteredDoctors.map((doctor) => (
               <TouchableOpacity
                 key={doctor.id}
-                style={styles.doctorCard}
+                style={[styles.doctorCard, { backgroundColor: colors.card }]}
                 onPress={() => handleSelectDoctor(doctor)}
               >
                 <View style={styles.doctorImagePlaceholder}>
@@ -141,24 +149,24 @@ const DoctorsListScreen = ({
                 </View>
 
                 <View style={styles.doctorInfo}>
-                  <Text style={styles.doctorName}>{doctor.name}</Text>
-                  <Text style={styles.doctorSpecialty}>{doctor.specialty}</Text>
+                  <Text style={[styles.doctorName, { color: colors.text }]}>{doctor.name}</Text>
+                  <Text style={[styles.doctorSpecialty, { color: colors.subText }]}>{doctor.specialty}</Text>
 
                   <View style={styles.doctorMeta}>
                     <View style={styles.ratingContainer}>
                       <Ionicons name="star" size={14} color="#FFA500" />
-                      <Text style={styles.rating}>{doctor.rating}</Text>
+                      <Text style={[styles.rating, { color: colors.text }]}>{doctor.rating}</Text>
                     </View>
                     <View style={styles.distanceContainer}>
-                      <Ionicons name="location-outline" size={14} color="#666" />
-                      <Text style={styles.distance}>{doctor.distance}</Text>
+                      <Ionicons name="location-outline" size={14} color={colors.subText} />
+                      <Text style={[styles.distance, { color: colors.subText }]}>{doctor.distance}</Text>
                     </View>
                   </View>
 
                   <Text style={styles.price}>{doctor.price} FCFA</Text>
                 </View>
 
-                <Ionicons name="chevron-forward" size={24} color="#666" />
+                <Ionicons name="chevron-forward" size={24} color={colors.subText} />
               </TouchableOpacity>
             ))}
           </View>
@@ -171,7 +179,6 @@ const DoctorsListScreen = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   header: {
     flexDirection: 'row',
@@ -180,7 +187,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   backButton: {
     padding: 5,
@@ -188,7 +194,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
   },
   placeholder: {
     width: 34,
@@ -222,7 +227,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#E0E0E0',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -232,14 +236,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   stepTextInactive: {
-    color: '#999',
     fontSize: 16,
     fontWeight: '600',
   },
   stepLine: {
     width: 40,
     height: 2,
-    backgroundColor: '#E0E0E0',
     marginHorizontal: 5,
   },
   stepLineCompleted: {
@@ -251,19 +253,16 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
     borderRadius: 25,
     paddingHorizontal: 15,
     paddingVertical: 12,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
   },
   searchInput: {
     flex: 1,
     marginLeft: 10,
     fontSize: 14,
-    color: '#000',
   },
   doctorsList: {
     gap: 12,
@@ -272,7 +271,6 @@ const styles = StyleSheet.create({
   doctorCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 15,
     padding: 15,
     shadowColor: '#000',
@@ -296,12 +294,10 @@ const styles = StyleSheet.create({
   doctorName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 4,
   },
   doctorSpecialty: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 8,
   },
   doctorMeta: {
@@ -317,7 +313,6 @@ const styles = StyleSheet.create({
   rating: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#000',
   },
   distanceContainer: {
     flexDirection: 'row',
@@ -326,7 +321,6 @@ const styles = StyleSheet.create({
   },
   distance: {
     fontSize: 13,
-    color: '#666',
   },
   price: {
     fontSize: 15,

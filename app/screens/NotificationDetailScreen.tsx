@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useApp } from '../context/AppContext';
 
 interface NotificationDetailScreenProps {
   onNavigate: (screen: string) => void;
@@ -54,6 +55,17 @@ const NotificationDetailScreen = ({
     return new Date().toLocaleDateString('fr-FR', options);
   };
 
+
+  const MonEcran = () => {
+    const { colors } = useApp();
+
+    return (
+      <View style={{ backgroundColor: colors.background }}>
+        <Text style={{ color: colors.text }}>Mon texte</Text>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -90,8 +102,8 @@ const NotificationDetailScreen = ({
               {notification?.type === 'appointment'
                 ? 'Rendez-vous'
                 : notification?.type === 'status'
-                ? 'Mise à jour'
-                : 'Information'}
+                  ? 'Mise à jour'
+                  : 'Information'}
             </Text>
           </View>
 

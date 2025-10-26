@@ -7,9 +7,15 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useApp } from '../context/AppContext';
+
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = width * 0.45;
+const CARD_MARGIN = 10;
 
 interface Hospital {
   id: string;
@@ -22,6 +28,8 @@ interface Hospital {
   isOpen24h: boolean;
   isFavorite: boolean;
   image: any;
+  rating: number;
+  reviewsCount: number;
 }
 
 interface HospitalScreenProps {
@@ -29,9 +37,13 @@ interface HospitalScreenProps {
 }
 
 const HospitalScreen = ({ onNavigate }: HospitalScreenProps) => {
+  const { colors } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('open');
+  const [activeFilter, setActiveFilter] = useState('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const scrollViewRef = React.useRef<ScrollView>(null);
+  const [hospitalPositions, setHospitalPositions] = useState<{[key: string]: number}>({});
+  
   const [hospitals, setHospitals] = useState<Hospital[]>([
     {
       id: '1',
@@ -44,6 +56,8 @@ const HospitalScreen = ({ onNavigate }: HospitalScreenProps) => {
       isOpen24h: true,
       isFavorite: true,
       image: null,
+      rating: 4.7,
+      reviewsCount: 342,
     },
     {
       id: '2',
@@ -56,6 +70,8 @@ const HospitalScreen = ({ onNavigate }: HospitalScreenProps) => {
       isOpen24h: true,
       isFavorite: true,
       image: null,
+      rating: 4.5,
+      reviewsCount: 278,
     },
     {
       id: '3',
@@ -68,6 +84,8 @@ const HospitalScreen = ({ onNavigate }: HospitalScreenProps) => {
       isOpen24h: true,
       isFavorite: false,
       image: null,
+      rating: 4.3,
+      reviewsCount: 198,
     },
     {
       id: '4',
@@ -78,8 +96,10 @@ const HospitalScreen = ({ onNavigate }: HospitalScreenProps) => {
       distance: '4.1 km',
       specialties: ['Urgences', 'Neurologie', 'Cardiologie'],
       isOpen24h: true,
-      isFavorite: false,
+      isFavorite: true,
       image: null,
+      rating: 4.6,
+      reviewsCount: 421,
     },
   ]);
 
@@ -95,43 +115,94 @@ const HospitalScreen = ({ onNavigate }: HospitalScreenProps) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
+  const scrollToHospital = (id: string) => {
+    const position = hospitalPositions[id];
+    if (position && scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({ y: position - 100, animated: true });
+      setExpandedId(id);
+    }
+  };
+
   const filteredHospitals = hospitals.filter((hospital) => {
     const matchesSearch = hospital.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
+    
+    if (activeFilter === 'all') return matchesSearch;
+    if (activeFilter === 'open') return matchesSearch && hospital.isOpen24h;
+    if (activeFilter === 'rating') return matchesSearch && hospital.rating >= 4.5;
+    
     return matchesSearch;
   });
 
   const favoriteHospitals = filteredHospitals.filter((h) => h.isFavorite);
 
+  const renderStars = (rating: number) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(
+        <Ionicons key={`star-${i}`} name="star" size={14} color="#FFB800" />
+      );
+    }
+
+    if (hasHalfStar) {
+      stars.push(
+        <Ionicons key="star-half" name="star-half" size={14} color="#FFB800" />
+      );
+    }
+
+    const emptyStars = 5 - Math.ceil(rating);
+    for (let i = 0; i < emptyStars; i++) {
+      stars.push(
+        <Ionicons
+          key={`star-empty-${i}`}
+          name="star-outline"
+          size={14}
+          color="#FFB800"
+        />
+      );
+    }
+
+    return stars;
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.card }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => onNavigate('home')}
         >
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Hôpitaux</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Hôpitaux</Text>
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false}>
         {/* Search Bar */}
         <View style={styles.searchContainer}>
-          <View style={styles.searchBar}>
-            <Ionicons name="search-outline" size={20} color="#999" />
+          <View style={[styles.searchBar, { 
+            backgroundColor: colors.card,
+            borderColor: colors.border
+          }]}>
+            <Ionicons name="search-outline" size={20} color={colors.subText} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: colors.text }]}
               placeholder="Rechercher un hôpital..."
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.subText}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
           </View>
-          <TouchableOpacity style={styles.filterButton}>
+          <TouchableOpacity style={[styles.filterButton, {
+            backgroundColor: colors.card,
+            borderColor: colors.border
+          }]}>
             <Ionicons name="options-outline" size={20} color="#0077b6" />
           </TouchableOpacity>
         </View>
@@ -143,84 +214,61 @@ const HospitalScreen = ({ onNavigate }: HospitalScreenProps) => {
           style={styles.filtersContainer}
           contentContainerStyle={styles.filtersContent}
         >
-          <TouchableOpacity
-            style={[
-              styles.filterChip,
-              activeFilter === 'open' && styles.filterChipActive,
-            ]}
-            onPress={() => setActiveFilter('open')}
-          >
-            <Text
+          {[
+            { key: 'all', label: 'Tous' },
+            { key: 'open', label: 'Ouvert 24h/24' },
+            { key: 'rating', label: 'Meilleures notes' }
+          ].map((filter) => (
+            <TouchableOpacity
+              key={filter.key}
               style={[
-                styles.filterChipText,
-                activeFilter === 'open' && styles.filterChipTextActive,
+                styles.filterChip,
+                { backgroundColor: colors.card, borderColor: colors.border },
+                activeFilter === filter.key && styles.filterChipActive,
               ]}
+              onPress={() => setActiveFilter(filter.key)}
             >
-              Ouvert 24h/24
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.filterChip,
-              activeFilter === 'urgences' && styles.filterChipActive,
-            ]}
-            onPress={() => setActiveFilter('urgences')}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                activeFilter === 'urgences' && styles.filterChipTextActive,
-              ]}
-            >
-              Urgences
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.filterChip,
-              activeFilter === 'distance' && styles.filterChipActive,
-            ]}
-            onPress={() => setActiveFilter('distance')}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                activeFilter === 'distance' && styles.filterChipTextActive,
-              ]}
-            >
-              Distance
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.filterChip,
-              activeFilter === 'speciality' && styles.filterChipActive,
-            ]}
-            onPress={() => setActiveFilter('speciality')}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                activeFilter === 'speciality' && styles.filterChipTextActive,
-              ]}
-            >
-              Spécialités
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.filterChipText,
+                  { color: colors.subText },
+                  activeFilter === filter.key && styles.filterChipTextActive,
+                ]}
+              >
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </ScrollView>
 
-        {/* Favorites Section */}
+        {/* Favorites Carousel */}
         {favoriteHospitals.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Favoris</Text>
-            <View style={styles.favoritesRow}>
-              {favoriteHospitals.slice(0, 2).map((hospital) => (
-                <View key={hospital.id} style={styles.favoriteCard}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Favoris</Text>
+              <Text style={[styles.sectionCount, { color: colors.subText }]}>
+                {favoriteHospitals.length}
+              </Text>
+            </View>
+            
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={CARD_WIDTH + CARD_MARGIN * 2}
+              decelerationRate="fast"
+              contentContainerStyle={styles.carouselContent}
+            >
+              {favoriteHospitals.map((hospital, index) => (
+                <View
+                  key={hospital.id}
+                  style={[
+                    styles.carouselCard,
+                    { backgroundColor: colors.card },
+                    index === 0 && styles.carouselCardFirst,
+                  ]}
+                >
                   <View style={styles.favoriteHeader}>
-                    <Text style={styles.favoriteTitle} numberOfLines={1}>
+                    <Text style={[styles.favoriteTitle, { color: colors.text }]} numberOfLines={1}>
                       {hospital.name}
                     </Text>
                     <TouchableOpacity
@@ -229,43 +277,88 @@ const HospitalScreen = ({ onNavigate }: HospitalScreenProps) => {
                       <Ionicons name="heart" size={20} color="#0077b6" />
                     </TouchableOpacity>
                   </View>
-                  <Text style={styles.favoriteAddress} numberOfLines={2}>
+                  
+                  {/* Rating */}
+                  <View style={styles.ratingContainer}>
+                    <View style={styles.starsRow}>
+                      {renderStars(hospital.rating)}
+                    </View>
+                    <Text style={[styles.ratingText, { color: colors.subText }]}>
+                      {hospital.rating} ({hospital.reviewsCount})
+                    </Text>
+                  </View>
+
+                  <Text style={[styles.favoriteAddress, { color: colors.subText }]} numberOfLines={2}>
                     {hospital.address}, {hospital.city}
                   </Text>
-                  <TouchableOpacity style={styles.detailsButton}>
+                  
+                  <TouchableOpacity 
+                    style={styles.detailsButton}
+                    onPress={() => scrollToHospital(hospital.id)}
+                  >
                     <Text style={styles.detailsButtonText}>Voir détails</Text>
                   </TouchableOpacity>
                 </View>
               ))}
-            </View>
+            </ScrollView>
           </View>
         )}
 
         {/* All Hospitals */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tous les hôpitaux</Text>
+          <Text style={[styles.sectionTitle1, { color: colors.text }]}>Tous les hôpitaux</Text>
 
           {filteredHospitals.map((hospital) => (
-            <View key={hospital.id} style={styles.hospitalCard}>
+            <View 
+              key={hospital.id} 
+              style={[styles.hospitalCard, { backgroundColor: colors.card }]}
+              onLayout={(event) => {
+                const { y } = event.nativeEvent.layout;
+                setHospitalPositions(prev => ({ ...prev, [hospital.id]: y }));
+              }}
+            >
               <TouchableOpacity
                 style={styles.hospitalHeader}
                 onPress={() => toggleExpand(hospital.id)}
               >
                 <View style={styles.hospitalHeaderLeft}>
-                  <Text style={styles.hospitalName}>{hospital.name}</Text>
-                  <Text style={styles.hospitalDistance}>{hospital.distance}</Text>
+                  <View style={styles.hospitalNameRow}>
+                    <Text style={[styles.hospitalName, { color: colors.text }]}>{hospital.name}</Text>
+                    <TouchableOpacity
+                      onPress={() => toggleFavorite(hospital.id)}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <Ionicons 
+                        name={hospital.isFavorite ? "heart" : "heart-outline"} 
+                        size={22} 
+                        color={hospital.isFavorite ? "#0077b6" : colors.subText} 
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  
+                  {/* Rating */}
+                  <View style={styles.hospitalRatingRow}>
+                    <View style={styles.starsRow}>
+                      {renderStars(hospital.rating)}
+                    </View>
+                    <Text style={[styles.hospitalRatingText, { color: colors.subText }]}>
+                      {hospital.rating} ({hospital.reviewsCount} avis)
+                    </Text>
+                  </View>
+                  
+                  <Text style={[styles.hospitalDistance, { color: colors.subText }]}>{hospital.distance}</Text>
                 </View>
                 <Ionicons
                   name={
                     expandedId === hospital.id ? 'chevron-up' : 'chevron-down'
                   }
                   size={24}
-                  color="#666"
+                  color={colors.subText}
                 />
               </TouchableOpacity>
 
               {expandedId === hospital.id && (
-                <View style={styles.hospitalDetails}>
+                <View style={[styles.hospitalDetails, { borderTopColor: colors.border }]}>
                   {/* Image de l'hôpital */}
                   <View style={styles.hospitalImageContainer}>
                     {hospital.image ? (
@@ -280,18 +373,21 @@ const HospitalScreen = ({ onNavigate }: HospitalScreenProps) => {
                     )}
                   </View>
 
-                  <Text style={styles.hospitalAddress}>
+                  <Text style={[styles.hospitalAddress, { color: colors.subText }]}>
                     {hospital.address}, {hospital.city}
                   </Text>
-                  <Text style={styles.hospitalPhone}>{hospital.phone}</Text>
+                  <Text style={[styles.hospitalPhone, { color: colors.text }]}>{hospital.phone}</Text>
 
                   {/* Spécialités */}
                   <View style={styles.specialtiesContainer}>
-                    <Text style={styles.specialtiesLabel}>Spécialités :</Text>
+                    <Text style={[styles.specialtiesLabel, { color: colors.text }]}>Spécialités :</Text>
                     <View style={styles.specialtiesChips}>
                       {hospital.specialties.map((specialty, index) => (
-                        <View key={index} style={styles.specialtyChip}>
-                          <Text style={styles.specialtyChipText}>{specialty}</Text>
+                        <View key={index} style={[styles.specialtyChip, { 
+                          backgroundColor: colors.inputBackground,
+                          borderColor: colors.border
+                        }]}>
+                          <Text style={[styles.specialtyChipText, { color: colors.subText }]}>{specialty}</Text>
                         </View>
                       ))}
                     </View>
@@ -319,27 +415,30 @@ const HospitalScreen = ({ onNavigate }: HospitalScreenProps) => {
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, { 
+        backgroundColor: colors.card,
+        borderTopColor: colors.border
+      }]}>
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => onNavigate('home')}
         >
-          <Ionicons name="home-outline" size={24} color="#999" />
+          <Ionicons name="home-outline" size={24} color={colors.subText} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="chatbubble-outline" size={24} color="#999" />
+          <Ionicons name="chatbubble-outline" size={24} color={colors.subText} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="calendar-outline" size={24} color="#999" />
+          <Ionicons name="calendar-outline" size={24} color={colors.subText} />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => onNavigate('profile')}
         >
-          <Ionicons name="person-outline" size={24} color="#999" />
+          <Ionicons name="person-outline" size={24} color={colors.subText} />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -349,7 +448,6 @@ const HospitalScreen = ({ onNavigate }: HospitalScreenProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   header: {
     flexDirection: 'row',
@@ -357,7 +455,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
   },
   backButton: {
     padding: 5,
@@ -365,7 +462,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
   },
   placeholder: {
     width: 34,
@@ -381,28 +477,23 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 25,
     paddingHorizontal: 15,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
   },
   searchInput: {
     flex: 1,
     marginLeft: 10,
     fontSize: 14,
-    color: '#000',
   },
   filterButton: {
     width: 48,
     height: 48,
-    backgroundColor: '#fff',
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
   },
   filtersContainer: {
     paddingLeft: 20,
@@ -416,9 +507,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
   },
   filterChipActive: {
     backgroundColor: '#E3F2FD',
@@ -426,7 +515,6 @@ const styles = StyleSheet.create({
   },
   filterChipText: {
     fontSize: 14,
-    color: '#666',
     fontWeight: '500',
   },
   filterChipTextActive: {
@@ -435,21 +523,40 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 25,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 15,
+    gap: 8,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
-    paddingHorizontal: 20,
-    marginBottom: 15,
+    paddingLeft: 5,
   },
-  favoritesRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    gap: 15,
+  sectionTitle1: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    paddingLeft: 20,
   },
-  favoriteCard: {
-    flex: 1,
-    backgroundColor: '#fff',
+  sectionCount: {
+    fontSize: 14,
+    backgroundColor: '#E3F2FD',
+    color: '#0077b6',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  carouselContent: {
+    paddingRight: 20,
+  },
+  carouselCard: {
+    width: CARD_WIDTH,
+    marginLeft: CARD_MARGIN,
+    marginRight: CARD_MARGIN,
     borderRadius: 15,
     padding: 15,
     shadowColor: '#000',
@@ -457,6 +564,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  carouselCardFirst: {
+    marginLeft: 20,
   },
   favoriteHeader: {
     flexDirection: 'row',
@@ -468,12 +578,21 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '600',
-    color: '#000',
     marginRight: 10,
+  },
+  ratingContainer: {
+    marginBottom: 8,
+  },
+  starsRow: {
+    flexDirection: 'row',
+    gap: 2,
+    marginBottom: 4,
+  },
+  ratingText: {
+    fontSize: 12,
   },
   favoriteAddress: {
     fontSize: 12,
-    color: '#666',
     marginBottom: 12,
     lineHeight: 18,
   },
@@ -489,7 +608,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   hospitalCard: {
-    backgroundColor: '#fff',
     marginHorizontal: 20,
     marginBottom: 10,
     borderRadius: 12,
@@ -504,21 +622,33 @@ const styles = StyleSheet.create({
   hospitalHeaderLeft: {
     flex: 1,
   },
+  hospitalNameRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
   hospitalName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    flex: 1,
+  },
+  hospitalRatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 4,
+    gap: 8,
+  },
+  hospitalRatingText: {
+    fontSize: 12,
   },
   hospitalDistance: {
     fontSize: 14,
-    color: '#666',
   },
   hospitalDetails: {
     paddingHorizontal: 20,
     paddingBottom: 20,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
     paddingTop: 15,
   },
   hospitalImageContainer: {
@@ -540,12 +670,10 @@ const styles = StyleSheet.create({
   },
   hospitalAddress: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 8,
   },
   hospitalPhone: {
     fontSize: 14,
-    color: '#000',
     fontWeight: '500',
     marginBottom: 15,
   },
@@ -555,7 +683,6 @@ const styles = StyleSheet.create({
   specialtiesLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 8,
   },
   specialtiesChips: {
@@ -564,16 +691,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   specialtyChip: {
-    backgroundColor: '#F5F5F5',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
   },
   specialtyChipText: {
     fontSize: 12,
-    color: '#666',
     fontWeight: '500',
   },
   hospitalActions: {
@@ -609,11 +733,9 @@ const styles = StyleSheet.create({
   bottomNav: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: '#fff',
     paddingVertical: 15,
     paddingBottom: 50,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,

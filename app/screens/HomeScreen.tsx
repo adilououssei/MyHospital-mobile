@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import { useApp } from '../context/AppContext';
 
 interface Doctor {
   id: string;
@@ -28,6 +29,8 @@ interface HomeScreenProps {
 }
 
 const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
+  const { colors } = useApp();
+
   const topDoctors: Doctor[] = [
     {
       id: '1',
@@ -63,46 +66,46 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
       <View style={styles.serviceIconContainer}>
         <Ionicons name={icon as any} size={28} color="#0077b6" />
       </View>
-      <Text style={styles.serviceLabel}>{label}</Text>
+      <Text style={[styles.serviceLabel, { color: colors.subText }]}>{label}</Text>
     </TouchableOpacity>
   );
 
   const DoctorCard = ({ doctor }: { doctor: Doctor }) => (
-    <TouchableOpacity style={styles.doctorCard}>
+    <TouchableOpacity style={[styles.doctorCard, { backgroundColor: colors.card }]}>
       <View style={styles.doctorImageContainer}>
         <View style={styles.doctorImagePlaceholder}>
           <FontAwesome5 name="user-md" size={40} color="#0077b6" />
         </View>
       </View>
-      <Text style={styles.doctorName}>{doctor.name}</Text>
-      <Text style={styles.doctorSpecialty}>{doctor.specialty}</Text>
+      <Text style={[styles.doctorName, { color: colors.text }]}>{doctor.name}</Text>
+      <Text style={[styles.doctorSpecialty, { color: colors.subText }]}>{doctor.specialty}</Text>
       <View style={styles.doctorInfo}>
         <View style={styles.ratingContainer}>
           <Ionicons name="star" size={14} color="#FFC107" />
-          <Text style={styles.ratingText}>{doctor.rating}</Text>
+          <Text style={[styles.ratingText, { color: colors.text }]}>{doctor.rating}</Text>
         </View>
         <View style={styles.distanceContainer}>
-          <Ionicons name="location-outline" size={14} color="#666" />
-          <Text style={styles.distanceText}>{doctor.distance}</Text>
+          <Ionicons name="location-outline" size={14} color={colors.subText} />
+          <Text style={[styles.distanceText, { color: colors.subText }]}>{doctor.distance}</Text>
         </View>
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>Trouvez votre solution</Text>
-            <Text style={styles.title}>santé désirée</Text>
+            <Text style={[styles.title, { color: colors.text }]}>Trouvez votre solution</Text>
+            <Text style={[styles.title, { color: colors.text }]}>santé désirée</Text>
           </View>
           <TouchableOpacity
             style={styles.notificationButton}
             onPress={() => onNavigate('notifications')}
           >
-            <Ionicons name="notifications-outline" size={24} color="#000" />
+            <Ionicons name="notifications-outline" size={24} color={colors.text} />
             {unreadCount > 0 && (
               <View style={styles.notificationBadge}>
                 <Text style={styles.notificationBadgeText}>
@@ -114,12 +117,12 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
         </View>
 
         {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Ionicons name="search-outline" size={20} color="#999" />
+        <View style={[styles.searchContainer, { backgroundColor: colors.inputBackground }]}>
+          <Ionicons name="search-outline" size={20} color={colors.subText} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.text }]}
             placeholder="Rechercher médecin, médicaments, articles..."
-            placeholderTextColor="#999"
+            placeholderTextColor={colors.subText}
           />
         </View>
 
@@ -147,14 +150,17 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
           </View>
           <View style={styles.bannerImageContainer}>
             <View style={styles.bannerImagePlaceholder}>
-              <Ionicons name="medical" size={60} color="#0077b6" />
+              <Image
+                source={require('../../assets/doctor2.png')}
+                style={{ width: 120, height: 140 }}
+              />
             </View>
           </View>
         </LinearGradient>
 
         {/* Top Doctors */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Meilleurs Docteurs</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Meilleurs Docteurs</Text>
           <TouchableOpacity onPress={() => onNavigate('doctorsList')}>
             <Text style={styles.seeAllText}>Voir tout</Text>
           </TouchableOpacity>
@@ -176,24 +182,24 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
         <TouchableOpacity style={styles.navItem}>
           <Ionicons name="home" size={24} color="#0077b6" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="chatbubble-outline" size={24} color="#999" />
+          <Ionicons name="chatbubble-outline" size={24} color={colors.subText} />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => onNavigate('appointments')}
         >
-          <Ionicons name="calendar-outline" size={24} color="#999" />
+          <Ionicons name="calendar-outline" size={24} color={colors.subText} />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => onNavigate('profile')}
         >
-          <Ionicons name="person-outline" size={24} color="#999" />
+          <Ionicons name="person-outline" size={24} color={colors.subText} />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -203,7 +209,6 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   header: {
     flexDirection: 'row',
@@ -216,7 +221,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#000',
   },
   notificationButton: {
     padding: 8,
@@ -244,7 +248,6 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
     marginHorizontal: 20,
     paddingHorizontal: 15,
     paddingVertical: 12,
@@ -255,7 +258,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 10,
     fontSize: 14,
-    color: '#000',
   },
   servicesContainer: {
     flexDirection: 'row',
@@ -277,7 +279,6 @@ const styles = StyleSheet.create({
   },
   serviceLabel: {
     fontSize: 12,
-    color: '#666',
   },
   banner: {
     marginHorizontal: 20,
@@ -316,7 +317,7 @@ const styles = StyleSheet.create({
   bannerImagePlaceholder: {
     width: 100,
     height: 100,
-    backgroundColor: '#fff',
+    backgroundColor: '#e3e2e2ff',
     borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
@@ -331,7 +332,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
   },
   seeAllText: {
     fontSize: 14,
@@ -347,7 +347,6 @@ const styles = StyleSheet.create({
     paddingRight: 20,
   },
   doctorCard: {
-    backgroundColor: '#fff',
     borderRadius: 15,
     padding: 15,
     marginRight: 15,
@@ -373,12 +372,10 @@ const styles = StyleSheet.create({
   doctorName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 4,
   },
   doctorSpecialty: {
     fontSize: 12,
-    color: '#666',
     marginBottom: 8,
   },
   doctorInfo: {
@@ -394,7 +391,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     marginLeft: 4,
-    color: '#000',
   },
   distanceContainer: {
     flexDirection: 'row',
@@ -402,7 +398,6 @@ const styles = StyleSheet.create({
   },
   distanceText: {
     fontSize: 12,
-    color: '#666',
     marginLeft: 2,
   },
   bottomNav: {
@@ -412,17 +407,14 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: '#fff',
     paddingVertical: 15,
     paddingBottom: 50,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 10,
-
   },
   navItem: {
     padding: 5,

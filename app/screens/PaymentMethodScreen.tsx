@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import { useApp } from '../context/AppContext';
 
 interface PaymentMethodScreenProps {
   onNavigate: (screen: string) => void;
@@ -30,6 +31,7 @@ const PaymentMethodScreen = ({
   consultationPrice = 15000,
   confirmationFee = 2000,
 }: PaymentMethodScreenProps) => {
+  const { colors } = useApp();
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
@@ -56,7 +58,6 @@ const PaymentMethodScreen = ({
       return;
     }
 
-    // Simuler le paiement
     setShowSuccessModal(true);
   };
 
@@ -66,87 +67,96 @@ const PaymentMethodScreen = ({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { 
+        backgroundColor: colors.card,
+        borderBottomColor: colors.border
+      }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => onNavigate('doctorDetail')}
         >
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Paiement</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Paiement</Text>
         <View style={styles.placeholder} />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           {/* Doctor Info */}
-          <View style={styles.doctorCard}>
+          <View style={[styles.doctorCard, { backgroundColor: colors.card }]}>
             <View style={styles.doctorImagePlaceholder}>
               <FontAwesome5 name="user-md" size={40} color="#0077b6" />
             </View>
             <View style={styles.doctorInfo}>
-              <Text style={styles.doctorName}>
+              <Text style={[styles.doctorName, { color: colors.text }]}>
                 {doctor?.name || 'Dr. Marcus Horizon'}
               </Text>
-              <Text style={styles.doctorSpecialty}>
+              <Text style={[styles.doctorSpecialty, { color: colors.subText }]}>
                 {doctor?.specialty || 'Cardiologue'}
               </Text>
               <View style={styles.ratingContainer}>
                 <Ionicons name="star" size={14} color="#FFA500" />
-                <Text style={styles.rating}>{doctor?.rating || 4.7}</Text>
-                <Ionicons name="location-outline" size={14} color="#666" style={{ marginLeft: 10 }} />
-                <Text style={styles.distance}>{doctor?.distance || '800m'}</Text>
+                <Text style={[styles.rating, { color: colors.subText }]}>{doctor?.rating || 4.7}</Text>
+                <Ionicons name="location-outline" size={14} color={colors.subText} style={{ marginLeft: 10 }} />
+                <Text style={[styles.distance, { color: colors.subText }]}>{doctor?.distance || '800m'}</Text>
               </View>
             </View>
           </View>
 
           {/* Appointment Details */}
-          <View style={styles.detailsCard}>
-            <Text style={styles.detailsTitle}>Détails du rendez-vous</Text>
+          <View style={[styles.detailsCard, { backgroundColor: colors.card }]}>
+            <Text style={[styles.detailsTitle, { color: colors.text }]}>Détails du rendez-vous</Text>
 
             <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Date</Text>
+              <Text style={[styles.detailLabel, { color: colors.subText }]}>Date</Text>
               <View style={styles.detailValue}>
-                <Text style={styles.detailText}>Mercredi, 23 Juin 2021 | {time || '14:00'}</Text>
+                <Text style={[styles.detailText, { color: colors.text }]}>
+                  Mercredi, 23 Juin 2021 | {time || '14:00'}
+                </Text>
                 <TouchableOpacity>
                   <Text style={styles.changeText}>Modifier</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-            <Text style={styles.detailsTitle}>Détail du paiement</Text>
+            <Text style={[styles.detailsTitle, { color: colors.text }]}>Détail du paiement</Text>
 
             <View style={styles.paymentRow}>
-              <Text style={styles.paymentLabel}>Consultation</Text>
-              <Text style={styles.paymentValue}>{consultationPrice} FCFA</Text>
+              <Text style={[styles.paymentLabel, { color: colors.subText }]}>Consultation</Text>
+              <Text style={[styles.paymentValue, { color: colors.text }]}>{consultationPrice} FCFA</Text>
             </View>
 
             <View style={styles.paymentRow}>
-              <Text style={styles.paymentLabel}>Frais de confirmation</Text>
-              <Text style={styles.paymentValue}>{confirmationFee} FCFA</Text>
+              <Text style={[styles.paymentLabel, { color: colors.subText }]}>Frais de confirmation</Text>
+              <Text style={[styles.paymentValue, { color: colors.text }]}>{confirmationFee} FCFA</Text>
             </View>
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <View style={styles.paymentRow}>
-              <Text style={styles.totalLabel}>Total</Text>
-              <Text style={styles.totalValue}>{totalAmount} FCFA</Text>
+              <Text style={[styles.totalLabel, { color: colors.text }]}>Total</Text>
+              <Text style={[styles.totalValue, { color: colors.text }]}>{totalAmount} FCFA</Text>
             </View>
           </View>
 
           {/* Payment Method */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Mode de paiement</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Mode de paiement</Text>
 
             {paymentMethods.map((method) => (
               <TouchableOpacity
                 key={method.id}
                 style={[
                   styles.methodCard,
+                  { 
+                    backgroundColor: colors.card,
+                    borderColor: colors.border
+                  },
                   selectedMethod === method.id && styles.methodCardActive,
                 ]}
                 onPress={() => setSelectedMethod(method.id)}
@@ -164,7 +174,7 @@ const PaymentMethodScreen = ({
                       color={method.color}
                     />
                   </View>
-                  <Text style={styles.methodName}>{method.name}</Text>
+                  <Text style={[styles.methodName, { color: colors.text }]}>{method.name}</Text>
                 </View>
 
                 {selectedMethod === method.id ? (
@@ -179,10 +189,13 @@ const PaymentMethodScreen = ({
       </ScrollView>
 
       {/* Bottom Section */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { 
+        backgroundColor: colors.card,
+        borderTopColor: colors.border
+      }]}>
         <View style={styles.totalContainer}>
-          <Text style={styles.footerLabel}>Total</Text>
-          <Text style={styles.footerTotal}>{totalAmount} FCFA</Text>
+          <Text style={[styles.footerLabel, { color: colors.subText }]}>Total</Text>
+          <Text style={[styles.footerTotal, { color: colors.text }]}>{totalAmount} FCFA</Text>
         </View>
         <TouchableOpacity
           style={[
@@ -204,19 +217,19 @@ const PaymentMethodScreen = ({
         onRequestClose={() => setShowSuccessModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
             <View style={styles.modalIconContainer}>
               <Ionicons name="checkmark" size={50} color="#0077b6" />
             </View>
 
-            <Text style={styles.modalTitle}>Paiement réussi</Text>
-            <Text style={styles.modalDescription}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Paiement réussi</Text>
+            <Text style={[styles.modalDescription, { color: colors.subText }]}>
               Votre paiement a été effectué avec succès,
             </Text>
-            <Text style={styles.modalDescription}>
+            <Text style={[styles.modalDescription, { color: colors.subText }]}>
               vous pouvez avoir une session de consultation
             </Text>
-            <Text style={styles.modalDescription}>
+            <Text style={[styles.modalDescription, { color: colors.subText }]}>
               avec votre médecin de confiance
             </Text>
 
@@ -236,7 +249,6 @@ const PaymentMethodScreen = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
     paddingBottom: 30,
   },
   header: {
@@ -245,76 +257,67 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-    },
-    backButton: {
+  },
+  backButton: {
     padding: 5,
-    },
-    headerTitle: {
+  },
+  headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
-    },
-    placeholder: {
+  },
+  placeholder: {
     width: 34,
-    },
-    content: {
+  },
+  content: {
     padding: 20,
   },
   doctorCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     padding: 15,
     borderRadius: 10,
-    marginBottom: 20,  
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 3,
   },
-    doctorImagePlaceholder: {
+  doctorImagePlaceholder: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#E3F2FD',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
-    },
-    doctorInfo: {
+  },
+  doctorInfo: {
     flex: 1,
-    },
-    doctorName: {  
+  },
+  doctorName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 2,
-    },
-    doctorSpecialty: {
+  },
+  doctorSpecialty: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 5,
-    },
-    ratingContainer: {
+  },
+  ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-    rating: {
+  rating: {
     fontSize: 14,
-    color: '#666',
     marginLeft: 4,
-    },
-    distance: {
+  },
+  distance: {
     fontSize: 14,
-    color: '#666',
     marginLeft: 4,
-    },
+  },
   detailsCard: {
-    backgroundColor: '#fff',
     padding: 15,
     borderRadius: 10,
     marginBottom: 20,
@@ -323,153 +326,128 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 3,
-    },
-    detailsTitle: {
+  },
+  detailsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 10,
-    },
-    detailRow: {
+  },
+  detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
-    },
-    detailLabel: {
+  },
+  detailLabel: {
     fontSize: 14,
-    color: '#666',
-    },
-    detailValue: {
+  },
+  detailValue: {
     flexDirection: 'row',
     alignItems: 'center',
-    },
-    detailText: {
+  },
+  detailText: {
     fontSize: 14,
-    color: '#000',
     marginRight: 10,
-    },
-    changeText: {
+  },
+  changeText: {
     fontSize: 14,
     color: '#0077b6',
     fontWeight: '600',
-    },
-    divider: {
+  },
+  divider: {
     height: 1,
-    backgroundColor: '#E0E0E0',
     marginVertical: 10,
-    },
-    paymentRow: {
+  },
+  paymentRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 10,
-    },
-    paymentLabel: {
+  },
+  paymentLabel: {
     fontSize: 14,
-    color: '#666',
-    },
-    paymentValue: {
+  },
+  paymentValue: {
     fontSize: 14,
-    color: '#000',
     fontWeight: '600',
-    },
-    totalLabel: {
+  },
+  totalLabel: {
     fontSize: 16,
-    color: '#000',
     fontWeight: '700',
-    },
-    totalValue: {
+  },
+  totalValue: {
     fontSize: 16,
-    color: '#000',
     fontWeight: '700',
-    },
+  },
   section: {
     marginBottom: 20,
   },
-    sectionTitle: {
+  sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 10,
-    },
-    methodCard: {
+  },
+  methodCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#fff',
     padding: 15,
     borderRadius: 10,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    },
-    methodCardActive: {
+  },
+  methodCardActive: {
     borderColor: '#0077b6',
     backgroundColor: '#E0F7FF',
-    },
-    methodLeft: {
+  },
+  methodLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    },
-    methodIcon: {
+  },
+  methodIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
-    },
-    methodName: {
+  },
+  methodName: {
     fontSize: 14,
-    color: '#000',
     fontWeight: '600',
-    },
-    changeMethod: {
-    alignSelf: 'flex-end',
-    marginTop: 5,
-    },
-    changeMethodText: {
-    fontSize: 14,
-    color: '#0077b6',
-    fontWeight: '600',
-    },
+  },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 15,
-    backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
   },
-    totalContainer: {
+  totalContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    },
-    footerLabel: {
+  },
+  footerLabel: {
     fontSize: 16,
-    color: '#666',
     marginRight: 10,
-    },
-    footerTotal: {
+  },
+  footerTotal: {
     fontSize: 18,
-    color: '#000',
     fontWeight: '700',
-    },
-    confirmButton: {
+  },
+  confirmButton: {
     backgroundColor: '#0077b6',
     paddingVertical: 12,
     paddingHorizontal: 25,
     borderRadius: 8,
-    },
-    confirmButtonDisabled: {
+  },
+  confirmButtonDisabled: {
     backgroundColor: '#ccc',
-    },
-    confirmButtonText: {
+  },
+  confirmButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-    },
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -478,12 +456,11 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '80%',
-    backgroundColor: '#fff',
     borderRadius: 10,
     padding: 20,
     alignItems: 'center',
   },
-    modalIconContainer: {
+  modalIconContainer: {
     width: 80,
     height: 80,
     borderRadius: 40,
@@ -491,31 +468,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 15,
-    },
-    modalTitle: {
+  },
+  modalTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#000',
     marginBottom: 10,
-    },
-    modalDescription: {
+  },
+  modalDescription: {
     fontSize: 14,
-    color: '#666',
     textAlign: 'center',
     marginBottom: 5,
-    },
-    modalButton: {
+  },
+  modalButton: {
     marginTop: 15,
     backgroundColor: '#0077b6',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
-    },
-    modalButtonText: {
+  },
+  modalButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-    },
+  },
 });
 
 export default PaymentMethodScreen;

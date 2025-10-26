@@ -5,12 +5,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useApp } from '../context/AppContext';
 
 interface MenuItem {
   id: string;
@@ -27,6 +27,7 @@ interface ProfileScreenProps {
 }
 
 const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
+  const { theme, language, colors } = useApp();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const menuItems: MenuItem[] = [
@@ -36,6 +37,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
       label: 'Mes Favoris',
       iconColor: '#0077b6',
       bgColor: '#e4f4fcff',
+      screen: 'favorites',
     },
     {
       id: '2',
@@ -47,20 +49,36 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
     },
     {
       id: '3',
+      icon: 'language-outline',
+      label: 'Langue',
+      iconColor: '#0077b6',
+      bgColor: '#e4f4fcff',
+      screen: 'language',
+    },
+    {
+      id: '4',
+      icon: theme === 'dark' ? 'moon' : 'moon-outline',
+      label: `Mode ${theme === 'dark' ? 'sombre' : 'clair'}`,
+      iconColor: '#0077b6',
+      bgColor: '#e4f4fcff',
+      screen: 'theme',
+    },
+    {
+      id: '5',
       icon: 'card-outline',
       label: 'Moyen de Paiement',
       iconColor: '#0077b6',
       bgColor: '#e4f4fcff',
     },
     {
-      id: '4',
+      id: '6',
       icon: 'help-circle-outline',
       label: 'FAQs',
       iconColor: '#0077b6',
       bgColor: '#e4f4fcff',
     },
     {
-      id: '5',
+      id: '7',
       icon: 'log-out-outline',
       label: 'Déconnexion',
       iconColor: '#FF6B6B',
@@ -71,13 +89,12 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
 
   const handleLogout = () => {
     setShowLogoutModal(false);
-    // Logique de déconnexion ici
-    console.log('Utilisateur déconnecté');
+    onNavigate('welcome');
   };
 
   const MenuItem = ({ item }: { item: MenuItem }) => (
     <TouchableOpacity
-      style={styles.menuItem}
+      style={[styles.menuItem, { backgroundColor: colors.card }]}
       onPress={() => {
         if (item.isLogout) {
           setShowLogoutModal(true);
@@ -95,100 +112,105 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
         <Text
           style={[
             styles.menuItemText,
+            { color: colors.text },
             item.isLogout && styles.menuItemTextLogout,
           ]}
         >
           {item.label}
         </Text>
       </View>
-      <Ionicons name="chevron-forward" size={20} color="#999" />
+      <Ionicons name="chevron-forward" size={20} color={colors.subText} />
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <LinearGradient
         colors={['#0077b6', '#0077b6']}
         style={styles.headerGradient}
       >
-        {/* Menu Icon */}
-        <TouchableOpacity style={styles.menuButton}>
-          <Ionicons name="ellipsis-vertical" size={24} color="#fff" />
-        </TouchableOpacity>
+        <SafeAreaView edges={['top']} style={styles.safeArea}>
+          {/* Menu Icon */}
+          <TouchableOpacity style={styles.menuButton}>
+            <Ionicons name="ellipsis-vertical" size={24} color="#fff" />
+          </TouchableOpacity>
 
-        {/* Profile Image */}
-        <View style={styles.profileImageContainer}>
-          <View style={styles.profileImageWrapper}>
-            <View style={styles.profileImagePlaceholder}>
-              <Ionicons name="person" size={50} color="#0077b6" />
+          {/* Profile Image */}
+          <View style={styles.profileImageContainer}>
+            <View style={styles.profileImageWrapper}>
+              <View style={styles.profileImagePlaceholder}>
+                <Ionicons name="person" size={50} color="#0077b6" />
+              </View>
+              <TouchableOpacity style={styles.editButton}>
+                <Ionicons name="camera" size={16} color="#fff" />
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.editButton}>
-              <Ionicons name="camera" size={16} color="#fff" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* User Name */}
-        <Text style={styles.userName}>Amelia Renata</Text>
-
-        {/* Health Stats */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <View style={styles.statIconContainer}>
-              <Ionicons name="heart" size={24} color="#fff" />
-            </View>
-            <Text style={styles.statLabel1}>Fréquence cardiaque</Text>
-            <Text style={styles.statValue}>215bpm</Text>
           </View>
 
-          <View style={styles.statDivider} />
+          {/* User Name */}
+          <Text style={styles.userName}>Amelia Renata</Text>
 
-          <View style={styles.statItem}>
-            <View style={styles.statIconContainer}>
-              <Ionicons name="flame" size={24} color="#fff" />
+          {/* Health Stats */}
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <View style={styles.statIconContainer}>
+                <Ionicons name="heart" size={24} color="#fff" />
+              </View>
+              <Text style={styles.statLabel}>Fréquence{'\n'}cardiaque</Text>
+              <Text style={styles.statValue}>215bpm</Text>
             </View>
-            <Text style={styles.statLabel}>Calories</Text>
-            <Text style={styles.statValue}>756cal</Text>
-          </View>
 
-          <View style={styles.statDivider} />
+            <View style={styles.statDivider} />
 
-          <View style={styles.statItem}>
-            <View style={styles.statIconContainer}>
-              <Ionicons name="barbell" size={24} color="#fff" />
+            <View style={styles.statItem}>
+              <View style={styles.statIconContainer}>
+                <Ionicons name="flame" size={24} color="#fff" />
+              </View>
+              <Text style={styles.statLabel}>Calories</Text>
+              <Text style={styles.statValue}>756cal</Text>
             </View>
-            <Text style={styles.statLabel}>Poids</Text>
-            <Text style={styles.statValue}>103lbs</Text>
+
+            <View style={styles.statDivider} />
+
+            <View style={styles.statItem}>
+              <View style={styles.statIconContainer}>
+                <Ionicons name="barbell" size={24} color="#fff" />
+              </View>
+              <Text style={styles.statLabel}>Poids</Text>
+              <Text style={styles.statValue}>103lbs</Text>
+            </View>
           </View>
-        </View>
+        </SafeAreaView>
       </LinearGradient>
 
       {/* Menu Items */}
       <ScrollView
-        style={styles.menuContainer}
+        style={[styles.menuContainer, { backgroundColor: colors.card }]}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.menuContent}
       >
         {menuItems.map((item) => (
           <MenuItem key={item.id} item={item} />
         ))}
+        <View style={{ height: 100 }} />
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity 
+      <View style={[styles.bottomNav, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
+        <TouchableOpacity
           style={styles.navItem}
           onPress={() => onNavigate('home')}
         >
-          <Ionicons name="home-outline" size={24} color="#999" />
+          <Ionicons name="home-outline" size={24} color={colors.subText} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="chatbubble-outline" size={24} color="#999" />
+          <Ionicons name="chatbubble-outline" size={24} color={colors.subText} />
         </TouchableOpacity>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.navItem}
           onPress={() => onNavigate('appointments')}
         >
-          <Ionicons name="calendar-outline" size={24} color="#999" />
+          <Ionicons name="calendar-outline" size={24} color={colors.subText} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem}>
           <Ionicons name="person" size={24} color="#0077b6" />
@@ -203,13 +225,13 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
         onRequestClose={() => setShowLogoutModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
             <View style={styles.modalIconContainer}>
               <Ionicons name="log-out-outline" size={40} color="#0077b6" />
             </View>
 
-            <Text style={styles.modalTitle}>Êtes-vous sûr de vouloir</Text>
-            <Text style={styles.modalTitle}>vous déconnecter ?</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Êtes-vous sûr de vouloir</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>vous déconnecter ?</Text>
 
             <TouchableOpacity
               style={styles.logoutButton}
@@ -227,20 +249,19 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   headerGradient: {
-    paddingTop: 15,
     paddingBottom: 30,
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
+  },
+  safeArea: {
+    paddingTop: 10,
   },
   menuButton: {
     position: 'absolute',
@@ -250,8 +271,7 @@ const styles = StyleSheet.create({
   },
   profileImageContainer: {
     alignItems: 'center',
-    marginTop: 20,
-    paddingTop: 10,
+    marginTop: 30,
   },
   profileImageWrapper: {
     position: 'relative',
@@ -305,13 +325,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     opacity: 0.9,
     marginBottom: 4,
-  },
-  statLabel1: {
-    fontSize: 11,
-    color: '#fff',
-    opacity: 0.9,
-    marginBottom: 4,
-    marginLeft: 20,
+    textAlign: 'center',
   },
   statValue: {
     fontSize: 16,
@@ -326,11 +340,12 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     flex: 1,
-    backgroundColor: '#fff',
-    marginTop: 5,
+    marginTop: -25,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
-    paddingTop: 15,
+  },
+  menuContent: {
+    paddingTop: 20,
   },
   menuItem: {
     flexDirection: 'row',
@@ -338,7 +353,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 18,
     paddingHorizontal: 25,
-    backgroundColor: '#fff',
     marginBottom: 1,
   },
   menuItemLeft: {
@@ -355,7 +369,6 @@ const styles = StyleSheet.create({
   },
   menuItemText: {
     fontSize: 16,
-    color: '#000',
     fontWeight: '500',
   },
   menuItemTextLogout: {
@@ -364,11 +377,9 @@ const styles = StyleSheet.create({
   bottomNav: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: '#fff',
     paddingVertical: 15,
     paddingBottom: 50,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
@@ -386,7 +397,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
   },
   modalContent: {
-    backgroundColor: '#fff',
     borderRadius: 25,
     padding: 30,
     width: '100%',
@@ -395,7 +405,7 @@ const styles = StyleSheet.create({
   modalIconContainer: {
     width: 80,
     height: 80,
-    backgroundColor: '#E8F9F5',
+    backgroundColor: '#e4f4fcff',
     borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
@@ -404,7 +414,6 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
     textAlign: 'center',
   },
   logoutButton: {

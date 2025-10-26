@@ -7,9 +7,15 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useApp } from '../context/AppContext';
+
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = width * 0.45;
+const CARD_MARGIN = 10;
 
 interface Pharmacy {
   id: string;
@@ -21,6 +27,8 @@ interface Pharmacy {
   isOnDuty: boolean;
   isFavorite: boolean;
   image: any;
+  rating: number;
+  reviewsCount: number;
 }
 
 interface PharmacyScreenProps {
@@ -28,9 +36,13 @@ interface PharmacyScreenProps {
 }
 
 const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
+  const { colors } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('open');
+  const [activeFilter, setActiveFilter] = useState('all');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const scrollViewRef = React.useRef<ScrollView>(null);
+  const [pharmacyPositions, setPharmacyPositions] = useState<{[key: string]: number}>({});
+  
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([
     {
       id: '1',
@@ -41,7 +53,9 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
       distance: '1.2 km',
       isOnDuty: true,
       isFavorite: true,
-      image: null, // Placeholder
+      image: null,
+      rating: 4.5,
+      reviewsCount: 128,
     },
     {
       id: '2',
@@ -53,6 +67,8 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
       isOnDuty: true,
       isFavorite: true,
       image: null,
+      rating: 4.8,
+      reviewsCount: 203,
     },
     {
       id: '3',
@@ -64,6 +80,21 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
       isOnDuty: true,
       isFavorite: false,
       image: null,
+      rating: 4.2,
+      reviewsCount: 89,
+    },
+    {
+      id: '4',
+      name: 'Pharmacie de la Paix',
+      address: '23 Rue de la Paix',
+      city: '75002 Paris',
+      phone: '01 42 61 89 34',
+      distance: '1.8 km',
+      isOnDuty: true,
+      isFavorite: true,
+      image: null,
+      rating: 4.6,
+      reviewsCount: 156,
     },
   ]);
 
@@ -79,43 +110,94 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
+  const scrollToPharmacy = (id: string) => {
+    const position = pharmacyPositions[id];
+    if (position && scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({ y: position - 100, animated: true });
+      setExpandedId(id);
+    }
+  };
+
   const filteredPharmacies = pharmacies.filter((pharmacy) => {
     const matchesSearch = pharmacy.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
+    
+    if (activeFilter === 'all') return matchesSearch;
+    if (activeFilter === 'open') return matchesSearch && pharmacy.isOnDuty;
+    if (activeFilter === 'rating') return matchesSearch && pharmacy.rating >= 4.5;
+    
     return matchesSearch;
   });
 
   const favoritePharmacies = filteredPharmacies.filter((p) => p.isFavorite);
 
+  const renderStars = (rating: number) => {
+    const stars = [];
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 !== 0;
+
+    for (let i = 0; i < fullStars; i++) {
+      stars.push(
+        <Ionicons key={`star-${i}`} name="star" size={14} color="#FFB800" />
+      );
+    }
+
+    if (hasHalfStar) {
+      stars.push(
+        <Ionicons key="star-half" name="star-half" size={14} color="#FFB800" />
+      );
+    }
+
+    const emptyStars = 5 - Math.ceil(rating);
+    for (let i = 0; i < emptyStars; i++) {
+      stars.push(
+        <Ionicons
+          key={`star-empty-${i}`}
+          name="star-outline"
+          size={14}
+          color="#FFB800"
+        />
+      );
+    }
+
+    return stars;
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.card }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => onNavigate('home')}
         >
-          <Ionicons name="arrow-back" size={24} color="#000" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Pharmacies de garde</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Pharmacies de garde</Text>
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false}>
         {/* Search Bar */}
         <View style={styles.searchContainer}>
-          <View style={styles.searchBar}>
-            <Ionicons name="search-outline" size={20} color="#999" />
+          <View style={[styles.searchBar, { 
+            backgroundColor: colors.card,
+            borderColor: colors.border
+          }]}>
+            <Ionicons name="search-outline" size={20} color={colors.subText} />
             <TextInput
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: colors.text }]}
               placeholder="Rechercher une pharmacie..."
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.subText}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
           </View>
-          <TouchableOpacity style={styles.filterButton}>
+          <TouchableOpacity style={[styles.filterButton, {
+            backgroundColor: colors.card,
+            borderColor: colors.border
+          }]}>
             <Ionicons name="options-outline" size={20} color="#0077b6" />
           </TouchableOpacity>
         </View>
@@ -127,84 +209,61 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
           style={styles.filtersContainer}
           contentContainerStyle={styles.filtersContent}
         >
-          <TouchableOpacity
-            style={[
-              styles.filterChip,
-              activeFilter === 'open' && styles.filterChipActive,
-            ]}
-            onPress={() => setActiveFilter('open')}
-          >
-            <Text
+          {[
+            { key: 'all', label: 'Toutes' },
+            { key: 'open', label: 'Ouvertes' },
+            { key: 'rating', label: 'Meilleures notes' }
+          ].map((filter) => (
+            <TouchableOpacity
+              key={filter.key}
               style={[
-                styles.filterChipText,
-                activeFilter === 'open' && styles.filterChipTextActive,
+                styles.filterChip,
+                { backgroundColor: colors.card, borderColor: colors.border },
+                activeFilter === filter.key && styles.filterChipActive,
               ]}
+              onPress={() => setActiveFilter(filter.key)}
             >
-              Ouvert maintenant
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.filterChip,
-              activeFilter === 'services' && styles.filterChipActive,
-            ]}
-            onPress={() => setActiveFilter('services')}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                activeFilter === 'services' && styles.filterChipTextActive,
-              ]}
-            >
-              Services
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.filterChip,
-              activeFilter === 'distance' && styles.filterChipActive,
-            ]}
-            onPress={() => setActiveFilter('distance')}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                activeFilter === 'distance' && styles.filterChipTextActive,
-              ]}
-            >
-              Distance
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.filterChip,
-              activeFilter === 'rating' && styles.filterChipActive,
-            ]}
-            onPress={() => setActiveFilter('rating')}
-          >
-            <Text
-              style={[
-                styles.filterChipText,
-                activeFilter === 'rating' && styles.filterChipTextActive,
-              ]}
-            >
-              Note
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.filterChipText,
+                  { color: colors.subText },
+                  activeFilter === filter.key && styles.filterChipTextActive,
+                ]}
+              >
+                {filter.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </ScrollView>
 
-        {/* Favorites Section */}
+        {/* Favorites Carousel */}
         {favoritePharmacies.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Favoris</Text>
-            <View style={styles.favoritesRow}>
-              {favoritePharmacies.slice(0, 2).map((pharmacy) => (
-                <View key={pharmacy.id} style={styles.favoriteCard}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Favoris</Text>
+              <Text style={[styles.sectionCount, { color: colors.subText }]}>
+                {favoritePharmacies.length}
+              </Text>
+            </View>
+            
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              snapToInterval={CARD_WIDTH + CARD_MARGIN * 2}
+              decelerationRate="fast"
+              contentContainerStyle={styles.carouselContent}
+            >
+              {favoritePharmacies.map((pharmacy, index) => (
+                <View
+                  key={pharmacy.id}
+                  style={[
+                    styles.carouselCard,
+                    { backgroundColor: colors.card },
+                    index === 0 && styles.carouselCardFirst,
+                  ]}
+                >
                   <View style={styles.favoriteHeader}>
-                    <Text style={styles.favoriteTitle} numberOfLines={1}>
+                    <Text style={[styles.favoriteTitle, { color: colors.text }]} numberOfLines={1}>
                       {pharmacy.name}
                     </Text>
                     <TouchableOpacity
@@ -213,43 +272,88 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
                       <Ionicons name="heart" size={20} color="#0077b6" />
                     </TouchableOpacity>
                   </View>
-                  <Text style={styles.favoriteAddress} numberOfLines={2}>
+                  
+                  {/* Rating */}
+                  <View style={styles.ratingContainer}>
+                    <View style={styles.starsRow}>
+                      {renderStars(pharmacy.rating)}
+                    </View>
+                    <Text style={[styles.ratingText, { color: colors.subText }]}>
+                      {pharmacy.rating} ({pharmacy.reviewsCount})
+                    </Text>
+                  </View>
+
+                  <Text style={[styles.favoriteAddress, { color: colors.subText }]} numberOfLines={2}>
                     {pharmacy.address}, {pharmacy.city}
                   </Text>
-                  <TouchableOpacity style={styles.detailsButton}>
+                  
+                  <TouchableOpacity 
+                    style={styles.detailsButton}
+                    onPress={() => scrollToPharmacy(pharmacy.id)}
+                  >
                     <Text style={styles.detailsButtonText}>Voir détails</Text>
                   </TouchableOpacity>
                 </View>
               ))}
-            </View>
+            </ScrollView>
           </View>
         )}
 
         {/* All Pharmacies */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Toutes les pharmacies</Text>
+          <Text style={[styles.sectionTitle1, { color: colors.text }]}>Toutes les pharmacies</Text>
 
           {filteredPharmacies.map((pharmacy) => (
-            <View key={pharmacy.id} style={styles.pharmacyCard}>
+            <View 
+              key={pharmacy.id} 
+              style={[styles.pharmacyCard, { backgroundColor: colors.card }]}
+              onLayout={(event) => {
+                const { y } = event.nativeEvent.layout;
+                setPharmacyPositions(prev => ({ ...prev, [pharmacy.id]: y }));
+              }}
+            >
               <TouchableOpacity
                 style={styles.pharmacyHeader}
                 onPress={() => toggleExpand(pharmacy.id)}
               >
                 <View style={styles.pharmacyHeaderLeft}>
-                  <Text style={styles.pharmacyName}>{pharmacy.name}</Text>
-                  <Text style={styles.pharmacyDistance}>{pharmacy.distance}</Text>
+                  <View style={styles.pharmacyNameRow}>
+                    <Text style={[styles.pharmacyName, { color: colors.text }]}>{pharmacy.name}</Text>
+                    <TouchableOpacity
+                      onPress={() => toggleFavorite(pharmacy.id)}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <Ionicons 
+                        name={pharmacy.isFavorite ? "heart" : "heart-outline"} 
+                        size={22} 
+                        color={pharmacy.isFavorite ? "#0077b6" : colors.subText} 
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  
+                  {/* Rating */}
+                  <View style={styles.pharmacyRatingRow}>
+                    <View style={styles.starsRow}>
+                      {renderStars(pharmacy.rating)}
+                    </View>
+                    <Text style={[styles.pharmacyRatingText, { color: colors.subText }]}>
+                      {pharmacy.rating} ({pharmacy.reviewsCount} avis)
+                    </Text>
+                  </View>
+                  
+                  <Text style={[styles.pharmacyDistance, { color: colors.subText }]}>{pharmacy.distance}</Text>
                 </View>
                 <Ionicons
                   name={
                     expandedId === pharmacy.id ? 'chevron-up' : 'chevron-down'
                   }
                   size={24}
-                  color="#666"
+                  color={colors.subText}
                 />
               </TouchableOpacity>
 
               {expandedId === pharmacy.id && (
-                <View style={styles.pharmacyDetails}>
+                <View style={[styles.pharmacyDetails, { borderTopColor: colors.border }]}>
                   {/* Image de la pharmacie */}
                   <View style={styles.pharmacyImageContainer}>
                     {pharmacy.image ? (
@@ -264,10 +368,10 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
                     )}
                   </View>
 
-                  <Text style={styles.pharmacyAddress}>
+                  <Text style={[styles.pharmacyAddress, { color: colors.subText }]}>
                     {pharmacy.address}, {pharmacy.city}
                   </Text>
-                  <Text style={styles.pharmacyPhone}>{pharmacy.phone}</Text>
+                  <Text style={[styles.pharmacyPhone, { color: colors.text }]}>{pharmacy.phone}</Text>
 
                   <View style={styles.pharmacyActions}>
                     <TouchableOpacity style={styles.dutyBadge}>
@@ -288,28 +392,31 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Bottom Navigation - Identique aux autres pages */}
-      <View style={styles.bottomNav}>
+      {/* Bottom Navigation */}
+      <View style={[styles.bottomNav, { 
+        backgroundColor: colors.card,
+        borderTopColor: colors.border
+      }]}>
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => onNavigate('home')}
         >
-          <Ionicons name="home-outline" size={24} color="#999" />
+          <Ionicons name="home-outline" size={24} color={colors.subText} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="chatbubble-outline" size={24} color="#999" />
+          <Ionicons name="chatbubble-outline" size={24} color={colors.subText} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="calendar-outline" size={24} color="#999" />
+          <Ionicons name="calendar-outline" size={24} color={colors.subText} />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.navItem}
           onPress={() => onNavigate('profile')}
         >
-          <Ionicons name="person-outline" size={24} color="#999" />
+          <Ionicons name="person-outline" size={24} color={colors.subText} />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -319,7 +426,6 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
   },
   header: {
     flexDirection: 'row',
@@ -327,8 +433,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
-    
   },
   backButton: {
     padding: 5,
@@ -336,7 +440,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
   },
   placeholder: {
     width: 34,
@@ -352,28 +455,23 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
     borderRadius: 25,
     paddingHorizontal: 15,
     paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
   },
   searchInput: {
     flex: 1,
     marginLeft: 10,
     fontSize: 14,
-    color: '#000',
   },
   filterButton: {
     width: 48,
     height: 48,
-    backgroundColor: '#fff',
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
   },
   filtersContainer: {
     paddingLeft: 20,
@@ -387,9 +485,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
   },
   filterChipActive: {
     backgroundColor: '#E3F2FD',
@@ -397,7 +493,6 @@ const styles = StyleSheet.create({
   },
   filterChipText: {
     fontSize: 14,
-    color: '#666',
     fontWeight: '500',
   },
   filterChipTextActive: {
@@ -406,21 +501,41 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 25,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 15,
+    gap: 8,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
-    paddingHorizontal: 20,
-    marginBottom: 15,
+    paddingLeft: 5,
+
   },
-  favoritesRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    gap: 15,
+  sectionTitle1: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    paddingLeft: 20,
   },
-  favoriteCard: {
-    flex: 1,
-    backgroundColor: '#fff',
+  sectionCount: {
+    fontSize: 14,
+    backgroundColor: '#E3F2FD',
+    color: '#0077b6',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  carouselContent: {
+    paddingRight: 20,
+  },
+  carouselCard: {
+    width: CARD_WIDTH,
+    marginLeft: CARD_MARGIN,
+    marginRight: CARD_MARGIN,
     borderRadius: 15,
     padding: 15,
     shadowColor: '#000',
@@ -428,6 +543,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  carouselCardFirst: {
+    marginLeft: 20,
   },
   favoriteHeader: {
     flexDirection: 'row',
@@ -439,12 +557,13 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '600',
-    color: '#000',
     marginRight: 10,
+  },
+  ratingContainer: {
+    marginBottom: 8,
   },
   favoriteAddress: {
     fontSize: 12,
-    color: '#666',
     marginBottom: 12,
     lineHeight: 18,
   },
@@ -459,8 +578,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
+  starsRow: {
+    flexDirection: 'row',
+    gap: 2,
+    marginBottom: 4,
+  },
+  ratingText: {
+    fontSize: 12,
+  },
   pharmacyCard: {
-    backgroundColor: '#fff',
     marginHorizontal: 20,
     marginBottom: 10,
     borderRadius: 12,
@@ -475,21 +601,33 @@ const styles = StyleSheet.create({
   pharmacyHeaderLeft: {
     flex: 1,
   },
+  pharmacyNameRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
   pharmacyName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    flex: 1,
+  },
+  pharmacyRatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 4,
+    gap: 8,
+  },
+  pharmacyRatingText: {
+    fontSize: 12,
   },
   pharmacyDistance: {
     fontSize: 14,
-    color: '#666',
   },
   pharmacyDetails: {
     paddingHorizontal: 20,
     paddingBottom: 20,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
     paddingTop: 15,
   },
   pharmacyImageContainer: {
@@ -511,12 +649,10 @@ const styles = StyleSheet.create({
   },
   pharmacyAddress: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 8,
   },
   pharmacyPhone: {
     fontSize: 14,
-    color: '#000',
     fontWeight: '500',
     marginBottom: 15,
   },
@@ -553,11 +689,9 @@ const styles = StyleSheet.create({
   bottomNav: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: '#fff',
     paddingVertical: 15,
     paddingBottom: 50,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
@@ -568,5 +702,4 @@ const styles = StyleSheet.create({
     padding: 5,
   },
 });
-
 export default PharmacyScreen;
