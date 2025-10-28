@@ -22,6 +22,17 @@ import NotificationDetailScreen from './app/screens/NotificationDetailScreen';
 import FavoritesScreen from './app/screens/FavoritesScreen';
 import LanguageScreen from './app/screens/LanguageScreen';
 import ThemeScreen from './app/screens/ThemeScreen';
+import SavedPaymentMethodsScreen from './app/screens/SavedPaymentMethodsScreen';
+import FAQsScreen from './app/screens/FAQsScreen';
+import EmergencyScreen from './app/screens/EmergencyScreen';
+import HealthInfoScreen from './app/screens/HealthInfoScreen';
+import SettingsScreen from './app/screens/SettingsScreen';
+import EditProfileScreen from './app/screens/EditProfileScreen';
+import PrivacySecurityScreen from './app/screens/PrivacySecurityScreen';
+import ChangePasswordScreen from './app/screens/ChangePasswordScreen';
+import TermsScreen from './app/screens/TermsScreen';
+import PrivacyPolicyScreen from './app/screens/PrivacyPolicyScreen';
+
 
 function AppContent() {
   const [currentScreen, setCurrentScreen] = useState('welcome');
@@ -121,8 +132,32 @@ function AppContent() {
         return <LanguageScreen onNavigate={handleNavigation} />;
       case 'theme':
         return <ThemeScreen onNavigate={handleNavigation} />;
+      case 'savedPaymentMethods':
+        return <SavedPaymentMethodsScreen onNavigate={handleNavigation} />;
+      case 'faqs':
+        return <FAQsScreen onNavigate={handleNavigation} />;
+      case 'emergency':
+        return <EmergencyScreen onNavigate={setCurrentScreen} />;
       default:
         return <WelcomeScreen onNavigate={handleNavigation} />;
+      case 'healthInfo':
+        return <HealthInfoScreen onNavigate={setCurrentScreen} />;
+      case 'editProfile':
+        return <EditProfileScreen onNavigate={setCurrentScreen} />;
+
+      case 'settings':
+        return <SettingsScreen onNavigate={setCurrentScreen} />;
+      case 'privacySecurity':
+        return <PrivacySecurityScreen onNavigate={setCurrentScreen} />;
+
+      case 'changePassword':
+        return <ChangePasswordScreen onNavigate={setCurrentScreen} />;
+
+      case 'terms':
+        return <TermsScreen onNavigate={setCurrentScreen} />;
+
+      case 'privacyPolicy':
+        return <PrivacyPolicyScreen onNavigate={setCurrentScreen} />;
     }
   };
 

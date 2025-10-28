@@ -5,6 +5,7 @@ import {
     StyleSheet,
     ScrollView,
     TouchableOpacity,
+    Image,
     Switch,
     Alert,
 } from 'react-native';
@@ -87,8 +88,10 @@ const ThemeScreen = ({ onNavigate }: ThemeScreenProps) => {
                         <Text style={[styles.sectionTitle, { color: colors.subText }]}>Aperçu</Text>
                         <View style={[styles.previewCard, { backgroundColor: colors.card }]}>
                             <View style={styles.previewHeader}>
-                                <Ionicons name="medical" size={30} color="#0077b6" />
-                                <Text style={[styles.previewText, { color: colors.text }]}>MyHospital</Text>
+                                <Image
+                                    source={require('../../assets/MyHospital1.png')}
+                                    style={{ width: 220, height: 60 }}
+                                />
                             </View>
                             <View style={styles.previewContent}>
                                 <View style={[styles.previewItem, { backgroundColor: colors.inputBackground }]} />

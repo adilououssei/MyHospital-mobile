@@ -64,7 +64,13 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
       onPress={() => screen && onNavigate(screen)}
     >
       <View style={styles.serviceIconContainer}>
-        <Ionicons name={icon as any} size={28} color="#0077b6" />
+        {label === 'Docteur' ? (
+          <FontAwesome5 name="user-md" size={28} color="#0077b6" />
+        ) : label === 'Ambulance' ? (
+          <FontAwesome5 name="ambulance" size={28} color="#0077b6" />
+        ) : (
+          <Ionicons name={icon as any} size={28} color="#0077b6" />
+        )}
       </View>
       <Text style={[styles.serviceLabel, { color: colors.subText }]}>{label}</Text>
     </TouchableOpacity>
@@ -98,8 +104,10 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={[styles.title, { color: colors.text }]}>Trouvez votre solution</Text>
-            <Text style={[styles.title, { color: colors.text }]}>santé désirée</Text>
+            <Image
+              source={require('../../assets/MyHospital1.png')}
+              style={{ width: 200, height: 60 }}
+            />
           </View>
           <TouchableOpacity
             style={styles.notificationButton}
@@ -131,7 +139,7 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
           <ServiceButton icon="medical-outline" label="Docteur" screen="doctorsList" />
           <ServiceButton icon="medkit-outline" label="Pharmacie" screen="pharmacy" />
           <ServiceButton icon="business-outline" label="Hôpital" screen="hospital" />
-          <ServiceButton icon="car-outline" label="Ambulance" />
+          <ServiceButton icon="car-outline" label="Ambulance" screen="emergency" />
         </View>
 
         {/* Banner */}
@@ -144,7 +152,10 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
           <View style={styles.bannerContent}>
             <Text style={styles.bannerTitle}>Protection précoce pour</Text>
             <Text style={styles.bannerTitle}>la santé de votre famille</Text>
-            <TouchableOpacity style={styles.bannerButton}>
+            <TouchableOpacity
+              style={styles.bannerButton}
+              onPress={() => onNavigate('healthInfo')}
+            >
               <Text style={styles.bannerButtonText}>En savoir plus</Text>
             </TouchableOpacity>
           </View>
@@ -225,6 +236,7 @@ const styles = StyleSheet.create({
   notificationButton: {
     padding: 8,
     position: 'relative',
+    marginTop: 15,
   },
   notificationBadge: {
     position: 'absolute',

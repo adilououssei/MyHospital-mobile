@@ -6,6 +6,7 @@ import {
     ScrollView,
     TouchableOpacity,
     Alert,
+    Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,6 +24,9 @@ interface Appointment {
     status: 'pending' | 'confirmed' | 'past' | 'rejected';
     consultationType: ConsultationType;
     doctorImage: any;
+    doctorPhone: string;
+    hospitalAddress?: string;
+    hospitalCoordinates?: { latitude: number; longitude: number };
 }
 
 interface AppointmentsScreenProps {
@@ -33,6 +37,8 @@ interface AppointmentsScreenProps {
 const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenProps) => {
     const { colors } = useApp();
     const [activeTab, setActiveTab] = useState<'pending' | 'confirmed' | 'past' | 'rejected'>('confirmed');
+    const [expandedId, setExpandedId] = useState<string | null>(null);
+    
     const [appointments, setAppointments] = useState<Appointment[]>([
         {
             id: '1',
@@ -43,6 +49,7 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
             status: 'confirmed',
             consultationType: 'online',
             doctorImage: null,
+            doctorPhone: '+33612345678',
         },
         {
             id: '2',
@@ -53,6 +60,9 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
             status: 'confirmed',
             consultationType: 'hospital',
             doctorImage: null,
+            doctorPhone: '+33623456789',
+            hospitalAddress: 'Hôpital Saint-Louis, 1 Avenue Claude Vellefaux, 75010 Paris',
+            hospitalCoordinates: { latitude: 48.8738, longitude: 2.3686 },
         },
         {
             id: '3',
@@ -63,6 +73,7 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
             status: 'past',
             consultationType: 'home',
             doctorImage: null,
+            doctorPhone: '+33634567890',
         },
         {
             id: '4',
@@ -73,6 +84,7 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
             status: 'pending',
             consultationType: 'online',
             doctorImage: null,
+            doctorPhone: '+33645678901',
         },
         {
             id: '5',
@@ -83,12 +95,33 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
             status: 'rejected',
             consultationType: 'hospital',
             doctorImage: null,
+            doctorPhone: '+33656789012',
+            hospitalAddress: 'Hôpital Necker, 149 Rue de Sèvres, 75015 Paris',
+            hospitalCoordinates: { latitude: 48.8486, longitude: 2.3161 },
         },
     ]);
 
     const filteredAppointments = appointments.filter(
         (apt) => apt.status === activeTab
     );
+
+    const toggleExpand = (id: string) => {
+        setExpandedId(expandedId === id ? null : id);
+    };
+
+    const handleCall = (phone: string) => {
+        Linking.openURL(`tel:${phone}`);
+    };
+
+    const handleWhatsApp = (phone: string) => {
+        const cleanPhone = phone.replace(/\+/g, '').replace(/\s/g, '');
+        Linking.openURL(`https://wa.me/${cleanPhone}`);
+    };
+
+    const handleGetDirections = (coordinates: { latitude: number; longitude: number }, address: string) => {
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${coordinates.latitude},${coordinates.longitude}`;
+        Linking.openURL(url);
+    };
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -156,7 +189,6 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
                 {
                     text: 'Oui',
                     onPress: () => {
-                        // Logique pour annuler le rendez-vous
                         console.log('Rendez-vous annulé:', id);
                     },
                     style: 'destructive'
@@ -166,7 +198,6 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
     };
 
     const handleRescheduleAppointment = (id: string) => {
-        // Naviguer vers l'écran de reprogrammation
         console.log('Reprogrammer le rendez-vous:', id);
         onNavigate('bookingType');
     };
@@ -192,7 +223,6 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
     };
 
     const handleJoinVideoCall = (id: string) => {
-        // Logique pour rejoindre la vidéoconférence
         Alert.alert(
             'Rejoindre la consultation',
             'Vous allez être redirigé vers la vidéoconférence',
@@ -205,7 +235,6 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
                     text: 'Rejoindre',
                     onPress: () => {
                         console.log('Rejoindre la vidéoconférence:', id);
-                        // Ici, vous pouvez naviguer vers votre écran de vidéoconférence
                     }
                 }
             ]
@@ -213,7 +242,6 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
     };
 
     const renderAppointmentActions = (appointment: Appointment) => {
-        // Pour les rendez-vous en attente
         if (appointment.status === 'pending') {
             return (
                 <View style={styles.appointmentActions}>
@@ -237,7 +265,6 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
             );
         }
 
-        // Pour les rendez-vous confirmés avec consultation en ligne
         if (appointment.status === 'confirmed' && appointment.consultationType === 'online') {
             return (
                 <View style={styles.appointmentActions}>
@@ -254,7 +281,6 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
             );
         }
 
-        // Pour les rendez-vous confirmés (autres que en ligne)
         if (appointment.status === 'confirmed') {
             return (
                 <View style={styles.appointmentActions}>
@@ -268,7 +294,6 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
             );
         }
 
-        // Pour les rendez-vous passés ou refusés
         if (appointment.status === 'past' || appointment.status === 'rejected') {
             return (
                 <View style={styles.appointmentActions}>
@@ -448,6 +473,66 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
                                     </View>
                                 </View>
 
+                                {/* Contact & Navigation */}
+                                <TouchableOpacity 
+                                    style={styles.expandButton}
+                                    onPress={() => toggleExpand(appointment.id)}
+                                >
+                                    <Text style={[styles.expandButtonText, { color: '#0077b6' }]}>
+                                        {expandedId === appointment.id ? 'Masquer les détails' : 'Plus de détails'}
+                                    </Text>
+                                    <Ionicons 
+                                        name={expandedId === appointment.id ? 'chevron-up' : 'chevron-down'} 
+                                        size={18} 
+                                        color="#0077b6" 
+                                    />
+                                </TouchableOpacity>
+
+                                {expandedId === appointment.id && (
+                                    <View style={[styles.expandedSection, { borderTopColor: colors.border }]}>
+                                        {/* Contact Buttons */}
+                                        <View style={styles.contactRow}>
+                                            <TouchableOpacity 
+                                                style={styles.contactButton}
+                                                onPress={() => handleCall(appointment.doctorPhone)}
+                                            >
+                                                <Ionicons name="call-outline" size={20} color="#0077b6" />
+                                                <Text style={styles.contactButtonText}>Appeler</Text>
+                                            </TouchableOpacity>
+                                            
+                                            <TouchableOpacity 
+                                                style={styles.contactButton}
+                                                onPress={() => handleWhatsApp(appointment.doctorPhone)}
+                                            >
+                                                <Ionicons name="logo-whatsapp" size={20} color="#25D366" />
+                                                <Text style={styles.contactButtonText}>WhatsApp</Text>
+                                            </TouchableOpacity>
+                                        </View>
+
+                                        {/* Hospital Address & Directions */}
+                                        {appointment.consultationType === 'hospital' && appointment.hospitalAddress && (
+                                            <View style={styles.addressSection}>
+                                                <View style={styles.addressRow}>
+                                                    <Ionicons name="location" size={16} color={colors.subText} />
+                                                    <Text style={[styles.addressText, { color: colors.subText }]}>
+                                                        {appointment.hospitalAddress}
+                                                    </Text>
+                                                </View>
+                                                <TouchableOpacity 
+                                                    style={styles.directionsButton}
+                                                    onPress={() => handleGetDirections(
+                                                        appointment.hospitalCoordinates!,
+                                                        appointment.hospitalAddress!
+                                                    )}
+                                                >
+                                                    <Ionicons name="navigate" size={18} color="#fff" />
+                                                    <Text style={styles.directionsButtonText}>Itinéraire</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        )}
+                                    </View>
+                                )}
+
                                 {renderAppointmentActions(appointment)}
                             </View>
                         ))
@@ -622,7 +707,7 @@ const styles = StyleSheet.create({
     appointmentInfo: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 15,
+        marginBottom: 12,
         paddingVertical: 10,
         borderRadius: 10,
         paddingHorizontal: 12,
@@ -648,6 +733,70 @@ const styles = StyleSheet.create({
     statusText: {
         fontSize: 13,
         fontWeight: '600',
+    },
+    expandButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        paddingVertical: 8,
+    },
+    expandButtonText: {
+        fontSize: 13,
+        fontWeight: '600',
+    },
+    expandedSection: {
+        borderTopWidth: 1,
+        paddingTop: 12,
+        marginTop: 8,
+        marginBottom: 12,
+    },
+    contactRow: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 12,
+    },
+    contactButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        paddingVertical: 10,
+        backgroundColor: '#F5F5F5',
+        borderRadius: 10,
+    },
+    contactButtonText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#333',
+    },
+    addressSection: {
+        gap: 10,
+    },
+    addressRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        gap: 8,
+    },
+    addressText: {
+        flex: 1,
+        fontSize: 12,
+        lineHeight: 18,
+    },
+    directionsButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        paddingVertical: 10,
+        backgroundColor: '#0077b6',
+        borderRadius: 10,
+    },
+    directionsButtonText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#fff',
     },
     appointmentActions: {
         flexDirection: 'row',

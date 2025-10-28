@@ -29,6 +29,7 @@ interface ProfileScreenProps {
 const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
   const { theme, language, colors } = useApp();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showMenuModal, setShowMenuModal] = useState(false);
 
   const menuItems: MenuItem[] = [
     {
@@ -69,6 +70,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
       label: 'Moyen de Paiement',
       iconColor: '#0077b6',
       bgColor: '#e4f4fcff',
+      screen: 'savedPaymentMethods',
     },
     {
       id: '6',
@@ -76,6 +78,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
       label: 'FAQs',
       iconColor: '#0077b6',
       bgColor: '#e4f4fcff',
+      screen: 'faqs',
     },
     {
       id: '7',
@@ -130,22 +133,28 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
         style={styles.headerGradient}
       >
         <SafeAreaView edges={['top']} style={styles.safeArea}>
-          {/* Menu Icon */}
-          <TouchableOpacity style={styles.menuButton}>
+          {/* Menu Icon with Dropdown */}
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={() => setShowMenuModal(true)}
+          >
             <Ionicons name="ellipsis-vertical" size={24} color="#fff" />
           </TouchableOpacity>
 
           {/* Profile Image */}
-          <View style={styles.profileImageContainer}>
+          <TouchableOpacity
+            style={styles.profileImageContainer}
+            onPress={() => onNavigate('editProfile')}
+          >
             <View style={styles.profileImageWrapper}>
               <View style={styles.profileImagePlaceholder}>
                 <Ionicons name="person" size={50} color="#0077b6" />
               </View>
-              <TouchableOpacity style={styles.editButton}>
-                <Ionicons name="camera" size={16} color="#fff" />
-              </TouchableOpacity>
+              <View style={styles.editButton}>
+                <Ionicons name="pencil" size={16} color="#fff" />
+              </View>
             </View>
-          </View>
+          </TouchableOpacity>
 
           {/* User Name */}
           <Text style={styles.userName}>Amelia Renata</Text>
@@ -217,6 +226,46 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
         </TouchableOpacity>
       </View>
 
+      {/* Menu Modal (Settings & Logout) */}
+      <Modal
+        visible={showMenuModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowMenuModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.menuModalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowMenuModal(false)}
+        >
+          <View style={[styles.menuModalContent, { backgroundColor: colors.card }]}>
+            <TouchableOpacity
+              style={styles.menuModalItem}
+              onPress={() => {
+                setShowMenuModal(false);
+                onNavigate('settings');
+              }}
+            >
+              <Ionicons name="settings-outline" size={22} color="#0077b6" />
+              <Text style={[styles.menuModalItemText, { color: colors.text }]}>Paramètres</Text>
+            </TouchableOpacity>
+
+            <View style={[styles.menuModalDivider, { backgroundColor: colors.border }]} />
+
+            <TouchableOpacity
+              style={styles.menuModalItem}
+              onPress={() => {
+                setShowMenuModal(false);
+                setShowLogoutModal(true);
+              }}
+            >
+              <Ionicons name="log-out-outline" size={22} color="#FF6B6B" />
+              <Text style={[styles.menuModalItemText, { color: '#FF6B6B' }]}>Déconnexion</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
       {/* Logout Modal */}
       <Modal
         visible={showLogoutModal}
@@ -268,6 +317,7 @@ const styles = StyleSheet.create({
     top: 20,
     right: 20,
     zIndex: 10,
+    padding: 5,
   },
   profileImageContainer: {
     alignItems: 'center',
@@ -388,6 +438,39 @@ const styles = StyleSheet.create({
   },
   navItem: {
     padding: 5,
+  },
+  menuModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-end',
+    paddingTop: 70,
+    paddingRight: 20,
+  },
+  menuModalContent: {
+    borderRadius: 12,
+    paddingVertical: 8,
+    minWidth: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  menuModalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+  },
+  menuModalItemText: {
+    fontSize: 15,
+    fontWeight: '500',
+    marginLeft: 15,
+  },
+  menuModalDivider: {
+    height: 1,
+    marginVertical: 4,
   },
   modalOverlay: {
     flex: 1,
