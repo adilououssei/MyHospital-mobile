@@ -152,30 +152,10 @@ const PrivacySecurityScreen = ({ onNavigate }: PrivacySecurityScreenProps) => {
                         value={faceId}
                         onValueChange={setFaceId}
                     />
-                    <ToggleItem
-                        icon="shield-checkmark-outline"
-                        title="Authentification à deux facteurs"
-                        subtitle="Protection supplémentaire pour votre compte"
-                        value={twoFactorAuth}
-                        onValueChange={setTwoFactorAuth}
-                    />
-                    <ActionItem
-                        icon="time-outline"
-                        title="Historique de connexion"
-                        subtitle="Voir les appareils connectés"
-                        onPress={() => Alert.alert('Historique', 'Aucune connexion suspecte détectée')}
-                    />
                 </SettingsSection>
 
                 {/* Confidentialité */}
                 <SettingsSection title="CONFIDENTIALITÉ DES DONNÉES">
-                    <ToggleItem
-                        icon="eye-outline"
-                        title="Profil public"
-                        subtitle="Autoriser les autres utilisateurs à voir votre profil"
-                        value={profileVisibility}
-                        onValueChange={setProfileVisibility}
-                    />
                     <ToggleItem
                         icon="fitness-outline"
                         title="Partager les données de santé"

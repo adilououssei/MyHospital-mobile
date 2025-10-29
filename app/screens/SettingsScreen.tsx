@@ -191,27 +191,32 @@ const SettingsScreen = ({ onNavigate }: SettingsScreenProps) => {
                     />
                 </SettingsSection>
 
+                {/* Payment */}
+                <SettingsSection title="PAIEMENT">
+                    <SettingsItem
+                        icon="card-outline"
+                        title="Moyens de paiement"
+                        subtitle="Gérer vos moyens de paiement"
+                        onPress={() => onNavigate('savedPaymentMethods')}
+                    />
+                    <SettingsItem
+                        icon="receipt-outline"
+                        title="Historique des transactions"
+                        onPress={() => onNavigate('transactionHistory')}
+                    />
+                </SettingsSection>
+
                 {/* Support */}
                 <SettingsSection title="AIDE ET SUPPORT">
                     <SettingsItem
                         icon="help-circle-outline"
-                        title="Centre d'aide"
+                        title="Centre d'aide (FAQs)"
                         onPress={() => onNavigate('faqs')}
-                    />
-                    <SettingsItem
-                        icon="chatbubbles-outline"
-                        title="Contacter le support"
-                        onPress={() => console.log('Contact support')}
                     />
                     <SettingsItem
                         icon="document-text-outline"
                         title="Conditions d'utilisation"
-                        onPress={() => console.log('Terms')}
-                    />
-                    <SettingsItem
-                        icon="shield-outline"
-                        title="Politique de confidentialité"
-                        onPress={() => console.log('Privacy policy')}
+                        onPress={() => onNavigate('terms')}
                     />
                 </SettingsSection>
 
@@ -226,7 +231,7 @@ const SettingsScreen = ({ onNavigate }: SettingsScreenProps) => {
                     <SettingsItem
                         icon="star-outline"
                         title="Noter l'application"
-                        onPress={() => console.log('Rate app')}
+                        onPress={() => onNavigate('rateApp')}
                     />
                     <SettingsItem
                         icon="share-social-outline"

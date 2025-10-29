@@ -32,6 +32,9 @@ import PrivacySecurityScreen from './app/screens/PrivacySecurityScreen';
 import ChangePasswordScreen from './app/screens/ChangePasswordScreen';
 import TermsScreen from './app/screens/TermsScreen';
 import PrivacyPolicyScreen from './app/screens/PrivacyPolicyScreen';
+import RateAppScreen from './app/screens/RateAppScreen';
+import TransactionHistoryScreen from './app/screens/TransactionHistoryScreen';
+import PrescriptionsScreen from './app/screens/PrescriptionsScreen';
 
 
 function AppContent() {
@@ -158,6 +161,14 @@ function AppContent() {
 
       case 'privacyPolicy':
         return <PrivacyPolicyScreen onNavigate={setCurrentScreen} />;
+      case 'rateApp':
+        return <RateAppScreen onNavigate={handleNavigation} />;
+      case 'terms':
+        return <TermsScreen onNavigate={handleNavigation} />;
+      case 'transactionHistory':
+        return <TransactionHistoryScreen onNavigate={handleNavigation} />;
+      case 'prescriptions':
+        return <PrescriptionsScreen onNavigate={handleNavigation} />;
     }
   };
 

@@ -8,9 +8,11 @@ import {
   TextInput,
   Alert,
   Modal,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useApp } from '../context/AppContext';
 
 interface EditProfileScreenProps {
@@ -32,8 +34,10 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
     weight: '47',
   });
 
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showBloodGroupPicker, setShowBloodGroupPicker] = useState(false);
+  const [showPhotoOptions, setShowPhotoOptions] = useState(false);
 
   // Date picker state
   const [selectedDay, setSelectedDay] = useState<number>(15);
@@ -58,6 +62,80 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
   const years = Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i);
 
   const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+
+  const requestPermissions = async () => {
+    const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
+    const { status: galleryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (cameraStatus !== 'granted' || galleryStatus !== 'granted') {
+      Alert.alert(
+        'Permissions requises',
+        'Nous avons besoin de la permission d\'accéder à votre caméra et galerie.'
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const handleTakePhoto = async () => {
+    setShowPhotoOptions(false);
+    
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) return;
+
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setProfileImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de prendre la photo');
+    }
+  };
+
+  const handleChooseFromGallery = async () => {
+    setShowPhotoOptions(false);
+    
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) return;
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setProfileImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de sélectionner la photo');
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setShowPhotoOptions(false);
+    Alert.alert(
+      'Supprimer la photo',
+      'Voulez-vous vraiment supprimer votre photo de profil ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: () => setProfileImage(null),
+        },
+      ]
+    );
+  };
 
   const handleSave = () => {
     Alert.alert(
@@ -162,15 +240,24 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
         <View style={styles.profileSection}>
           <View style={styles.profileImageContainer}>
             <View style={[styles.profileImagePlaceholder, { backgroundColor: colors.card }]}>
-              <Ionicons name="person" size={60} color="#0077b6" />
+              {profileImage ? (
+                <Image source={{ uri: profileImage }} style={styles.profileImage} />
+              ) : (
+                <Ionicons name="person" size={60} color="#0077b6" />
+              )}
             </View>
-            <TouchableOpacity style={styles.changePhotoButton}>
+            <TouchableOpacity 
+              style={styles.changePhotoButton}
+              onPress={() => setShowPhotoOptions(true)}
+            >
               <Ionicons name="camera" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
-          <Text style={[styles.changePhotoText, { color: colors.text }]}>
-            Changer la photo
-          </Text>
+          <TouchableOpacity onPress={() => setShowPhotoOptions(true)}>
+            <Text style={[styles.changePhotoText, { color: colors.text }]}>
+              Changer la photo
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Form Fields */}
@@ -278,6 +365,68 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Photo Options Modal */}
+      <Modal
+        visible={showPhotoOptions}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowPhotoOptions(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.photoOptionsModal, { backgroundColor: colors.card }]}>
+            <View style={styles.photoOptionsHeader}>
+              <Text style={[styles.photoOptionsTitle, { color: colors.text }]}>
+                Photo de profil
+              </Text>
+              <TouchableOpacity onPress={() => setShowPhotoOptions(false)}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.photoOption, { backgroundColor: colors.inputBackground }]}
+              onPress={handleTakePhoto}
+            >
+              <View style={styles.photoOptionIcon}>
+                <Ionicons name="camera" size={24} color="#0077b6" />
+              </View>
+              <Text style={[styles.photoOptionText, { color: colors.text }]}>
+                Prendre une photo
+              </Text>
+              <Ionicons name="chevron-forward" size={20} color={colors.subText} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.photoOption, { backgroundColor: colors.inputBackground }]}
+              onPress={handleChooseFromGallery}
+            >
+              <View style={styles.photoOptionIcon}>
+                <Ionicons name="images" size={24} color="#0077b6" />
+              </View>
+              <Text style={[styles.photoOptionText, { color: colors.text }]}>
+                Choisir depuis la galerie
+              </Text>
+              <Ionicons name="chevron-forward" size={20} color={colors.subText} />
+            </TouchableOpacity>
+
+            {profileImage && (
+              <TouchableOpacity
+                style={[styles.photoOption, { backgroundColor: colors.inputBackground }]}
+                onPress={handleRemovePhoto}
+              >
+                <View style={styles.photoOptionIcon}>
+                  <Ionicons name="trash-outline" size={24} color="#FF6B6B" />
+                </View>
+                <Text style={[styles.photoOptionText, { color: '#FF6B6B' }]}>
+                  Supprimer la photo
+                </Text>
+                <Ionicons name="chevron-forward" size={20} color="#FF6B6B" />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </Modal>
 
       {/* Date Picker Modal */}
       <Modal
@@ -419,6 +568,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 3,
     borderColor: '#0077b6',
+    overflow: 'hidden',
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
   },
   changePhotoButton: {
     position: 'absolute',
@@ -517,6 +671,45 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
+  },
+  photoOptionsModal: {
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    paddingBottom: 30,
+  },
+  photoOptionsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  photoOptionsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  photoOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    marginHorizontal: 20,
+    marginTop: 12,
+    borderRadius: 12,
+  },
+  photoOptionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#e4f4fcff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  photoOptionText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
   },
   pickerModal: {
     borderTopLeftRadius: 25,

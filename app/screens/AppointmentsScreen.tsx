@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
     },
     activeTabText: {
         color: '#fff',
-        fontWeight: '600',
+        fontWeight: '500',
     },
     appointmentsList: {
         paddingHorizontal: 20,

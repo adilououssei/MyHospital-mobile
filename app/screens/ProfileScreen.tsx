@@ -50,6 +50,14 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
     },
     {
       id: '3',
+      icon: 'document-text-outline',
+      label: 'Mes Ordonnances',
+      iconColor: '#0077b6',
+      bgColor: '#e4f4fcff',
+      screen: 'prescriptions',
+    },
+    {
+      id: '4',
       icon: 'language-outline',
       label: 'Langue',
       iconColor: '#0077b6',
@@ -57,7 +65,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
       screen: 'language',
     },
     {
-      id: '4',
+      id: '5',
       icon: theme === 'dark' ? 'moon' : 'moon-outline',
       label: `Mode ${theme === 'dark' ? 'sombre' : 'clair'}`,
       iconColor: '#0077b6',
@@ -65,7 +73,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
       screen: 'theme',
     },
     {
-      id: '5',
+      id: '6',
       icon: 'card-outline',
       label: 'Moyen de Paiement',
       iconColor: '#0077b6',
@@ -73,7 +81,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
       screen: 'savedPaymentMethods',
     },
     {
-      id: '6',
+      id: '7',
       icon: 'help-circle-outline',
       label: 'FAQs',
       iconColor: '#0077b6',
@@ -81,7 +89,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
       screen: 'faqs',
     },
     {
-      id: '7',
+      id: '8',
       icon: 'log-out-outline',
       label: 'Déconnexion',
       iconColor: '#FF6B6B',
@@ -318,6 +326,7 @@ const styles = StyleSheet.create({
     right: 20,
     zIndex: 10,
     padding: 5,
+    marginTop: 25,
   },
   profileImageContainer: {
     alignItems: 'center',
