@@ -4,11 +4,11 @@ import {
     Text,
     StyleSheet,
     ScrollView,
-    TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
+import ScreenHeader from '../tabs/ScreenHeader';
 
 interface PrivacyPolicyScreenProps {
     onNavigate: (screen: string) => void;
@@ -71,18 +71,10 @@ const PrivacyPolicyScreen = ({ onNavigate }: PrivacyPolicyScreenProps) => {
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
             {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => onNavigate('settings')}
-                >
-                    <Ionicons name="arrow-back" size={24} color={colors.text} />
-                </TouchableOpacity>
-                <Text style={[styles.headerTitle, { color: colors.text }]}>
-                    Politique de confidentialité
-                </Text>
-                <View style={{ width: 40 }} />
-            </View>
+            <ScreenHeader 
+                title="Politique de confidentialité"
+                onBack={() => onNavigate('settings')}
+            />
 
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.content}>
@@ -147,20 +139,6 @@ const PrivacyPolicyScreen = ({ onNavigate }: PrivacyPolicyScreenProps) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingVertical: 15,
-    },
-    backButton: {
-        padding: 5,
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
     },
     content: {
         paddingHorizontal: 20,

@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useApp } from '../context/AppContext';
+import BottomNavigation from '../tabs/BottomNavigation';
 
 interface Doctor {
   id: string;
@@ -192,27 +193,12 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Bottom Navigation */}
-      <View style={[styles.bottomNav, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="home" size={24} color="#0077b6" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="chatbubble-outline" size={24} color={colors.subText} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => onNavigate('appointments')}
-        >
-          <Ionicons name="calendar-outline" size={24} color={colors.subText} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => onNavigate('profile')}
-        >
-          <Ionicons name="person-outline" size={24} color={colors.subText} />
-        </TouchableOpacity>
-      </View>
+      {/* Bottom Navigation - Composant réutilisable */}
+      <BottomNavigation 
+        currentScreen="home" 
+        onNavigate={onNavigate}
+        unreadCount={unreadCount}
+      />
     </SafeAreaView>
   );
 };
@@ -228,10 +214,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 10,
     paddingBottom: 20,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: 'bold',
   },
   notificationButton: {
     padding: 8,
@@ -411,25 +393,6 @@ const styles = StyleSheet.create({
   distanceText: {
     fontSize: 12,
     marginLeft: 2,
-  },
-  bottomNav: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 15,
-    paddingBottom: 50,
-    borderTopWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 10,
-  },
-  navItem: {
-    padding: 5,
   },
 });
 

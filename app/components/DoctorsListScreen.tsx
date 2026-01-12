@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useApp } from '../context/AppContext';
+import ScreenHeader from '../tabs/ScreenHeader';
 
 interface Doctor {
   id: string;
@@ -89,20 +90,11 @@ const DoctorsListScreen = ({
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { 
-        backgroundColor: colors.card,
-        borderBottomColor: colors.border
-      }]}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => onNavigate('bookingType')}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Choisir un médecin</Text>
-        <View style={styles.placeholder} />
-      </View>
+      {/* Header avec composant réutilisable */}
+      <ScreenHeader
+        title="Choisir un médecin"
+        onBack={() => onNavigate('bookingType')}
+      />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
@@ -179,24 +171,6 @@ const DoctorsListScreen = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-  },
-  backButton: {
-    padding: 5,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  placeholder: {
-    width: 34,
   },
   content: {
     padding: 20,

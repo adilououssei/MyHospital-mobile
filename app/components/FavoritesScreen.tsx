@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
+import ScreenHeader from '../tabs/ScreenHeader';
 
 interface FavoriteItem {
     id: string;
@@ -80,17 +81,11 @@ const FavoritesScreen = ({ onNavigate }: FavoritesScreenProps) => {
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-            {/* Header */}
-            <View style={[styles.header, { backgroundColor: colors.card }]}>
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => onNavigate('profile')}
-                >
-                    <Ionicons name="arrow-back" size={24} color={colors.text} />
-                </TouchableOpacity>
-                <Text style={[styles.headerTitle, { color: colors.text }]}>Mes Favoris</Text>
-                <View style={styles.placeholder} />
-            </View>
+            {/* Header - Composant réutilisable */}
+            <ScreenHeader
+                title="Mes Favoris"
+                onBack={() => onNavigate('profile')}
+            />
 
             {/* Tabs */}
             <View style={[styles.tabsContainer, { backgroundColor: colors.card }]}>
@@ -231,23 +226,6 @@ const FavoritesScreen = ({ onNavigate }: FavoritesScreenProps) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingVertical: 15,
-    },
-    backButton: {
-        padding: 5,
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-    },
-    placeholder: {
-        width: 34,
     },
     tabsContainer: {
         flexDirection: 'row',

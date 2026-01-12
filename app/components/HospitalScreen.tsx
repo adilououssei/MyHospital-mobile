@@ -12,6 +12,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
+import ScreenHeader from '../tabs/ScreenHeader';
+import BottomNavigation from '../tabs/BottomNavigation';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.45;
@@ -172,16 +174,10 @@ const HospitalScreen = ({ onNavigate }: HospitalScreenProps) => {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.card }]}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => onNavigate('home')}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Hôpitaux</Text>
-        <View style={styles.placeholder} />
-      </View>
+      <ScreenHeader 
+        title="Hôpitaux"
+        onBack={() => onNavigate('home')}
+      />
 
       <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false}>
         {/* Search Bar */}
@@ -415,32 +411,10 @@ const HospitalScreen = ({ onNavigate }: HospitalScreenProps) => {
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View style={[styles.bottomNav, { 
-        backgroundColor: colors.card,
-        borderTopColor: colors.border
-      }]}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => onNavigate('home')}
-        >
-          <Ionicons name="home-outline" size={24} color={colors.subText} />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="chatbubble-outline" size={24} color={colors.subText} />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="calendar-outline" size={24} color={colors.subText} />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => onNavigate('profile')}
-        >
-          <Ionicons name="person-outline" size={24} color={colors.subText} />
-        </TouchableOpacity>
-      </View>
+      <BottomNavigation 
+        currentScreen="hospitals"
+        onNavigate={onNavigate}
+      />
     </SafeAreaView>
   );
 };
@@ -448,23 +422,6 @@ const HospitalScreen = ({ onNavigate }: HospitalScreenProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-  },
-  backButton: {
-    padding: 5,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  placeholder: {
-    width: 34,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -729,21 +686,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 15,
-    paddingBottom: 50,
-    borderTopWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 10,
-  },
-  navItem: {
-    padding: 5,
   },
 });
 

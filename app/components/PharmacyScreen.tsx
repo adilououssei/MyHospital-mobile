@@ -12,6 +12,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
+import BottomNavigation from '../tabs/BottomNavigation';
+import ScreenHeader from '../tabs/ScreenHeader';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.45;
@@ -167,16 +169,13 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.card }]}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => onNavigate('home')}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Pharmacies de garde</Text>
-        <View style={styles.placeholder} />
-      </View>
+      <ScreenHeader
+        title="Pharmacies de garde"
+        onBack={() => onNavigate("home")}
+        showNotification={true}
+        unreadCount={4}
+        onNotificationPress={() => onNavigate("messages")}
+      />
 
       <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false}>
         {/* Search Bar */}
@@ -393,32 +392,10 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View style={[styles.bottomNav, { 
-        backgroundColor: colors.card,
-        borderTopColor: colors.border
-      }]}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => onNavigate('home')}
-        >
-          <Ionicons name="home-outline" size={24} color={colors.subText} />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="chatbubble-outline" size={24} color={colors.subText} />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="calendar-outline" size={24} color={colors.subText} />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => onNavigate('profile')}
-        >
-          <Ionicons name="person-outline" size={24} color={colors.subText} />
-        </TouchableOpacity>
-      </View>
+       <BottomNavigation
+        currentScreen="pharmacy"
+        onNavigate={onNavigate}
+      />
     </SafeAreaView>
   );
 };

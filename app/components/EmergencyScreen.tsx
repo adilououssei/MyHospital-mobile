@@ -1,3 +1,4 @@
+// EmergencyScreen.tsx
 import React, { useEffect, useRef } from 'react';
 import {
   View,
@@ -12,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useApp } from '../context/AppContext';
+import ScreenHeader from '../tabs/ScreenHeader';
 
 interface EmergencyScreenProps {
   onNavigate: (screen: string) => void;
@@ -23,7 +25,6 @@ const EmergencyScreen = ({ onNavigate }: EmergencyScreenProps) => {
   const opacityAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    // Animation de pulsation
     const pulse = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
@@ -39,7 +40,6 @@ const EmergencyScreen = ({ onNavigate }: EmergencyScreenProps) => {
       ])
     );
 
-    // Animation de clignotement
     const blink = Animated.loop(
       Animated.sequence([
         Animated.timing(opacityAnim, {
@@ -90,19 +90,11 @@ const EmergencyScreen = ({ onNavigate }: EmergencyScreenProps) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => onNavigate('home')}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>
-          Urgences
-        </Text>
-        <View style={{ width: 40 }} />
-      </View>
+      {/* Header avec composant réutilisable */}
+      <ScreenHeader
+        title="Urgences"
+        onBack={() => onNavigate('home')}
+      />
 
       {/* Content */}
       <View style={styles.content}>
@@ -157,20 +149,6 @@ const EmergencyScreen = ({ onNavigate }: EmergencyScreenProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-  },
-  backButton: {
-    padding: 5,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
   },
   content: {
     flex: 1,

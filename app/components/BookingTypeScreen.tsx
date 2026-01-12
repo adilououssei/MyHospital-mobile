@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
+import ScreenHeader from '../tabs/ScreenHeader';
 
 interface BookingTypeScreenProps {
   onNavigate: (screen: string, params?: any) => void;
@@ -37,7 +38,7 @@ const BookingTypeScreen = ({ onNavigate }: BookingTypeScreenProps) => {
     },
     {
       id: 'hospital',
-      title: 'Consultation à l\'hôpital',
+      title: "Consultation à l'hôpital",
       icon: 'business',
       description: 'Rendez-vous en présentiel',
     },
@@ -57,17 +58,11 @@ const BookingTypeScreen = ({ onNavigate }: BookingTypeScreenProps) => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => onNavigate('appointments')}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Nouveau rendez-vous</Text>
-        <View style={styles.placeholder} />
-      </View>
+      {/* Header avec composant réutilisable */}
+      <ScreenHeader
+        title="Nouveau rendez-vous"
+        onBack={() => onNavigate('appointments')}
+      />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -99,7 +94,7 @@ const BookingTypeScreen = ({ onNavigate }: BookingTypeScreenProps) => {
               Choisissez le type de consultation qui vous convient
             </Text>
 
-            {/* Consultation Types - Version compacte en grille */}
+            {/* Consultation Types */}
             <View style={styles.typesGrid}>
               {consultationTypes.map((type) => (
                 <TouchableOpacity
@@ -193,24 +188,6 @@ const BookingTypeScreen = ({ onNavigate }: BookingTypeScreenProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-  },
-  backButton: {
-    padding: 5,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  placeholder: {
-    width: 34,
   },
   keyboardAvoidingView: {
     flex: 1,

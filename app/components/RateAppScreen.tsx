@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -8,10 +8,12 @@ import {
     TextInput,
     Alert,
     Modal,
+    BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
+import ScreenHeader from '../tabs/ScreenHeader';
 
 interface RateAppScreenProps {
     onNavigate: (screen: string) => void;
@@ -23,6 +25,18 @@ const RateAppScreen = ({ onNavigate }: RateAppScreenProps) => {
     const [hoveredRating, setHoveredRating] = useState(0);
     const [comment, setComment] = useState('');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+    // Gérer le bouton retour Android
+    useEffect(() => {
+        const backHandler = BackHandler.addEventListener(
+            'hardwareBackPress',
+            () => {
+                onNavigate('settings');
+                return true;
+            }
+        );
+        return () => backHandler.remove();
+    }, [onNavigate]);
 
     const ratingLabels = [
         { stars: 1, label: 'Très mauvais', emoji: '😞' },
@@ -43,7 +57,6 @@ const RateAppScreen = ({ onNavigate }: RateAppScreenProps) => {
             return;
         }
 
-        // Ici, vous enverrez les données au backend
         console.log('Rating:', rating);
         console.log('Comment:', comment);
 
@@ -57,19 +70,11 @@ const RateAppScreen = ({ onNavigate }: RateAppScreenProps) => {
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-            {/* Header */}
-            <View style={[styles.header, { backgroundColor: colors.card }]}>
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => onNavigate('settings')}
-                >
-                    <Ionicons name="arrow-back" size={24} color={colors.text} />
-                </TouchableOpacity>
-                <Text style={[styles.headerTitle, { color: colors.text }]}>
-                    Noter l'application
-                </Text>
-                <View style={styles.placeholder} />
-            </View>
+            {/* Header avec composant réutilisable */}
+            <ScreenHeader
+                title="Noter l'application"
+                onBack={() => onNavigate('settings')}
+            />
 
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.content}>
@@ -138,6 +143,7 @@ const RateAppScreen = ({ onNavigate }: RateAppScreenProps) => {
                                 multiline
                                 numberOfLines={6}
                                 textAlignVertical="top"
+                                maxLength={500}
                             />
                         </View>
                         <Text style={[styles.commentHint, { color: colors.subText }]}>
@@ -225,23 +231,6 @@ const RateAppScreen = ({ onNavigate }: RateAppScreenProps) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingVertical: 15,
-    },
-    backButton: {
-        padding: 5,
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-    },
-    placeholder: {
-        width: 34,
     },
     content: {
         padding: 20,

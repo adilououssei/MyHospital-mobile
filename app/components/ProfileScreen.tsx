@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useApp } from '../context/AppContext';
+import BottomNavigation from '../tabs/BottomNavigation';
 
 interface MenuItem {
   id: string;
@@ -30,6 +31,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
   const { theme, language, colors } = useApp();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showMenuModal, setShowMenuModal] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const menuItems: MenuItem[] = [
     {
@@ -213,26 +215,11 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View style={[styles.bottomNav, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => onNavigate('home')}
-        >
-          <Ionicons name="home-outline" size={24} color={colors.subText} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="chatbubble-outline" size={24} color={colors.subText} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => onNavigate('appointments')}
-        >
-          <Ionicons name="calendar-outline" size={24} color={colors.subText} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="person" size={24} color="#0077b6" />
-        </TouchableOpacity>
-      </View>
+      <BottomNavigation
+        currentScreen="profile"
+        onNavigate={onNavigate}
+        unreadCount={unreadCount}
+      />
 
       {/* Menu Modal (Settings & Logout) */}
       <Modal

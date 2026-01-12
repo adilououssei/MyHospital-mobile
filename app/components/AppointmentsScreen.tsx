@@ -12,6 +12,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useApp } from '../context/AppContext';
+import ScreenHeader from '../tabs/ScreenHeader';
+import BottomNavigation from '../tabs/BottomNavigation';
 
 type ConsultationType = 'online' | 'home' | 'hospital';
 
@@ -158,7 +160,7 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
             case 'home':
                 return 'À domicile';
             case 'hospital':
-                return 'À l\'hôpital';
+                return "À l'hôpital";
             default:
                 return type;
         }
@@ -315,23 +317,13 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-            {/* Header */}
-            <View style={[styles.header, { backgroundColor: colors.background }]}>
-                <Text style={[styles.headerTitle, { color: colors.text }]}>Rendez-vous</Text>
-                <TouchableOpacity
-                    style={styles.notificationButton}
-                    onPress={() => onNavigate('notifications')}
-                >
-                    <Ionicons name="notifications-outline" size={24} color={colors.text} />
-                    {unreadCount > 0 && (
-                        <View style={styles.notificationBadge}>
-                            <Text style={styles.notificationBadgeText}>
-                                {unreadCount > 9 ? '9+' : unreadCount}
-                            </Text>
-                        </View>
-                    )}
-                </TouchableOpacity>
-            </View>
+            {/* Header avec composant réutilisable */}
+            <ScreenHeader
+                title="Rendez-vous"
+                showNotification={true}
+                unreadCount={unreadCount}
+                onNotificationPress={() => onNavigate('notifications')}
+            />
 
             {/* Tabs */}
             <View style={styles.tabsContainer}>
@@ -434,7 +426,6 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
                                     </View>
                                 </View>
 
-                                {/* Consultation Type Badge */}
                                 <View style={[styles.consultationTypeBadge, { backgroundColor: colors.inputBackground }]}>
                                     <Ionicons 
                                         name={getConsultationTypeIcon(appointment.consultationType)} 
@@ -473,7 +464,6 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
                                     </View>
                                 </View>
 
-                                {/* Contact & Navigation */}
                                 <TouchableOpacity 
                                     style={styles.expandButton}
                                     onPress={() => toggleExpand(appointment.id)}
@@ -490,7 +480,6 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
 
                                 {expandedId === appointment.id && (
                                     <View style={[styles.expandedSection, { borderTopColor: colors.border }]}>
-                                        {/* Contact Buttons */}
                                         <View style={styles.contactRow}>
                                             <TouchableOpacity 
                                                 style={styles.contactButton}
@@ -509,7 +498,6 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
                                             </TouchableOpacity>
                                         </View>
 
-                                        {/* Hospital Address & Directions */}
                                         {appointment.consultationType === 'hospital' && appointment.hospitalAddress && (
                                             <View style={styles.addressSection}>
                                                 <View style={styles.addressRow}>
@@ -557,30 +545,12 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
                 <Ionicons name="add" size={32} color="#fff" />
             </TouchableOpacity>
 
-            {/* Bottom Navigation */}
-            <View style={[styles.bottomNav, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
-                <TouchableOpacity
-                    style={styles.navItem}
-                    onPress={() => onNavigate('home')}
-                >
-                    <Ionicons name="home-outline" size={24} color={colors.subText} />
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.navItem}>
-                    <Ionicons name="chatbubble-outline" size={24} color={colors.subText} />
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.navItem}>
-                    <Ionicons name="calendar" size={24} color="#0077b6" />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={styles.navItem}
-                    onPress={() => onNavigate('profile')}
-                >
-                    <Ionicons name="person-outline" size={24} color={colors.subText} />
-                </TouchableOpacity>
-            </View>
+            {/* Bottom Navigation avec composant réutilisable */}
+            <BottomNavigation
+                currentScreen="appointments"
+                onNavigate={onNavigate}
+                unreadCount={unreadCount}
+            />
         </SafeAreaView>
     );
 };
@@ -588,40 +558,6 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingVertical: 15,
-    },
-    headerTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-    },
-    notificationButton: {
-        padding: 8,
-        position: 'relative',
-    },
-    notificationBadge: {
-        position: 'absolute',
-        top: 5,
-        right: 5,
-        backgroundColor: '#FF6B6B',
-        borderRadius: 10,
-        minWidth: 20,
-        height: 20,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 5,
-        borderWidth: 2,
-        borderColor: '#fff',
-    },
-    notificationBadgeText: {
-        color: '#fff',
-        fontSize: 11,
-        fontWeight: 'bold',
     },
     tabsContainer: {
         flexDirection: 'row',
@@ -891,21 +827,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.4,
         shadowRadius: 8,
         elevation: 8,
-    },
-    bottomNav: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        paddingVertical: 15,
-        paddingBottom: 50,
-        borderTopWidth: 1,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 10,
-    },
-    navItem: {
-        padding: 5,
     },
 });
 

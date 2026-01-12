@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useApp } from '../context/AppContext';
+import ScreenHeader from '../tabs/ScreenHeader';
 
 interface DoctorDetailScreenProps {
   onNavigate: (screen: string, params?: any) => void;
@@ -41,7 +42,7 @@ const DoctorDetailScreen = ({
     '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00',
   ];
 
-  const confirmationFee = 2000; // Frais de confirmation
+  const confirmationFee = 2000;
 
   const handleNext = () => {
     if (!selectedDate || !selectedTime) {
@@ -62,19 +63,12 @@ const DoctorDetailScreen = ({
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.card }]}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => onNavigate('doctorsList')}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Détails du médecin</Text>
-        <TouchableOpacity style={styles.menuButton}>
-          <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />
-        </TouchableOpacity>
-      </View>
+      {/* Header avec composant réutilisable */}
+      <ScreenHeader
+        title="Détails du médecin"
+        onBack={() => onNavigate('doctorsList')}
+        rightIcon="ellipsis-vertical"
+      />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
@@ -265,23 +259,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingBottom: 30,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-  },
-  backButton: {
-    padding: 5,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  menuButton: {
-    padding: 5,
   },
   content: {
     padding: 20,
