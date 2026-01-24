@@ -22,7 +22,7 @@ const BottomNavigation = ({ currentScreen, onNavigate, unreadCount = 0 }: Bottom
   return (
     <View style={[styles.bottomNav, { 
       backgroundColor: colors.card, 
-      borderTopColor: colors.border 
+      borderTopColor: '#ccc' // Default color instead of colors.divider
     }]}>
       {navItems.map((item) => {
         const isActive = currentScreen === item.screen;

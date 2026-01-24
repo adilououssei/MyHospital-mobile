@@ -9,9 +9,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import authService from '../services/authService';
+import { useAuth } from '../context/AppContext';
 
 interface LoginScreenProps {
   onNavigate: (screen: string) => void;
@@ -24,30 +28,63 @@ const LoginScreen = ({ onNavigate }: LoginScreenProps) => {
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const { login: saveUser } = useAuth();
 
   const validateEmail = (text: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(text);
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setEmailError(false);
     setPasswordError(false);
+    setErrorMessage('');
 
-    // Validation simple
+    // Validation côté client
     if (!validateEmail(email)) {
       setEmailError(true);
+      setErrorMessage('Email invalide');
       return;
     }
 
-    // Simulation d'une vérification de mot de passe
     if (password.length < 6) {
       setPasswordError(true);
+      setErrorMessage('Mot de passe trop court');
       return;
     }
 
-    // Afficher le modal de succès
-    setShowSuccessModal(true);
+    // Appel API
+    setIsLoading(true);
+
+    try {
+      const response = await authService.login({
+        email: email.trim(),
+        password: password,
+      });
+
+      setIsLoading(false);
+
+      if (response.status === 'success' && response.user) {
+        // Sauvegarder l'utilisateur dans le contexte
+        await saveUser(response.user);
+        
+        // Afficher le modal de succès
+        setShowSuccessModal(true);
+      } else {
+        // Afficher l'erreur
+        setPasswordError(true);
+        setErrorMessage(response.message || 'Erreur de connexion');
+        Alert.alert('Erreur', response.message || 'Erreur de connexion');
+      }
+    } catch (error) {
+      setIsLoading(false);
+      setPasswordError(true);
+      setErrorMessage('Erreur de connexion au serveur');
+      Alert.alert('Erreur', 'Impossible de se connecter au serveur');
+    }
   };
 
   const handleGoToHome = () => {
@@ -75,6 +112,11 @@ const LoginScreen = ({ onNavigate }: LoginScreenProps) => {
           </View>
 
           <View style={styles.content}>
+            <Text style={styles.welcomeText}>Bon retour !</Text>
+            <Text style={styles.subtitleText}>
+              Connectez-vous pour accéder à votre compte
+            </Text>
+
             {/* Email Input */}
             <View style={[styles.inputContainer, emailError && styles.inputError]}>
               <Ionicons name="mail-outline" size={20} color="#999" />
@@ -86,9 +128,11 @@ const LoginScreen = ({ onNavigate }: LoginScreenProps) => {
                 onChangeText={(text) => {
                   setEmail(text);
                   setEmailError(false);
+                  setErrorMessage('');
                 }}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                editable={!isLoading}
               />
               {email && validateEmail(email) && (
                 <Ionicons name="checkmark" size={20} color="#0077b6" />
@@ -106,8 +150,10 @@ const LoginScreen = ({ onNavigate }: LoginScreenProps) => {
                 onChangeText={(text) => {
                   setPassword(text);
                   setPasswordError(false);
+                  setErrorMessage('');
                 }}
                 secureTextEntry={!showPassword}
+                editable={!isLoading}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                 <Ionicons
@@ -118,29 +164,39 @@ const LoginScreen = ({ onNavigate }: LoginScreenProps) => {
               </TouchableOpacity>
             </View>
 
-            {passwordError && (
-              <Text style={styles.errorText}>
-                *Le mot de passe que vous avez entré est incorrect
-              </Text>
-            )}
+            {errorMessage ? (
+              <Text style={styles.errorText}>*{errorMessage}</Text>
+            ) : null}
 
             {/* Forgot Password */}
             <TouchableOpacity 
               style={styles.forgotPassword}
               onPress={() => onNavigate('forgotPassword')}
+              disabled={isLoading}
             >
               <Text style={styles.forgotPasswordText}>Mot de passe oublié ?</Text>
             </TouchableOpacity>
 
             {/* Login Button */}
-            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-              <Text style={styles.loginButtonText}>Connexion</Text>
+            <TouchableOpacity 
+              style={[styles.loginButton, isLoading && styles.loginButtonDisabled]} 
+              onPress={handleLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.loginButtonText}>Connexion</Text>
+              )}
             </TouchableOpacity>
 
             {/* Sign Up Link */}
             <View style={styles.signupContainer}>
               <Text style={styles.signupText}>Vous n'avez pas de compte ? </Text>
-              <TouchableOpacity onPress={() => onNavigate('signup')}>
+              <TouchableOpacity 
+                onPress={() => onNavigate('signup')}
+                disabled={isLoading}
+              >
                 <Text style={styles.signupLink}>Inscription</Text>
               </TouchableOpacity>
             </View>
@@ -153,17 +209,17 @@ const LoginScreen = ({ onNavigate }: LoginScreenProps) => {
             </View>
 
             {/* Social Login Buttons */}
-            <TouchableOpacity style={styles.socialButton}>
+            <TouchableOpacity style={styles.socialButton} disabled={isLoading}>
               <Ionicons name="logo-google" size={24} color="#DB4437" />
               <Text style={styles.socialButtonText}>Se connecter avec Google</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.socialButton}>
+            <TouchableOpacity style={styles.socialButton} disabled={isLoading}>
               <Ionicons name="logo-apple" size={24} color="#000" />
               <Text style={styles.socialButtonText}>Se connecter avec Apple</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.socialButton}>
+            <TouchableOpacity style={styles.socialButton} disabled={isLoading}>
               <Ionicons name="logo-facebook" size={24} color="#1877F2" />
               <Text style={styles.socialButtonText}>Se connecter avec Facebook</Text>
             </TouchableOpacity>
@@ -188,7 +244,9 @@ const LoginScreen = ({ onNavigate }: LoginScreenProps) => {
             <Text style={styles.modalDescription}>
               Vous vous êtes connecté avec succès
             </Text>
-            <Text style={styles.modalDescription}>à l'application medidoc</Text>
+            <Text style={styles.modalDescription}>
+              à l'application MyHospital
+            </Text>
 
             <TouchableOpacity style={styles.modalButton} onPress={handleGoToHome}>
               <Text style={styles.modalButtonText}>Aller à l'accueil</Text>
@@ -227,6 +285,17 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 30,
     paddingTop: 20,
+  },
+  welcomeText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 8,
+  },
+  subtitleText: {
+    fontSize: 14,
+    color: '#999',
+    marginBottom: 30,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -271,6 +340,9 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignItems: 'center',
     marginBottom: 20,
+  },
+  loginButtonDisabled: {
+    backgroundColor: '#B0B0B0',
   },
   loginButtonText: {
     color: '#fff',
@@ -374,3 +446,5 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
+
+// FICHIER SÉPARÉ: SignUpScreen_API.tsx

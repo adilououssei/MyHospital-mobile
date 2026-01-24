@@ -10,9 +10,12 @@ import {
   Platform,
   ScrollView,
   FlatList,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import authService from '../services/authService';
 
 interface Country {
   code: string;
@@ -27,6 +30,7 @@ interface SignUpScreenProps {
 
 const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Étape 1
   const [firstName, setFirstName] = useState('');
@@ -142,33 +146,74 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
   const handleNextStep = () => {
     if (currentStep === 1) {
       if (!isStep1Valid()) {
-        if (!firstName.trim()) alert('Veuillez entrer votre prénom');
-        else if (!lastName.trim()) alert('Veuillez entrer votre nom');
-        else if (!email) alert('Veuillez entrer votre email');
-        else if (!validateEmail(email)) alert('Email invalide');
-        else if (!password) alert('Veuillez entrer un mot de passe');
-        else if (!validatePassword(password)) alert('Mot de passe trop court (min. 8 caractères)');
-        else if (password !== confirmPassword) alert('Les mots de passe ne correspondent pas');
+        if (!firstName.trim()) Alert.alert('Erreur', 'Veuillez entrer votre prénom');
+        else if (!lastName.trim()) Alert.alert('Erreur', 'Veuillez entrer votre nom');
+        else if (!email) Alert.alert('Erreur', 'Veuillez entrer votre email');
+        else if (!validateEmail(email)) Alert.alert('Erreur', 'Email invalide');
+        else if (!password) Alert.alert('Erreur', 'Veuillez entrer un mot de passe');
+        else if (!validatePassword(password)) Alert.alert('Erreur', 'Mot de passe trop court (min. 8 caractères)');
+        else if (password !== confirmPassword) Alert.alert('Erreur', 'Les mots de passe ne correspondent pas');
         return;
       }
       setCurrentStep(2);
     }
   };
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     if (!isStep2Valid()) {
-      if (!phoneNumber) alert('Veuillez entrer votre numéro de téléphone');
-      else if (!validatePhoneNumber(phoneNumber)) alert('Numéro de téléphone invalide');
-      else if (!address.trim()) alert('Veuillez entrer votre adresse');
-      else if (!city.trim()) alert('Veuillez entrer votre ville');
-      else if (!dateOfBirth) alert('Veuillez sélectionner votre date de naissance');
-      else if (!gender) alert('Veuillez sélectionner votre genre');
-      else if (!bloodGroup) alert('Veuillez sélectionner votre groupe sanguin');
-      else if (!agreedToTerms) alert('Veuillez accepter les conditions');
+      if (!phoneNumber) Alert.alert('Erreur', 'Veuillez entrer votre numéro de téléphone');
+      else if (!validatePhoneNumber(phoneNumber)) Alert.alert('Erreur', 'Numéro de téléphone invalide');
+      else if (!address.trim()) Alert.alert('Erreur', 'Veuillez entrer votre adresse');
+      else if (!city.trim()) Alert.alert('Erreur', 'Veuillez entrer votre ville');
+      else if (!dateOfBirth) Alert.alert('Erreur', 'Veuillez sélectionner votre date de naissance');
+      else if (!gender) Alert.alert('Erreur', 'Veuillez sélectionner votre genre');
+      else if (!bloodGroup) Alert.alert('Erreur', 'Veuillez sélectionner votre groupe sanguin');
+      else if (!agreedToTerms) Alert.alert('Erreur', 'Veuillez accepter les conditions');
       return;
     }
 
-    setShowSuccessModal(true);
+    setIsLoading(true);
+
+    try {
+      // Formater la date pour le backend (YYYY-MM-DD)
+      const [day, month, year] = dateOfBirth.split('/');
+      const formattedDate = `${year}-${month}-${day}`;
+
+      // Construire l'objet de données pour l'API
+      const registerData = {
+        email: email.trim(),
+        password: password,
+        nom: lastName.trim(),
+        prenom: firstName.trim(),
+        telephone: `${selectedCountry.dialCode}${phoneNumber}`,
+        adresse: address.trim(),
+        ville: city.trim(),
+        dateNaissance: formattedDate,
+        genre: gender,
+        groupeSanguin: bloodGroup || '',
+        taille: height ? parseFloat(height) : 0,
+        poids: weight ? parseFloat(weight) : 0,
+      };
+
+      console.log('📤 Données d\'inscription:', registerData);
+
+      // Appel API
+      const response = await authService.register(registerData);
+
+      setIsLoading(false);
+
+      console.log('📥 Réponse inscription:', response);
+
+      if (response.status === 'success') {
+        setShowSuccessModal(true);
+      } else {
+        Alert.alert('Erreur', response.message || 'Erreur lors de l\'inscription');
+      }
+    } catch (error: any) {
+      setIsLoading(false);
+      console.error('❌ Erreur inscription:', error);
+      Alert.alert('Erreur', 'Impossible de se connecter au serveur');
+    }
   };
 
   const handleSelectCountry = (country: Country) => {
@@ -211,6 +256,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                   onNavigate('welcome');
                 }
               }}
+              disabled={isLoading}
             >
               <Ionicons name="chevron-back" size={24} color="#000" />
             </TouchableOpacity>
@@ -251,6 +297,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                     value={firstName}
                     onChangeText={setFirstName}
                     autoCapitalize="words"
+                    editable={!isLoading}
                   />
                   {firstName.trim() && (
                     <Ionicons name="checkmark-circle" size={20} color="#0077b6" />
@@ -266,6 +313,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                     value={lastName}
                     onChangeText={setLastName}
                     autoCapitalize="words"
+                    editable={!isLoading}
                   />
                   {lastName.trim() && (
                     <Ionicons name="checkmark-circle" size={20} color="#0077b6" />
@@ -282,6 +330,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                     onChangeText={setEmail}
                     keyboardType="email-address"
                     autoCapitalize="none"
+                    editable={!isLoading}
                   />
                   {email && validateEmail(email) && (
                     <Ionicons name="checkmark-circle" size={20} color="#0077b6" />
@@ -297,6 +346,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword}
+                    editable={!isLoading}
                   />
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                     <Ionicons
@@ -330,6 +380,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     secureTextEntry={!showConfirmPassword}
+                    editable={!isLoading}
                   />
                   <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
                     <Ionicons
@@ -359,8 +410,9 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                 )}
 
                 <TouchableOpacity
-                  style={[styles.nextButton, !isStep1Valid() && styles.buttonDisabled]}
+                  style={[styles.nextButton, (!isStep1Valid() || isLoading) && styles.buttonDisabled]}
                   onPress={handleNextStep}
+                  disabled={isLoading}
                 >
                   <Text style={styles.buttonText}>Suivant</Text>
                   <Ionicons name="arrow-forward" size={20} color="#fff" />
@@ -375,6 +427,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                 <TouchableOpacity
                   style={styles.countrySelector}
                   onPress={() => setShowCountryPicker(true)}
+                  disabled={isLoading}
                 >
                   <Text style={styles.countryFlag}>{selectedCountry.flag}</Text>
                   <View style={styles.countrySelectorContent}>
@@ -396,6 +449,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                     value={phoneNumber}
                     onChangeText={setPhoneNumber}
                     keyboardType="phone-pad"
+                    editable={!isLoading}
                   />
                   {phoneNumber && validatePhoneNumber(phoneNumber) && (
                     <Ionicons name="checkmark-circle" size={20} color="#0077b6" />
@@ -411,6 +465,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                     placeholderTextColor="#999"
                     value={address}
                     onChangeText={setAddress}
+                    editable={!isLoading}
                   />
                   {address.trim() && (
                     <Ionicons name="checkmark-circle" size={20} color="#0077b6" />
@@ -426,6 +481,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                     placeholderTextColor="#999"
                     value={city}
                     onChangeText={setCity}
+                    editable={!isLoading}
                   />
                   {city.trim() && (
                     <Ionicons name="checkmark-circle" size={20} color="#0077b6" />
@@ -436,6 +492,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                 <TouchableOpacity
                   style={styles.inputContainer}
                   onPress={() => setShowDatePicker(true)}
+                  disabled={isLoading}
                 >
                   <Ionicons name="calendar-outline" size={20} color="#999" />
                   <Text style={[styles.inputText, dateOfBirth ? { color: '#000' } : { color: '#999' }]}>
@@ -457,6 +514,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                         gender === g && styles.genderButtonActive
                       ]}
                       onPress={() => setGender(g)}
+                      disabled={isLoading}
                     >
                       <Text style={[
                         styles.genderButtonText,
@@ -472,6 +530,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                 <TouchableOpacity
                   style={styles.inputContainer}
                   onPress={() => setShowBloodGroupPicker(true)}
+                  disabled={isLoading}
                 >
                   <Ionicons name="water-outline" size={20} color="#999" />
                   <Text style={[styles.inputText, bloodGroup ? { color: '#000' } : { color: '#999' }]}>
@@ -494,6 +553,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                       value={height}
                       onChangeText={setHeight}
                       keyboardType="numeric"
+                      editable={!isLoading}
                     />
                   </View>
                   <View style={styles.halfInputContainer}>
@@ -505,6 +565,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                       value={weight}
                       onChangeText={setWeight}
                       keyboardType="numeric"
+                      editable={!isLoading}
                     />
                   </View>
                 </View>
@@ -513,6 +574,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                 <TouchableOpacity
                   style={styles.checkboxContainer}
                   onPress={() => setAgreedToTerms(!agreedToTerms)}
+                  disabled={isLoading}
                 >
                   <View style={[styles.checkbox, agreedToTerms && styles.checkboxChecked]}>
                     {agreedToTerms && <Ionicons name="checkmark" size={16} color="#fff" />}
@@ -525,10 +587,15 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
 
                 {/* Sign Up Button */}
                 <TouchableOpacity
-                  style={[styles.nextButton, !isStep2Valid() && styles.buttonDisabled]}
+                  style={[styles.nextButton, (!isStep2Valid() || isLoading) && styles.buttonDisabled]}
                   onPress={handleSignUp}
+                  disabled={!isStep2Valid() || isLoading}
                 >
-                  <Text style={styles.buttonText}>S'inscrire</Text>
+                  {isLoading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.buttonText}>S'inscrire</Text>
+                  )}
                 </TouchableOpacity>
               </>
             )}
@@ -536,7 +603,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
             {/* Login Link */}
             <View style={styles.loginContainer}>
               <Text style={styles.loginText}>Vous avez déjà un compte ? </Text>
-              <TouchableOpacity onPress={() => onNavigate('login')}>
+              <TouchableOpacity onPress={() => onNavigate('login')} disabled={isLoading}>
                 <Text style={styles.loginLink}>Se connecter</Text>
               </TouchableOpacity>
             </View>
@@ -719,6 +786,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
   );
 };
 
+// [Les styles restent identiques... je les copie depuis ton fichier]
 const styles = StyleSheet.create({
   container: {
     flex: 1,
