@@ -191,9 +191,6 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
             <DoctorCard key={doctor.id} doctor={doctor} />
           ))}
         </ScrollView>
-
-        {/* Bottom spacing - RÉDUIT */}
-        <View style={{ height: 20 }} />
       </ScrollView>
 
       {/* Bottom Navigation - Composant réutilisable */}
@@ -211,7 +208,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 80, // Espace pour la navigation en bas
+    paddingBottom: 90, // Espace pour la navigation en bas (position absolute)
   },
   header: {
     flexDirection: 'row',
@@ -343,6 +340,7 @@ const styles = StyleSheet.create({
   },
   doctorsScrollContent: {
     paddingRight: 20,
+    paddingBottom: 10, // Petit padding pour les ombres des cartes
   },
   doctorCard: {
     borderRadius: 15,

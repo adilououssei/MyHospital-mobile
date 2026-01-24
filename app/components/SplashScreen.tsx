@@ -120,7 +120,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
             {/* Footer */}
             <View style={styles.footer}>
                 <Text style={styles.footerText}>Version 1.0.0</Text>
-                <Text style={styles.footerText}>© 2024 MyHospital</Text>
+                <Text style={styles.footerText}>© 2026 MyHospital</Text>
             </View>
         </LinearGradient>
     );

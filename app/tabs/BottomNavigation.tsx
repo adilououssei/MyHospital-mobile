@@ -49,10 +49,14 @@ const BottomNavigation = ({ currentScreen, onNavigate, unreadCount = 0 }: Bottom
 
 const styles = StyleSheet.create({
   bottomNav: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingVertical: 15,
-    paddingBottom: 50,
+    paddingVertical: 12,
+    paddingBottom: 20, // Réduit de 50 à 20 pour gérer la safe area
     borderTopWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },

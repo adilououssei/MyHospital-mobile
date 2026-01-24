@@ -1,8 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { useState, useEffect } from 'react';
-import { BackHandler } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
+import { BackHandler, View } from 'react-native';
+import * as SplashScreen from 'expo-splash-screen';
 import { AppProvider } from './app/context/AppContext';
+import CustomSplashScreen from './app/components/SplashScreen';
 import WelcomeScreen from './app/components/WelcomeScreen';
 import LoginScreen from './app/components/LoginScreen';
 import SignUpScreen from './app/components/SignUpScreen';
@@ -37,11 +39,41 @@ import RateAppScreen from './app/components/RateAppScreen';
 import TransactionHistoryScreen from './app/components/TransactionHistoryScreen';
 import PrescriptionsScreen from './app/components/PrescriptionsScreen';
 
+// Empêcher le splash screen natif de se cacher automatiquement
+SplashScreen.preventAutoHideAsync();
+
 function AppContent() {
+  // État pour gérer l'affichage du Custom Splash Screen
+  const [isLoading, setIsLoading] = useState(true);
+  const [appIsReady, setAppIsReady] = useState(false);
+  
   const [currentScreen, setCurrentScreen] = useState('welcome');
   const [screenParams, setScreenParams] = useState<any>({});
   const [unreadCount, setUnreadCount] = useState(2);
   const [navigationHistory, setNavigationHistory] = useState<string[]>(['welcome']);
+
+  useEffect(() => {
+    async function prepare() {
+      try {
+        // Simuler le chargement des ressources (fonts, données, etc.)
+        // Tu peux ajouter ici le chargement réel de tes ressources
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setAppIsReady(true);
+      }
+    }
+
+    prepare();
+  }, []);
+
+  const onLayoutRootView = useCallback(async () => {
+    if (appIsReady) {
+      // Cacher le splash screen natif d'Expo
+      await SplashScreen.hideAsync();
+    }
+  }, [appIsReady]);
 
   const handleNavigation = (screen: string, params?: any) => {
     setCurrentScreen(screen);
@@ -54,16 +86,15 @@ function AppContent() {
   const handleBack = () => {
     if (navigationHistory.length > 1) {
       const newHistory = [...navigationHistory];
-      newHistory.pop(); // Retirer l'écran actuel
+      newHistory.pop();
       const previousScreen = newHistory[newHistory.length - 1];
       setNavigationHistory(newHistory);
       setCurrentScreen(previousScreen);
-      return true; // Empêcher le comportement par défaut
+      return true;
     }
-    return false; // Permettre la fermeture de l'app si on est à l'écran d'accueil
+    return false;
   };
 
-  // Gérer le bouton retour Android
   useEffect(() => {
     const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBack);
     return () => backHandler.remove();
@@ -77,6 +108,24 @@ function AppContent() {
     if (currentScreen === 'profile') return 'light';
     return 'dark';
   };
+
+  const handleSplashFinish = () => {
+    setIsLoading(false);
+  };
+
+  // Attendre que l'app soit prête
+  if (!appIsReady) {
+    return null;
+  }
+
+  // Afficher le Custom Splash Screen
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+        <CustomSplashScreen onFinish={handleSplashFinish} />
+      </View>
+    );
+  }
 
   const renderScreen = () => {
     switch (currentScreen) {
@@ -187,10 +236,10 @@ function AppContent() {
   };
 
   return (
-    <>
+    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <StatusBar style={getStatusBarStyle()} />
       {renderScreen()}
-    </>
+    </View>
   );
 }
 
