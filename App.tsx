@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { BackHandler } from 'react-native';
 import { AppProvider } from './app/context/AppContext';
 import WelcomeScreen from './app/components/WelcomeScreen';
 import LoginScreen from './app/components/LoginScreen';
@@ -36,18 +37,37 @@ import RateAppScreen from './app/components/RateAppScreen';
 import TransactionHistoryScreen from './app/components/TransactionHistoryScreen';
 import PrescriptionsScreen from './app/components/PrescriptionsScreen';
 
-
 function AppContent() {
   const [currentScreen, setCurrentScreen] = useState('welcome');
   const [screenParams, setScreenParams] = useState<any>({});
   const [unreadCount, setUnreadCount] = useState(2);
+  const [navigationHistory, setNavigationHistory] = useState<string[]>(['welcome']);
 
   const handleNavigation = (screen: string, params?: any) => {
     setCurrentScreen(screen);
+    setNavigationHistory(prev => [...prev, screen]);
     if (params) {
       setScreenParams(params);
     }
   };
+
+  const handleBack = () => {
+    if (navigationHistory.length > 1) {
+      const newHistory = [...navigationHistory];
+      newHistory.pop(); // Retirer l'écran actuel
+      const previousScreen = newHistory[newHistory.length - 1];
+      setNavigationHistory(newHistory);
+      setCurrentScreen(previousScreen);
+      return true; // Empêcher le comportement par défaut
+    }
+    return false; // Permettre la fermeture de l'app si on est à l'écran d'accueil
+  };
+
+  // Gérer le bouton retour Android
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBack);
+    return () => backHandler.remove();
+  }, [navigationHistory]);
 
   const updateUnreadCount = (count: number) => {
     setUnreadCount(count);
@@ -141,34 +161,28 @@ function AppContent() {
         return <FAQsScreen onNavigate={handleNavigation} />;
       case 'emergency':
         return <EmergencyScreen onNavigate={setCurrentScreen} />;
-      default:
-        return <WelcomeScreen onNavigate={handleNavigation} />;
       case 'healthInfo':
         return <HealthInfoScreen onNavigate={setCurrentScreen} />;
       case 'editProfile':
         return <EditProfileScreen onNavigate={setCurrentScreen} />;
-
       case 'settings':
         return <SettingsScreen onNavigate={setCurrentScreen} />;
       case 'privacySecurity':
         return <PrivacySecurityScreen onNavigate={setCurrentScreen} />;
-
       case 'changePassword':
         return <ChangePasswordScreen onNavigate={setCurrentScreen} />;
-
       case 'terms':
-        return <TermsScreen onNavigate={setCurrentScreen} />;
-
+        return <TermsScreen onNavigate={handleNavigation} />;
       case 'privacyPolicy':
         return <PrivacyPolicyScreen onNavigate={setCurrentScreen} />;
       case 'rateApp':
         return <RateAppScreen onNavigate={handleNavigation} />;
-      case 'terms':
-        return <TermsScreen onNavigate={handleNavigation} />;
       case 'transactionHistory':
         return <TransactionHistoryScreen onNavigate={handleNavigation} />;
       case 'prescriptions':
         return <PrescriptionsScreen onNavigate={handleNavigation} />;
+      default:
+        return <WelcomeScreen onNavigate={handleNavigation} />;
     }
   };
 

@@ -100,8 +100,11 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Header */}
         <View style={styles.header}>
           <View>
@@ -189,8 +192,8 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
           ))}
         </ScrollView>
 
-        {/* Bottom spacing */}
-        <View style={{ height: 100 }} />
+        {/* Bottom spacing - RÉDUIT */}
+        <View style={{ height: 20 }} />
       </ScrollView>
 
       {/* Bottom Navigation - Composant réutilisable */}
@@ -206,6 +209,9 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 80, // Espace pour la navigation en bas
   },
   header: {
     flexDirection: 'row',
@@ -334,8 +340,6 @@ const styles = StyleSheet.create({
   },
   doctorsScroll: {
     paddingLeft: 20,
-    paddingBottom: 10,
-    paddingTop: 5,
   },
   doctorsScrollContent: {
     paddingRight: 20,
