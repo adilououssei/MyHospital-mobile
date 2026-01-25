@@ -1,4 +1,6 @@
-import React from 'react';
+// app/screens/HomeScreen.tsx
+
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +9,7 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,15 +17,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useApp } from '../context/AppContext';
 import BottomNavigation from '../tabs/BottomNavigation';
-
-interface Doctor {
-  id: string;
-  name: string;
-  specialty: string;
-  rating: number;
-  distance: string;
-  image: any;
-}
+import docteurService, { Docteur } from '../services/docteur.service';
+import { API_BASE_URL } from '../services/api.config';
 
 interface HomeScreenProps {
   onNavigate: (screen: string) => void;
@@ -31,33 +27,33 @@ interface HomeScreenProps {
 
 const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
   const { colors } = useApp();
+  const [topDoctors, setTopDoctors] = useState<Docteur[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const topDoctors: Doctor[] = [
-    {
-      id: '1',
-      name: 'Dr. Marcus Horiz',
-      specialty: 'Cardiologue',
-      rating: 4.7,
-      distance: '800m',
-      image: require('../../assets/doctor1.png'),
-    },
-    {
-      id: '2',
-      name: 'Dr. Maria Elena',
-      specialty: 'Psychologue',
-      rating: 4.8,
-      distance: '1.5km',
-      image: require('../../assets/doctor2.png'),
-    },
-    {
-      id: '3',
-      name: 'Dr. Stevi Jessi',
-      specialty: 'Orthopédiste',
-      rating: 4.8,
-      distance: '2km',
-      image: require('../../assets/doctor3.png'),
-    },
-  ];
+  useEffect(() => {
+    loadTopDoctors();
+  }, []);
+
+  const loadTopDoctors = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await docteurService.getDocteurs();
+      
+      // Prendre les 3 premiers docteurs avec les meilleures notes
+      const sortedDoctors = response.docteurs
+        .sort((a, b) => b.note - a.note)
+        .slice(0, 3);
+      
+      setTopDoctors(sortedDoctors);
+    } catch (err) {
+      console.error('Erreur chargement docteurs:', err);
+      setError('Impossible de charger les docteurs');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const ServiceButton = ({ icon, label, screen }: { icon: string; label: string; screen?: string }) => (
     <TouchableOpacity
@@ -77,27 +73,50 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
     </TouchableOpacity>
   );
 
-  const DoctorCard = ({ doctor }: { doctor: Doctor }) => (
-    <TouchableOpacity style={[styles.doctorCard, { backgroundColor: colors.card }]}>
-      <View style={styles.doctorImageContainer}>
-        <View style={styles.doctorImagePlaceholder}>
-          <FontAwesome5 name="user-md" size={40} color="#0077b6" />
+  const DoctorCard = ({ doctor }: { doctor: Docteur }) => {
+    const photoUrl = doctor.photo ? `${API_BASE_URL}${doctor.photo}` : null;
+    
+    return (
+      <TouchableOpacity 
+        style={[styles.doctorCard, { backgroundColor: colors.card }]}
+        onPress={() => onNavigate('doctorDetail')}
+      >
+        <View style={styles.doctorImageContainer}>
+          {photoUrl ? (
+            <Image
+              source={{ uri: photoUrl }}
+              style={styles.doctorImage}
+              defaultSource={require('../../assets/doctor1.png')}
+            />
+          ) : (
+            <View style={styles.doctorImagePlaceholder}>
+              <FontAwesome5 name="user-md" size={40} color="#0077b6" />
+            </View>
+          )}
         </View>
-      </View>
-      <Text style={[styles.doctorName, { color: colors.text }]}>{doctor.name}</Text>
-      <Text style={[styles.doctorSpecialty, { color: colors.subText }]}>{doctor.specialty}</Text>
-      <View style={styles.doctorInfo}>
-        <View style={styles.ratingContainer}>
-          <Ionicons name="star" size={14} color="#FFC107" />
-          <Text style={[styles.ratingText, { color: colors.text }]}>{doctor.rating}</Text>
+        <Text style={[styles.doctorName, { color: colors.text }]}>
+          {doctor.nomComplet}
+        </Text>
+        <Text style={[styles.doctorSpecialty, { color: colors.subText }]}>
+          {doctor.specialite || 'Médecin généraliste'}
+        </Text>
+        <View style={styles.doctorInfo}>
+          <View style={styles.ratingContainer}>
+            <Ionicons name="star" size={14} color="#FFC107" />
+            <Text style={[styles.ratingText, { color: colors.text }]}>
+              {doctor.note}
+            </Text>
+          </View>
+          <View style={styles.distanceContainer}>
+            <Ionicons name="location-outline" size={14} color={colors.subText} />
+            <Text style={[styles.distanceText, { color: colors.subText }]}>
+              {doctor.ville}
+            </Text>
+          </View>
         </View>
-        <View style={styles.distanceContainer}>
-          <Ionicons name="location-outline" size={14} color={colors.subText} />
-          <Text style={[styles.distanceText, { color: colors.subText }]}>{doctor.distance}</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -181,19 +200,31 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
           </TouchableOpacity>
         </View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.doctorsScroll}
-          contentContainerStyle={styles.doctorsScrollContent}
-        >
-          {topDoctors.map((doctor) => (
-            <DoctorCard key={doctor.id} doctor={doctor} />
-          ))}
-        </ScrollView>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#0077b6" />
+          </View>
+        ) : error ? (
+          <View style={styles.errorContainer}>
+            <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
+            <TouchableOpacity onPress={loadTopDoctors} style={styles.retryButton}>
+              <Text style={styles.retryButtonText}>Réessayer</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.doctorsScroll}
+            contentContainerStyle={styles.doctorsScrollContent}
+          >
+            {topDoctors.map((doctor) => (
+              <DoctorCard key={doctor.id} doctor={doctor} />
+            ))}
+          </ScrollView>
+        )}
       </ScrollView>
 
-      {/* Bottom Navigation - Composant réutilisable */}
       <BottomNavigation 
         currentScreen="home" 
         onNavigate={onNavigate}
@@ -204,11 +235,12 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
 };
 
 const styles = StyleSheet.create({
+  // ... (garde tous les styles existants)
   container: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 90, // Espace pour la navigation en bas (position absolute)
+    paddingBottom: 90,
   },
   header: {
     flexDirection: 'row',
@@ -340,7 +372,7 @@ const styles = StyleSheet.create({
   },
   doctorsScrollContent: {
     paddingRight: 20,
-    paddingBottom: 10, // Petit padding pour les ombres des cartes
+    paddingBottom: 10,
   },
   doctorCard: {
     borderRadius: 15,
@@ -356,6 +388,11 @@ const styles = StyleSheet.create({
   doctorImageContainer: {
     alignItems: 'center',
     marginBottom: 10,
+  },
+  doctorImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   doctorImagePlaceholder: {
     width: 80,
@@ -395,6 +432,29 @@ const styles = StyleSheet.create({
   distanceText: {
     fontSize: 12,
     marginLeft: 2,
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  errorContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  errorText: {
+    fontSize: 14,
+    marginBottom: 10,
+  },
+  retryButton: {
+    backgroundColor: '#0077b6',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

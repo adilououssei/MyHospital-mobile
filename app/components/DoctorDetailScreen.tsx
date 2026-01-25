@@ -1,16 +1,23 @@
-import React, { useState } from 'react';
+// app/screens/DoctorDetailScreen.tsx
+
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
+  Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useApp } from '../context/AppContext';
 import ScreenHeader from '../tabs/ScreenHeader';
+import docteurService, { DocteurDetail } from '../services/docteur.service';
+import { API_BASE_URL } from '../services/api.config';
 
 interface DoctorDetailScreenProps {
   onNavigate: (screen: string, params?: any) => void;
@@ -21,236 +28,362 @@ interface DoctorDetailScreenProps {
 
 const DoctorDetailScreen = ({
   onNavigate,
-  doctor,
+  doctor: initialDoctor,
   consultationType,
   description,
 }: DoctorDetailScreenProps) => {
   const { colors } = useApp();
   const [selectedDate, setSelectedDate] = useState('23');
   const [selectedTime, setSelectedTime] = useState('14:00');
+  const [doctorDetails, setDoctorDetails] = useState<DocteurDetail | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const dates = [
-    { day: 'Lun', date: '21' },
-    { day: 'Mar', date: '22' },
-    { day: 'Mer', date: '23' },
-    { day: 'Jeu', date: '24' },
-    { day: 'Ven', date: '25' },
-    { day: 'Sam', date: '26' },
-  ];
+  // Générer les dates dynamiquement (prochains 6 jours)
+  const generateDates = () => {
+    const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+    const dates = [];
+    const today = new Date();
 
+    for (let i = 0; i < 6; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      dates.push({
+        day: days[date.getDay()],
+        date: date.getDate().toString(),
+        fullDate: date.toISOString().split('T')[0],
+      });
+    }
+    return dates;
+  };
+
+  const dates = generateDates();
+  
   const timeSlots = [
     '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00',
   ];
 
   const confirmationFee = 2000;
 
+  // Charger les détails complets du docteur depuis l'API
+  useEffect(() => {
+    if (initialDoctor?.id) {
+      loadDoctorDetails(initialDoctor.id);
+    }
+  }, [initialDoctor?.id]);
+
+  const loadDoctorDetails = async (doctorId: number) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await docteurService.getDocteurById(doctorId);
+      setDoctorDetails(response.docteur);
+    } catch (err) {
+      console.error('Erreur chargement détails docteur:', err);
+      setError('Impossible de charger les détails du médecin');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleNext = () => {
     if (!selectedDate || !selectedTime) {
-      alert('Veuillez sélectionner une date et une heure');
+      Alert.alert('Attention', 'Veuillez sélectionner une date et une heure');
       return;
     }
 
+    const doctor = doctorDetails || initialDoctor;
+    const consultationPrice = doctorDetails 
+      ? (doctorDetails.tarifs.hopital || doctorDetails.tarifs.domicile || doctorDetails.tarifs.enLigne || 15000)
+      : (initialDoctor?.price || 15000);
+
     onNavigate('paymentMethod', {
-      doctor,
+      doctor: {
+        id: doctor.id,
+        name: doctorDetails ? doctorDetails.nomComplet : initialDoctor?.name,
+        specialty: doctorDetails ? doctorDetails.specialite : initialDoctor?.specialty,
+        rating: doctorDetails ? doctorDetails.note : initialDoctor?.rating,
+        photo: doctorDetails ? doctorDetails.photo : initialDoctor?.photo,
+      },
       consultationType,
       description,
       date: selectedDate,
       time: selectedTime,
-      consultationPrice: doctor?.price || 15000,
+      consultationPrice,
       confirmationFee,
     });
   };
 
+  // Utiliser les détails de l'API si disponibles, sinon utiliser les données initiales
+  const displayDoctor = doctorDetails || initialDoctor;
+  const photoUrl = displayDoctor?.photo ? `${API_BASE_URL}${displayDoctor.photo}` : null;
+  const consultationPrice = doctorDetails 
+    ? (doctorDetails.tarifs.hopital || doctorDetails.tarifs.domicile || doctorDetails.tarifs.enLigne || 15000)
+    : (initialDoctor?.price || 15000);
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header avec composant réutilisable */}
       <ScreenHeader
         title="Détails du médecin"
         onBack={() => onNavigate('doctorsList')}
         rightIcon="ellipsis-vertical"
       />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.content}>
-          {/* Step Indicator */}
-          <View style={styles.stepIndicator}>
-            <View style={styles.stepCompleted}>
-              <Ionicons name="checkmark" size={20} color="#fff" />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0077b6" />
+          <Text style={[styles.loadingText, { color: colors.subText }]}>
+            Chargement des détails...
+          </Text>
+        </View>
+      ) : error ? (
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={48} color="#FF6B6B" />
+          <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
+          <TouchableOpacity 
+            onPress={() => initialDoctor?.id && loadDoctorDetails(initialDoctor.id)} 
+            style={styles.retryButton}
+          >
+            <Text style={styles.retryButtonText}>Réessayer</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={styles.content}>
+            {/* Step Indicator */}
+            <View style={styles.stepIndicator}>
+              <View style={styles.stepCompleted}>
+                <Ionicons name="checkmark" size={20} color="#fff" />
+              </View>
+              <View style={styles.stepLineCompleted} />
+              <View style={styles.stepCompleted}>
+                <Ionicons name="checkmark" size={20} color="#fff" />
+              </View>
+              <View style={styles.stepLineCompleted} />
+              <View style={styles.stepActive}>
+                <Text style={styles.stepTextActive}>3</Text>
+              </View>
             </View>
-            <View style={styles.stepLineCompleted} />
-            <View style={styles.stepCompleted}>
-              <Ionicons name="checkmark" size={20} color="#fff" />
-            </View>
-            <View style={styles.stepLineCompleted} />
-            <View style={styles.stepActive}>
-              <Text style={styles.stepTextActive}>3</Text>
-            </View>
-          </View>
 
-          {/* Doctor Info */}
-          <View style={[styles.doctorCard, { backgroundColor: colors.card }]}>
-            <View style={styles.doctorImagePlaceholder}>
-              <FontAwesome5 name="user-md" size={50} color="#0077b6" />
-            </View>
-            <View style={styles.doctorInfo}>
-              <Text style={[styles.doctorName, { color: colors.text }]}>
-                {doctor?.name || 'Dr. Marcus Horizon'}
-              </Text>
-              <Text style={[styles.doctorSpecialty, { color: colors.subText }]}>
-                {doctor?.specialty || 'Cardiologue'}
-              </Text>
-              <View style={styles.doctorMeta}>
-                <View style={styles.ratingContainer}>
-                  <Ionicons name="star" size={16} color="#FFA500" />
-                  <Text style={[styles.rating, { color: colors.text }]}>
-                    {doctor?.rating || 4.7}
-                  </Text>
+            {/* Doctor Info Card */}
+            <View style={[styles.doctorCard, { backgroundColor: colors.card }]}>
+              {photoUrl ? (
+                <Image
+                  source={{ uri: photoUrl }}
+                  style={styles.doctorImage}
+                  defaultSource={require('../../assets/doctor1.png')}
+                />
+              ) : (
+                <View style={styles.doctorImagePlaceholder}>
+                  <FontAwesome5 name="user-md" size={50} color="#0077b6" />
                 </View>
-                <View style={styles.distanceContainer}>
-                  <Ionicons name="location-outline" size={16} color={colors.subText} />
-                  <Text style={[styles.distance, { color: colors.subText }]}>
-                    {doctor?.distance || '800m'}
-                  </Text>
+              )}
+              <View style={styles.doctorInfo}>
+                <Text style={[styles.doctorName, { color: colors.text }]}>
+                  {doctorDetails?.nomComplet || initialDoctor?.name || 'Dr. Marcus Horizon'}
+                </Text>
+                <Text style={[styles.doctorSpecialty, { color: colors.subText }]}>
+                  {doctorDetails?.specialite || initialDoctor?.specialty || 'Médecin généraliste'}
+                </Text>
+                <View style={styles.doctorMeta}>
+                  <View style={styles.ratingContainer}>
+                    <Ionicons name="star" size={16} color="#FFA500" />
+                    <Text style={[styles.rating, { color: colors.text }]}>
+                      {(doctorDetails?.note || initialDoctor?.rating || 4.7).toFixed(1)}
+                    </Text>
+                  </View>
+                  <View style={styles.distanceContainer}>
+                    <Ionicons name="location-outline" size={16} color={colors.subText} />
+                    <Text style={[styles.distance, { color: colors.subText }]}>
+                      {doctorDetails?.ville || initialDoctor?.ville || initialDoctor?.distance || 'Lomé'}
+                    </Text>
+                  </View>
                 </View>
               </View>
             </View>
-          </View>
 
-          {/* About */}
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>À propos</Text>
-            <Text style={[styles.aboutText, { color: colors.subText }]}>
-              Spécialiste en cardiologie avec plus de 15 ans d'expérience.
-              Diplômé de l'université de médecine de Paris, le Dr. Marcus
-              Horizon est reconnu pour son expertise...
-            </Text>
-            <TouchableOpacity>
-              <Text style={styles.readMore}>Lire la suite</Text>
-            </TouchableOpacity>
-          </View>
+            {/* About Section */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>À propos</Text>
+              <Text style={[styles.aboutText, { color: colors.subText }]}>
+                {doctorDetails?.biographie || 
+                  `Spécialiste en ${doctorDetails?.specialite || initialDoctor?.specialty || 'médecine'} avec ${doctorDetails?.anneesExperience || 15} ans d'expérience. Expert reconnu dans son domaine.`}
+              </Text>
+              
+              {/* Détails supplémentaires si disponibles */}
+              {doctorDetails && (
+                <View style={styles.detailsGrid}>
+                  {doctorDetails.anneesExperience > 0 && (
+                    <View style={styles.detailItem}>
+                      <Ionicons name="briefcase-outline" size={20} color="#0077b6" />
+                      <Text style={[styles.detailText, { color: colors.subText }]}>
+                        {doctorDetails.anneesExperience} ans d'expérience
+                      </Text>
+                    </View>
+                  )}
+                  {doctorDetails.nombrePatients > 0 && (
+                    <View style={styles.detailItem}>
+                      <Ionicons name="people-outline" size={20} color="#0077b6" />
+                      <Text style={[styles.detailText, { color: colors.subText }]}>
+                        {doctorDetails.nombrePatients}+ patients traités
+                      </Text>
+                    </View>
+                  )}
+                  {doctorDetails.languesParlees && (
+                    <View style={styles.detailItem}>
+                      <Ionicons name="language-outline" size={20} color="#0077b6" />
+                      <Text style={[styles.detailText, { color: colors.subText }]}>
+                        {doctorDetails.languesParlees}
+                      </Text>
+                    </View>
+                  )}
+                  {doctorDetails.numeroOrdre && (
+                    <View style={styles.detailItem}>
+                      <Ionicons name="card-outline" size={20} color="#0077b6" />
+                      <Text style={[styles.detailText, { color: colors.subText }]}>
+                        N° Ordre: {doctorDetails.numeroOrdre}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
 
-          {/* Date Selection */}
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Choisir une date</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              style={styles.datesScroll}
-            >
-              {dates.map((item, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.dateCard,
-                    { backgroundColor: colors.card, borderColor: colors.border },
-                    selectedDate === item.date && styles.dateCardActive,
-                  ]}
-                  onPress={() => setSelectedDate(item.date)}
-                >
-                  <Text
-                    style={[
-                      styles.dateDay,
-                      { color: colors.subText },
-                      selectedDate === item.date && styles.dateDayActive,
-                    ]}
-                  >
-                    {item.day}
+              {/* Diplômes si disponibles */}
+              {doctorDetails?.diplomes && (
+                <View style={styles.diplomesContainer}>
+                  <Text style={[styles.diplomesTitle, { color: colors.text }]}>Diplômes</Text>
+                  <Text style={[styles.diplomesText, { color: colors.subText }]}>
+                    {doctorDetails.diplomes}
                   </Text>
-                  <Text
+                </View>
+              )}
+            </View>
+
+            {/* Date Selection */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Choisir une date</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.datesScroll}
+              >
+                {dates.map((item, index) => (
+                  <TouchableOpacity
+                    key={index}
                     style={[
-                      styles.dateNumber,
-                      { color: colors.text },
-                      selectedDate === item.date && styles.dateNumberActive,
+                      styles.dateCard,
+                      { backgroundColor: colors.card, borderColor: colors.subText },
+                      selectedDate === item.date && styles.dateCardActive,
                     ]}
+                    onPress={() => setSelectedDate(item.date)}
                   >
-                    {item.date}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
+                    <Text
+                      style={[
+                        styles.dateDay,
+                        { color: colors.subText },
+                        selectedDate === item.date && styles.dateDayActive,
+                      ]}
+                    >
+                      {item.day}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.dateNumber,
+                        { color: colors.text },
+                        selectedDate === item.date && styles.dateNumberActive,
+                      ]}
+                    >
+                      {item.date}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
 
-          {/* Time Selection */}
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Choisir une heure</Text>
-            <View style={styles.timeGrid}>
-              {timeSlots.map((time, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.timeSlot,
-                    { 
-                      backgroundColor: colors.card,
-                      borderColor: colors.border
-                    },
-                    selectedTime === time && styles.timeSlotActive,
-                  ]}
-                  onPress={() => setSelectedTime(time)}
-                >
-                  <Text
+            {/* Time Selection */}
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Choisir une heure</Text>
+              <View style={styles.timeGrid}>
+                {timeSlots.map((time, index) => (
+                  <TouchableOpacity
+                    key={index}
                     style={[
-                      styles.timeText,
-                      { color: colors.subText },
-                      selectedTime === time && styles.timeTextActive,
+                      styles.timeSlot,
+                      { 
+                        backgroundColor: colors.card,
+                        borderColor: colors.subText
+                      },
+                      selectedTime === time && styles.timeSlotActive,
                     ]}
+                    onPress={() => setSelectedTime(time)}
                   >
-                    {time}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Text
+                      style={[
+                        styles.timeText,
+                        { color: colors.subText },
+                        selectedTime === time && styles.timeTextActive,
+                      ]}
+                    >
+                      {time}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
-          </View>
 
-          {/* Pricing */}
-          <View style={[styles.pricingCard, { backgroundColor: colors.card }]}>
-            <Text style={[styles.pricingTitle, { color: colors.text }]}>Détails des frais</Text>
-            <View style={styles.pricingRow}>
-              <Text style={[styles.pricingLabel, { color: colors.subText }]}>
-                Prix de la consultation
-              </Text>
-              <Text style={[styles.pricingValue, { color: colors.text }]}>
-                {doctor?.price || 15000} FCFA
-              </Text>
+            {/* Pricing Card */}
+            <View style={[styles.pricingCard, { backgroundColor: colors.card }]}>
+              <Text style={[styles.pricingTitle, { color: colors.text }]}>Détails des frais</Text>
+              <View style={styles.pricingRow}>
+                <Text style={[styles.pricingLabel, { color: colors.subText }]}>
+                  Prix de la consultation
+                </Text>
+                <Text style={[styles.pricingValue, { color: colors.text }]}>
+                  {consultationPrice.toLocaleString()} FCFA
+                </Text>
+              </View>
+              <View style={styles.pricingRow}>
+                <Text style={[styles.pricingLabel, { color: colors.subText }]}>
+                  Frais de confirmation
+                </Text>
+                <Text style={[styles.pricingValue, { color: colors.text }]}>
+                  {confirmationFee.toLocaleString()} FCFA
+                </Text>
+              </View>
+              <View style={[styles.divider, { backgroundColor: '#E0E0E0' }]} />
+              <View style={styles.pricingRow}>
+                <Text style={[styles.totalLabel, { color: colors.text }]}>Total</Text>
+                <Text style={styles.totalValue}>
+                  {(consultationPrice + confirmationFee).toLocaleString()} FCFA
+                </Text>
+              </View>
             </View>
-            <View style={styles.pricingRow}>
-              <Text style={[styles.pricingLabel, { color: colors.subText }]}>
-                Frais de confirmation
-              </Text>
-              <Text style={[styles.pricingValue, { color: colors.text }]}>
-                {confirmationFee} FCFA
-              </Text>
-            </View>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <View style={styles.pricingRow}>
-              <Text style={[styles.totalLabel, { color: colors.text }]}>Total</Text>
-              <Text style={styles.totalValue}>
-                {(doctor?.price || 15000) + confirmationFee} FCFA
-              </Text>
-            </View>
-          </View>
 
-          {/* Important Note */}
-          <View style={styles.noteCard}>
-            <Ionicons name="information-circle" size={24} color="#FFA500" />
-            <Text style={[styles.noteText, { color: colors.subText }]}>
-              <Text style={[styles.noteBold, { color: colors.text }]}>NB : </Text>
-              Les frais de confirmation de {confirmationFee} FCFA ne sont pas
-              remboursables, que le rendez-vous soit accepté ou refusé par le médecin.
-            </Text>
+            {/* Important Note */}
+            <View style={styles.noteCard}>
+              <Ionicons name="information-circle" size={24} color="#FFA500" />
+              <Text style={[styles.noteText, { color: colors.subText }]}>
+                <Text style={[styles.noteBold, { color: colors.text }]}>NB : </Text>
+                Les frais de confirmation de {confirmationFee.toLocaleString()} FCFA ne sont pas
+                remboursables, que le rendez-vous soit accepté ou refusé par le médecin.
+              </Text>
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      )}
 
       {/* Bottom Button */}
-      <View style={[styles.footer, { 
-        backgroundColor: colors.card,
-        borderTopColor: colors.border
-      }]}>
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <Text style={styles.nextButtonText}>Suivant</Text>
-          <Ionicons name="arrow-forward" size={20} color="#fff" />
-        </TouchableOpacity>
-      </View>
+      {!loading && !error && (
+        <View style={[styles.footer, { 
+          backgroundColor: colors.card,
+          borderTopColor: colors.subText
+        }]}>
+          <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+            <Text style={styles.nextButtonText}>Suivant</Text>
+            <Ionicons name="arrow-forward" size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -258,10 +391,43 @@ const DoctorDetailScreen = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingBottom: 30,
   },
   content: {
     padding: 20,
+    paddingBottom: 100,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  loadingText: {
+    marginTop: 15,
+    fontSize: 14,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  errorText: {
+    fontSize: 16,
+    marginTop: 15,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: '#0077b6',
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   stepIndicator: {
     flexDirection: 'row',
@@ -306,6 +472,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  doctorImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    marginRight: 15,
   },
   doctorImagePlaceholder: {
     width: 90,
@@ -361,12 +533,34 @@ const styles = StyleSheet.create({
   aboutText: {
     fontSize: 14,
     lineHeight: 22,
+    marginBottom: 12,
+  },
+  detailsGrid: {
+    gap: 10,
+    marginTop: 12,
+  },
+  detailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  detailText: {
+    fontSize: 14,
+  },
+  diplomesContainer: {
+    marginTop: 15,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+  },
+  diplomesTitle: {
+    fontSize: 16,
+    fontWeight: '600',
     marginBottom: 8,
   },
-  readMore: {
+  diplomesText: {
     fontSize: 14,
-    color: '#0077b6',
-    fontWeight: '600',
+    lineHeight: 20,
   },
   datesScroll: {
     marginHorizontal: -5,
@@ -424,6 +618,11 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 20,
     marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   pricingTitle: {
     fontSize: 16,
@@ -474,8 +673,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: 20,
-    paddingBottom: 30,
     borderTopWidth: 1,
   },
   nextButton: {
