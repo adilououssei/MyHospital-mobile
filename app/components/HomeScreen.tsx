@@ -1,6 +1,7 @@
 // app/screens/HomeScreen.tsx
+// ✅ Connecté à l'API - Les docteurs sont chargés depuis le backend
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -21,41 +22,49 @@ import docteurService, { Docteur } from '../services/docteur.service';
 import { API_BASE_URL } from '../services/api.config';
 
 interface HomeScreenProps {
-  onNavigate: (screen: string) => void;
+  onNavigate: (screen: string, params?: any) => void;
   unreadCount?: number;
 }
 
 const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
   const { colors } = useApp();
-  const [topDoctors, setTopDoctors] = useState<Docteur[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
+  // ── State des docteurs ──────────────────────────────────────
+  const [topDoctors, setTopDoctors]   = useState<Docteur[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(true);
+  const [errorDocs, setErrorDocs]     = useState<string | null>(null);
+
+  // ── Chargement des docteurs au montage ──────────────────────
   useEffect(() => {
     loadTopDoctors();
   }, []);
 
   const loadTopDoctors = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      const response = await docteurService.getDocteurs();
-      
-      // Prendre les 3 premiers docteurs avec les meilleures notes
-      const sortedDoctors = response.docteurs
-        .sort((a, b) => b.note - a.note)
-        .slice(0, 3);
-      
-      setTopDoctors(sortedDoctors);
-    } catch (err) {
-      console.error('Erreur chargement docteurs:', err);
-      setError('Impossible de charger les docteurs');
+      setLoadingDocs(true);
+      setErrorDocs(null);
+      const doctors = await docteurService.getDocteurs();
+      // On garde les 3 mieux notés
+      const sorted = [...doctors].sort((a, b) => b.note - a.note).slice(0, 3);
+      setTopDoctors(sorted);
+    } catch (err: any) {
+      console.error('Erreur chargement docteurs HomeScreen:', err.message);
+      setErrorDocs('Impossible de charger les médecins');
     } finally {
-      setLoading(false);
+      setLoadingDocs(false);
     }
   };
 
-  const ServiceButton = ({ icon, label, screen }: { icon: string; label: string; screen?: string }) => (
+  // ── Composant bouton de service ─────────────────────────────
+  const ServiceButton = ({
+    icon,
+    label,
+    screen,
+  }: {
+    icon: string;
+    label: string;
+    screen?: string;
+  }) => (
     <TouchableOpacity
       style={styles.serviceButton}
       onPress={() => screen && onNavigate(screen)}
@@ -73,65 +82,154 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
     </TouchableOpacity>
   );
 
+  // ── Carte d'un docteur ──────────────────────────────────────
   const DoctorCard = ({ doctor }: { doctor: Docteur }) => {
     const photoUrl = doctor.photo ? `${API_BASE_URL}${doctor.photo}` : null;
-    
+    const prix     = docteurService.getPrixMin(doctor);
+
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.doctorCard, { backgroundColor: colors.card }]}
-        onPress={() => onNavigate('doctorDetail')}
+        onPress={() =>
+          onNavigate('doctorDetail', {
+            doctor: {
+              id:        doctor.id,
+              name:      doctor.nomComplet,
+              specialty: doctor.specialite,
+              rating:    doctor.note,
+              ville:     doctor.ville,
+              price:     prix,
+              photo:     doctor.photo,
+              telephone: doctor.telephone,
+              email:     doctor.email,
+              adresse:   doctor.adresse,
+            },
+          })
+        }
       >
+        {/* Photo ou placeholder */}
         <View style={styles.doctorImageContainer}>
           {photoUrl ? (
             <Image
               source={{ uri: photoUrl }}
               style={styles.doctorImage}
-              defaultSource={require('../../assets/doctor1.png')}
             />
           ) : (
             <View style={styles.doctorImagePlaceholder}>
-              <FontAwesome5 name="user-md" size={40} color="#0077b6" />
+              <FontAwesome5 name="user-md" size={36} color="#0077b6" />
             </View>
           )}
         </View>
-        <Text style={[styles.doctorName, { color: colors.text }]}>
+
+        {/* Infos */}
+        <Text
+          style={[styles.doctorName, { color: colors.text }]}
+          numberOfLines={1}
+        >
           {doctor.nomComplet}
         </Text>
-        <Text style={[styles.doctorSpecialty, { color: colors.subText }]}>
-          {doctor.specialite || 'Médecin généraliste'}
+        <Text
+          style={[styles.doctorSpecialty, { color: colors.subText }]}
+          numberOfLines={1}
+        >
+          {doctor.specialite ?? 'Généraliste'}
         </Text>
+
+        {/* Note + Ville */}
         <View style={styles.doctorInfo}>
           <View style={styles.ratingContainer}>
-            <Ionicons name="star" size={14} color="#FFC107" />
+            <Ionicons name="star" size={13} color="#FFC107" />
             <Text style={[styles.ratingText, { color: colors.text }]}>
-              {doctor.note}
+              {doctor.note.toFixed(1)}
             </Text>
           </View>
           <View style={styles.distanceContainer}>
-            <Ionicons name="location-outline" size={14} color={colors.subText} />
-            <Text style={[styles.distanceText, { color: colors.subText }]}>
+            <Ionicons name="location-outline" size={13} color={colors.subText} />
+            <Text
+              style={[styles.distanceText, { color: colors.subText }]}
+              numberOfLines={1}
+            >
               {doctor.ville}
             </Text>
           </View>
         </View>
+
+        {/* Prix */}
+        {prix > 0 && (
+          <Text style={styles.prixText}>
+            {prix.toLocaleString()} FCFA
+          </Text>
+        )}
       </TouchableOpacity>
     );
   };
 
+  // ── Rendu section docteurs ──────────────────────────────────
+  const renderDoctorsSection = () => {
+    if (loadingDocs) {
+      return (
+        <View style={styles.docsLoadingContainer}>
+          <ActivityIndicator size="small" color="#0077b6" />
+          <Text style={[styles.docsLoadingText, { color: colors.subText }]}>
+            Chargement des médecins...
+          </Text>
+        </View>
+      );
+    }
+
+    if (errorDocs) {
+      return (
+        <View style={styles.docsErrorContainer}>
+          <Text style={[styles.docsErrorText, { color: colors.subText }]}>
+            {errorDocs}
+          </Text>
+          <TouchableOpacity onPress={loadTopDoctors} style={styles.retryButton}>
+            <Text style={styles.retryText}>Réessayer</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    if (topDoctors.length === 0) {
+      return (
+        <View style={styles.docsEmptyContainer}>
+          <Text style={[styles.docsEmptyText, { color: colors.subText }]}>
+            Aucun médecin disponible
+          </Text>
+        </View>
+      );
+    }
+
+    return (
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.doctorsScroll}
+        contentContainerStyle={styles.doctorsScrollContent}
+      >
+        {topDoctors.map((doctor) => (
+          <DoctorCard key={doctor.id} doctor={doctor} />
+        ))}
+      </ScrollView>
+    );
+  };
+
+  // ── Rendu principal ─────────────────────────────────────────
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-      <ScrollView 
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={['top']}
+    >
+      <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         {/* Header */}
         <View style={styles.header}>
-          <View>
-            <Image
-              source={require('../../assets/MyHospital1.png')}
-              style={{ width: 200, height: 60 }}
-            />
-          </View>
+          <Image
+            source={require('../../assets/MyHospital1.png')}
+            style={{ width: 200, height: 60 }}
+          />
           <TouchableOpacity
             style={styles.notificationButton}
             onPress={() => onNavigate('notifications')}
@@ -147,25 +245,25 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
           </TouchableOpacity>
         </View>
 
-        {/* Search Bar */}
+        {/* Barre de recherche */}
         <View style={[styles.searchContainer, { backgroundColor: colors.inputBackground }]}>
           <Ionicons name="search-outline" size={20} color={colors.subText} />
           <TextInput
             style={[styles.searchInput, { color: colors.text }]}
-            placeholder="Rechercher médecin, médicaments, articles..."
+            placeholder="Rechercher médecin, médicaments..."
             placeholderTextColor={colors.subText}
           />
         </View>
 
         {/* Services */}
         <View style={styles.servicesContainer}>
-          <ServiceButton icon="medical-outline" label="Docteur" screen="doctorsList" />
-          <ServiceButton icon="medkit-outline" label="Pharmacie" screen="pharmacy" />
-          <ServiceButton icon="business-outline" label="Hôpital" screen="hospital" />
-          <ServiceButton icon="car-outline" label="Ambulance" screen="emergency" />
+          <ServiceButton icon="medical-outline" label="Docteur"   screen="doctorsList" />
+          <ServiceButton icon="medkit-outline"  label="Pharmacie" screen="pharmacy" />
+          <ServiceButton icon="business-outline" label="Hôpital"  screen="hospital" />
+          <ServiceButton icon="car-outline"     label="Ambulance" screen="emergency" />
         </View>
 
-        {/* Banner */}
+        {/* Bannière */}
         <LinearGradient
           colors={['#e4f4fcff', '#0077b6']}
           style={styles.banner}
@@ -183,50 +281,28 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
             </TouchableOpacity>
           </View>
           <View style={styles.bannerImageContainer}>
-            <View style={styles.bannerImagePlaceholder}>
-              <Image
-                source={require('../../assets/doctor2.png')}
-                style={{ width: 120, height: 140 }}
-              />
-            </View>
+            <Image
+              source={require('../../assets/doctor2.png')}
+              style={{ width: 120, height: 140 }}
+            />
           </View>
         </LinearGradient>
 
-        {/* Top Doctors */}
+        {/* Section meilleurs docteurs */}
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Meilleurs Docteurs</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Meilleurs Docteurs
+          </Text>
           <TouchableOpacity onPress={() => onNavigate('doctorsList')}>
             <Text style={styles.seeAllText}>Voir tout</Text>
           </TouchableOpacity>
         </View>
 
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#0077b6" />
-          </View>
-        ) : error ? (
-          <View style={styles.errorContainer}>
-            <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
-            <TouchableOpacity onPress={loadTopDoctors} style={styles.retryButton}>
-              <Text style={styles.retryButtonText}>Réessayer</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.doctorsScroll}
-            contentContainerStyle={styles.doctorsScrollContent}
-          >
-            {topDoctors.map((doctor) => (
-              <DoctorCard key={doctor.id} doctor={doctor} />
-            ))}
-          </ScrollView>
-        )}
+        {renderDoctorsSection()}
       </ScrollView>
 
-      <BottomNavigation 
-        currentScreen="home" 
+      <BottomNavigation
+        currentScreen="home"
         onNavigate={onNavigate}
         unreadCount={unreadCount}
       />
@@ -234,14 +310,14 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
   );
 };
 
+// ─────────────────────────────────────────────────────────────
+// 🎨 STYLES
+// ─────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  // ... (garde tous les styles existants)
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 90,
-  },
+  container:    { flex: 1 },
+  scrollContent:{ paddingBottom: 90 },
+
+  // Header
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -250,30 +326,22 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 20,
   },
-  notificationButton: {
-    padding: 8,
-    position: 'relative',
-    marginTop: 15,
-  },
+  notificationButton: { padding: 8, position: 'relative', marginTop: 15 },
   notificationBadge: {
     position: 'absolute',
-    top: 5,
-    right: 5,
+    top: 5, right: 5,
     backgroundColor: '#FF6B6B',
     borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    minWidth: 20, height: 20,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 5,
     borderWidth: 2,
     borderColor: '#fff',
   },
-  notificationBadgeText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
+  notificationBadgeText: { color: '#fff', fontSize: 11, fontWeight: 'bold' },
+
+  // Recherche
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -283,32 +351,27 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 20,
   },
-  searchInput: {
-    flex: 1,
-    marginLeft: 10,
-    fontSize: 14,
-  },
+  searchInput: { flex: 1, marginLeft: 10, fontSize: 14 },
+
+  // Services
   servicesContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingHorizontal: 20,
     marginBottom: 20,
   },
-  serviceButton: {
-    alignItems: 'center',
-  },
+  serviceButton:        { alignItems: 'center' },
   serviceIconContainer: {
-    width: 60,
-    height: 60,
+    width: 60, height: 60,
     backgroundColor: '#e4f4fcff',
     borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
   },
-  serviceLabel: {
-    fontSize: 12,
-  },
+  serviceLabel: { fontSize: 12 },
+
+  // Bannière
   banner: {
     marginHorizontal: 20,
     borderRadius: 20,
@@ -317,15 +380,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 25,
   },
-  bannerContent: {
-    flex: 1,
-  },
-  bannerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-    marginBottom: 2,
-  },
+  bannerContent:        { flex: 1 },
+  bannerTitle:          { fontSize: 16, fontWeight: '600', color: '#000', marginBottom: 2 },
   bannerButton: {
     backgroundColor: '#0077b6',
     paddingHorizontal: 20,
@@ -334,23 +390,10 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginTop: 15,
   },
-  bannerButtonText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  bannerImageContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  bannerImagePlaceholder: {
-    width: 100,
-    height: 100,
-    backgroundColor: '#e3e2e2ff',
-    borderRadius: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  bannerButtonText:     { color: '#fff', fontSize: 13, fontWeight: '600' },
+  bannerImageContainer: { justifyContent: 'center', alignItems: 'center' },
+
+  // Section titre
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -358,104 +401,81 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 15,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  seeAllText: {
-    fontSize: 14,
-    color: '#0077b6',
-    fontWeight: '500',
-  },
-  doctorsScroll: {
-    paddingLeft: 20,
-  },
-  doctorsScrollContent: {
-    paddingRight: 20,
-    paddingBottom: 10,
-  },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold' },
+  seeAllText:   { fontSize: 14, color: '#0077b6', fontWeight: '500' },
+
+  // Liste docteurs
+  doctorsScroll:        { paddingLeft: 20 },
+  doctorsScrollContent: { paddingRight: 20, paddingBottom: 10 },
+
   doctorCard: {
     borderRadius: 15,
     padding: 15,
     marginRight: 15,
-    width: 140,
+    width: 145,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
   },
-  doctorImageContainer: {
-    alignItems: 'center',
-    marginBottom: 10,
-  },
+  doctorImageContainer: { alignItems: 'center', marginBottom: 10 },
   doctorImage: {
-    width: 80,
-    height: 80,
+    width: 80, height: 80,
     borderRadius: 40,
   },
   doctorImagePlaceholder: {
-    width: 80,
-    height: 80,
+    width: 80, height: 80,
     backgroundColor: '#e4f4fcff',
     borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  doctorName: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  doctorSpecialty: {
-    fontSize: 12,
-    marginBottom: 8,
-  },
+  doctorName:     { fontSize: 13, fontWeight: '600', marginBottom: 3 },
+  doctorSpecialty:{ fontSize: 11, marginBottom: 8 },
   doctorInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 6,
   },
-  ratingContainer: {
+  ratingContainer:  { flexDirection: 'row', alignItems: 'center' },
+  ratingText:       { fontSize: 12, fontWeight: '600', marginLeft: 3 },
+  distanceContainer:{ flexDirection: 'row', alignItems: 'center', flex: 1, marginLeft: 6 },
+  distanceText:     { fontSize: 11, marginLeft: 2 },
+  prixText:         { fontSize: 12, fontWeight: '700', color: '#0077b6', marginTop: 4 },
+
+  // États chargement / erreur / vide
+  docsLoadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 30,
+    gap: 10,
   },
-  ratingText: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  distanceContainer: {
-    flexDirection: 'row',
+  docsLoadingText: { fontSize: 14 },
+
+  docsErrorContainer: {
     alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
   },
-  distanceText: {
-    fontSize: 12,
-    marginLeft: 2,
-  },
-  loadingContainer: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  errorContainer: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  errorText: {
-    fontSize: 14,
-    marginBottom: 10,
-  },
+  docsErrorText: { fontSize: 14, textAlign: 'center', marginBottom: 12 },
   retryButton: {
     backgroundColor: '#0077b6',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingVertical: 10,
     borderRadius: 20,
   },
-  retryButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
+  retryText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+
+  docsEmptyContainer: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 30,
   },
+  docsEmptyText: { fontSize: 14, textAlign: 'center' },
 });
 
 export default HomeScreen;

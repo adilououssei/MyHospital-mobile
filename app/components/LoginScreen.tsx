@@ -14,7 +14,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import authService from '../services/authService';
+import apiClient from '../services/api.config';
 import { useAuth } from '../context/AppContext';
 
 interface LoginScreenProps {
@@ -60,6 +62,8 @@ const LoginScreen = ({ onNavigate }: LoginScreenProps) => {
     setIsLoading(true);
 
     try {
+      console.log('🔐 Tentative de connexion...');
+      
       const response = await authService.login({
         email: email.trim(),
         password: password,
@@ -68,6 +72,27 @@ const LoginScreen = ({ onNavigate }: LoginScreenProps) => {
       setIsLoading(false);
 
       if (response.status === 'success' && response.user) {
+        console.log('✅ Connexion réussie');
+
+        // ✅ NOUVEAU : Récupérer le token JWT
+        const token = response.token;
+
+        if (token) {
+          // 1. Configurer le token dans apiClient (pour les requêtes API)
+          apiClient.setAuthToken(token);
+          console.log('✅ Token configuré dans apiClient');
+
+          // 2. Sauvegarder le token dans AsyncStorage (persistence)
+          await AsyncStorage.setItem('authToken', token);
+          console.log('✅ Token sauvegardé dans AsyncStorage');
+
+          // 3. Sauvegarder les infos utilisateur dans AsyncStorage
+          await AsyncStorage.setItem('user', JSON.stringify(response.user));
+          console.log('✅ Infos utilisateur sauvegardées');
+        } else {
+          console.warn('⚠️ Token non reçu du serveur');
+        }
+
         // Sauvegarder l'utilisateur dans le contexte
         await saveUser(response.user);
         
@@ -79,11 +104,23 @@ const LoginScreen = ({ onNavigate }: LoginScreenProps) => {
         setErrorMessage(response.message || 'Erreur de connexion');
         Alert.alert('Erreur', response.message || 'Erreur de connexion');
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('❌ Erreur login:', error);
       setIsLoading(false);
       setPasswordError(true);
-      setErrorMessage('Erreur de connexion au serveur');
-      Alert.alert('Erreur', 'Impossible de se connecter au serveur');
+      
+      let errorMsg = 'Erreur de connexion au serveur';
+      
+      if (error.response) {
+        errorMsg = error.response.data?.message || 
+                   error.response.data?.error || 
+                   'Identifiants incorrects';
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
+      setErrorMessage(errorMsg);
+      Alert.alert('Erreur', errorMsg);
     }
   };
 
@@ -446,5 +483,3 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
-
-// FICHIER SÉPARÉ: SignUpScreen_API.tsx

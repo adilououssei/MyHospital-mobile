@@ -1,3 +1,6 @@
+// app/screens/PaymentMethodScreen.tsx
+// ✅ Version avec intégration API PayPlus
+
 import React, { useState } from 'react';
 import {
   View,
@@ -6,12 +9,15 @@ import {
   ScrollView,
   TouchableOpacity,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useApp } from '../context/AppContext';
 import ScreenHeader from '../tabs/ScreenHeader';
+import { usePayment } from '../hooks/Usepayment';
+import rendezVousService from '../services/rendezvous.service';
 
 interface PaymentMethodScreenProps {
   onNavigate: (screen: string) => void;
@@ -20,6 +26,7 @@ interface PaymentMethodScreenProps {
   description?: string;
   date?: string;
   time?: string;
+  selectedSlot?: any; // Le créneau sélectionné
   consultationPrice?: number;
   confirmationFee?: number;
 }
@@ -27,14 +34,29 @@ interface PaymentMethodScreenProps {
 const PaymentMethodScreen = ({
   onNavigate,
   doctor,
+  consultationType,
+  description,
   date,
   time,
+  selectedSlot,
   consultationPrice = 15000,
   confirmationFee = 2000,
 }: PaymentMethodScreenProps) => {
   const { colors } = useApp();
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  // Hook de paiement
+  const { isLoading, createRendezVousAndPay } = usePayment(
+    () => {
+      // Succès : afficher modal de confirmation
+      setShowSuccessModal(true);
+    },
+    (error) => {
+      // Erreur déjà gérée dans le hook
+      console.error('Erreur paiement:', error);
+    }
+  );
 
   const paymentMethods = [
     {
@@ -53,13 +75,32 @@ const PaymentMethodScreen = ({
 
   const totalAmount = consultationPrice + confirmationFee;
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!selectedMethod) {
       alert('Veuillez sélectionner un mode de paiement');
       return;
     }
 
-    setShowSuccessModal(true);
+    if (!doctor || !date || !consultationType) {
+      alert('Informations manquantes pour créer le rendez-vous');
+      return;
+    }
+
+    // Mapper le type de consultation au format backend
+    const mappedType = rendezVousService.mapConsultationType(consultationType);
+    const mappedPayment = rendezVousService.mapPaymentMethod(selectedMethod);
+
+    // Créer la date complète avec l'heure
+    const dateTime = `${date}T${time || '10:00'}:00`;
+
+    // Appeler l'API pour créer le rendez-vous et obtenir le lien PayPlus
+    await createRendezVousAndPay({
+      docteurId: doctor.id,
+      date: dateTime,
+      typeConsultation: mappedType,
+      modePaiement: mappedPayment,
+      description: description,
+    });
   };
 
   const handleSuccess = () => {
@@ -84,16 +125,14 @@ const PaymentMethodScreen = ({
             </View>
             <View style={styles.doctorInfo}>
               <Text style={[styles.doctorName, { color: colors.text }]}>
-                {doctor?.name || 'Dr. Marcus Horizon'}
+                {doctor?.nomComplet || 'Dr. Marcus Horizon'}
               </Text>
               <Text style={[styles.doctorSpecialty, { color: colors.subText }]}>
-                {doctor?.specialty || 'Cardiologue'}
+                {doctor?.specialite || 'Cardiologue'}
               </Text>
               <View style={styles.ratingContainer}>
                 <Ionicons name="star" size={14} color="#FFA500" />
-                <Text style={[styles.rating, { color: colors.subText }]}>{doctor?.rating || 4.7}</Text>
-                <Ionicons name="location-outline" size={14} color={colors.subText} style={{ marginLeft: 10 }} />
-                <Text style={[styles.distance, { color: colors.subText }]}>{doctor?.distance || '800m'}</Text>
+                <Text style={[styles.rating, { color: colors.subText }]}>{doctor?.note || 4.7}</Text>
               </View>
             </View>
           </View>
@@ -106,12 +145,18 @@ const PaymentMethodScreen = ({
               <Text style={[styles.detailLabel, { color: colors.subText }]}>Date</Text>
               <View style={styles.detailValue}>
                 <Text style={[styles.detailText, { color: colors.text }]}>
-                  Mercredi, 23 Juin 2021 | {time || '14:00'}
+                  {date} | {time || '14:00'}
                 </Text>
-                <TouchableOpacity>
-                  <Text style={styles.changeText}>Modifier</Text>
-                </TouchableOpacity>
               </View>
+            </View>
+
+            <View style={styles.detailRow}>
+              <Text style={[styles.detailLabel, { color: colors.subText }]}>Type</Text>
+              <Text style={[styles.detailText, { color: colors.text }]}>
+                {consultationType === 'en_ligne' ? 'En ligne' : 
+                 consultationType === 'domicile' ? 'À domicile' : 
+                 "À l'hôpital"}
+              </Text>
             </View>
 
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
@@ -152,6 +197,7 @@ const PaymentMethodScreen = ({
                   selectedMethod === method.id && styles.methodCardActive,
                 ]}
                 onPress={() => setSelectedMethod(method.id)}
+                disabled={isLoading}
               >
                 <View style={styles.methodLeft}>
                   <View
@@ -177,6 +223,14 @@ const PaymentMethodScreen = ({
               </TouchableOpacity>
             ))}
           </View>
+
+          {/* Information PayPlus */}
+          <View style={[styles.infoCard, { backgroundColor: colors.inputBackground }]}>
+            <Ionicons name="information-circle-outline" size={20} color="#0077b6" />
+            <Text style={[styles.infoText, { color: colors.subText }]}>
+              Vous serez redirigé vers PayPlus pour finaliser votre paiement en toute sécurité
+            </Text>
+          </View>
         </View>
       </ScrollView>
 
@@ -192,12 +246,16 @@ const PaymentMethodScreen = ({
         <TouchableOpacity
           style={[
             styles.confirmButton,
-            !selectedMethod && styles.confirmButtonDisabled,
+            (!selectedMethod || isLoading) && styles.confirmButtonDisabled,
           ]}
           onPress={handleConfirm}
-          disabled={!selectedMethod}
+          disabled={!selectedMethod || isLoading}
         >
-          <Text style={styles.confirmButtonText}>Confirmer</Text>
+          {isLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.confirmButtonText}>Confirmer et payer</Text>
+          )}
         </TouchableOpacity>
       </View>
 
@@ -214,15 +272,12 @@ const PaymentMethodScreen = ({
               <Ionicons name="checkmark" size={50} color="#0077b6" />
             </View>
 
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Paiement réussi</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Paiement en cours</Text>
             <Text style={[styles.modalDescription, { color: colors.subText }]}>
-              Votre paiement a été effectué avec succès,
+              Votre paiement est en cours de traitement.
             </Text>
             <Text style={[styles.modalDescription, { color: colors.subText }]}>
-              vous pouvez avoir une session de consultation
-            </Text>
-            <Text style={[styles.modalDescription, { color: colors.subText }]}>
-              avec votre médecin de confiance
+              Vous recevrez une confirmation une fois le paiement validé.
             </Text>
 
             <TouchableOpacity
@@ -287,10 +342,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 4,
   },
-  distance: {
-    fontSize: 14,
-    marginLeft: 4,
-  },
   detailsCard: {
     padding: 15,
     borderRadius: 10,
@@ -321,12 +372,6 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 14,
-    marginRight: 10,
-  },
-  changeText: {
-    fontSize: 14,
-    color: '#0077b6',
-    fontWeight: '600',
   },
   divider: {
     height: 1,
@@ -389,6 +434,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  infoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 10,
+    gap: 10,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 18,
+  },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -413,6 +470,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 25,
     borderRadius: 8,
+    minWidth: 150,
+    alignItems: 'center',
   },
   confirmButtonDisabled: {
     backgroundColor: '#ccc',

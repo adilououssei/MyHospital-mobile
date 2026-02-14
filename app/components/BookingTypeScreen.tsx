@@ -1,3 +1,4 @@
+// app/screens/BookingTypeScreen.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -23,21 +24,22 @@ const BookingTypeScreen = ({ onNavigate }: BookingTypeScreenProps) => {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [description, setDescription] = useState('');
 
+  // ⚠️ IMPORTANT : Les IDs correspondent aux types API backend
   const consultationTypes = [
     {
-      id: 'online',
+      id: 'en_ligne',  // ✅ Changé de 'online' à 'en_ligne'
       title: 'Consultation en ligne',
       icon: 'videocam',
       description: 'Consultation par vidéo',
     },
     {
-      id: 'home',
+      id: 'domicile',  // ✅ Changé de 'home' à 'domicile'
       title: 'Consultation à domicile',
       icon: 'home',
       description: 'Le médecin vient chez vous',
     },
     {
-      id: 'hospital',
+      id: 'hopital',   // ✅ Changé de 'hospital' à 'hopital'
       title: "Consultation à l'hôpital",
       icon: 'business',
       description: 'Rendez-vous en présentiel',
@@ -51,14 +53,13 @@ const BookingTypeScreen = ({ onNavigate }: BookingTypeScreenProps) => {
     }
 
     onNavigate('doctorsList', {
-      consultationType: selectedType,
+      consultationType: selectedType, // 'en_ligne', 'domicile', ou 'hopital'
       description: description,
     });
   };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header avec composant réutilisable */}
       <ScreenHeader
         title="Nouveau rendez-vous"
         onBack={() => onNavigate('appointments')}
@@ -72,6 +73,7 @@ const BookingTypeScreen = ({ onNavigate }: BookingTypeScreenProps) => {
         <ScrollView 
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
+          scrollEnabled={true}
         >
           <View style={styles.content}>
             {/* Step Indicator */}
@@ -79,12 +81,12 @@ const BookingTypeScreen = ({ onNavigate }: BookingTypeScreenProps) => {
               <View style={styles.stepActive}>
                 <Text style={styles.stepTextActive}>1</Text>
               </View>
-              <View style={[styles.stepLine, { backgroundColor: colors.border }]} />
-              <View style={[styles.stepInactive, { backgroundColor: colors.border }]}>
+              <View style={[styles.stepLine, { backgroundColor: '#ddd' }]} />
+              <View style={[styles.stepInactive, { backgroundColor: '#e0e0e0' }]}>
                 <Text style={[styles.stepTextInactive, { color: colors.subText }]}>2</Text>
               </View>
-              <View style={[styles.stepLine, { backgroundColor: colors.border }]} />
-              <View style={[styles.stepInactive, { backgroundColor: colors.border }]}>
+              <View style={[styles.stepLine, { backgroundColor: '#ddd' }]} />
+              <View style={[styles.stepInactive, { backgroundColor: '#e0e0e0' }]}>
                 <Text style={[styles.stepTextInactive, { color: colors.subText }]}>3</Text>
               </View>
             </View>
@@ -144,7 +146,7 @@ const BookingTypeScreen = ({ onNavigate }: BookingTypeScreenProps) => {
                   {
                     backgroundColor: colors.inputBackground,
                     color: colors.text,
-                    borderColor: colors.border
+                    borderColor: '#ddd'
                   }
                 ]}
                 placeholder="Décrivez brièvement votre problème de santé..."
@@ -165,7 +167,7 @@ const BookingTypeScreen = ({ onNavigate }: BookingTypeScreenProps) => {
 
         {/* Next Button */}
         <View style={[styles.footer, { 
-          borderTopColor: colors.border,
+          borderTopColor: '#ddd',
           backgroundColor: colors.background 
         }]}>
           <TouchableOpacity

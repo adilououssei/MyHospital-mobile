@@ -1,6 +1,11 @@
 // app/services/docteur.service.ts
+// ✅ Service docteurs - utilise Axios via apiClient
 
-import { API_BASE_URL, API_ENDPOINTS } from './api.config';
+import apiClient, { API_ENDPOINTS } from './api.config';
+
+// ─────────────────────────────────────────────────────────────
+// 📋 INTERFACES
+// ─────────────────────────────────────────────────────────────
 
 export interface Docteur {
   id: number;
@@ -8,7 +13,7 @@ export interface Docteur {
   prenom: string;
   nomComplet: string;
   specialite: string | null;
-  specialiteId: number | number[] | null;
+  specialiteId: number[] | null;
   photo: string | null;
   telephone: string;
   email: string;
@@ -19,7 +24,7 @@ export interface Docteur {
     domicile: number | null;
     enLigne: number | null;
   };
-  typesConsultation?: string[];
+  typesConsultation: string[];
   note: number;
   nombreAvis: number;
 }
@@ -43,18 +48,12 @@ export interface DocteurDetail extends Omit<Docteur, 'typesConsultation'> {
   }>;
 }
 
-export interface Specialite {
-  id: number;
-  nom: string;
-  description: string | null;
-}
-
 export interface Creneau {
   id: number;
   heure: string;
   type: string;
   typeLibelle?: string;
-  tarif?: number;
+  tarif?: number | null;
   disponible: boolean;
 }
 
@@ -64,238 +63,107 @@ export interface Disponibilite {
   dateFormatted: string;
   jourSemaine: string;
   creneaux: Creneau[];
-  nombreCreneauxDisponibles?: number;
-  nombreCreneauxTotal?: number;
 }
 
-export interface DocteurListResponse {
-  status: string;
-  count: number;
-  docteurs: Docteur[];
-}
-
-export interface DocteurDetailResponse {
-  status: string;
-  docteur: DocteurDetail;
-}
-
-export interface SpecialiteListResponse {
-  status: string;
-  count: number;
-  specialites: Specialite[];
-}
-
-export interface DisponibiliteListResponse {
-  status: string;
-  count: number;
-  disponibilites: Disponibilite[];
-}
-
-export interface DisponibiliteDateResponse {
-  status: string;
-  date: string;
-  dateFormatted: string;
-  jourSemaine: string;
-  nombreCreneauxDisponibles: number;
-  nombreCreneauxTotal: number;
-  creneaux: Creneau[];
-  message?: string;
-}
+// ─────────────────────────────────────────────────────────────
+// 🏥 DOCTEUR SERVICE
+// ─────────────────────────────────────────────────────────────
 
 class DocteurService {
   /**
-   * Récupère la liste des docteurs avec filtres optionnels
+   * Liste des docteurs (avec filtres optionnels)
    */
   async getDocteurs(
     specialite?: number,
     search?: string,
     type?: string
-  ): Promise<DocteurListResponse> {
+  ): Promise<Docteur[]> {
     try {
-      const params = new URLSearchParams();
-      if (specialite) params.append('specialite', specialite.toString());
-      if (search) params.append('search', search);
-      if (type) params.append('type', type);
+      const params: Record<string, string> = {};
+      if (specialite) params.specialite = specialite.toString();
+      if (search)     params.search     = search;
+      if (type)       params.type       = type;
 
-      const url = `${API_BASE_URL}${API_ENDPOINTS.DOCTEURS}${
-        params.toString() ? `?${params.toString()}` : ''
-      }`;
-
-      console.log('🌐 Fetching doctors from:', url);
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const responseText = await response.text();
-      console.log('📨 Server response status:', response.status);
-      console.log('📨 Server response body:', responseText);
-
-      if (!response.ok) {
-        throw new Error(`Erreur HTTP: ${response.status} - ${responseText}`);
-      }
-
-      const data: DocteurListResponse = JSON.parse(responseText);
-      console.log('✅ Doctors loaded:', data.count);
-      return data;
-    } catch (error) {
-      console.error('❌ Erreur lors de la récupération des docteurs:', error);
+      const response = await apiClient.get(API_ENDPOINTS.DOCTEURS, { params });
+      return response.data.docteurs ?? [];
+    } catch (error: any) {
+      console.error('❌ getDocteurs:', error.message);
       throw error;
     }
   }
 
   /**
-   * Récupère les détails d'un docteur spécifique
+   * Détails complets d'un docteur
    */
-  async getDocteurById(id: number): Promise<DocteurDetailResponse> {
+  async getDocteurById(id: number): Promise<DocteurDetail> {
     try {
-      const url = `${API_BASE_URL}${API_ENDPOINTS.DOCTEUR_DETAIL(id)}`;
-      console.log('🌐 Fetching doctor details from:', url);
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const responseText = await response.text();
-      console.log('📨 Server response status:', response.status);
-      console.log('📨 Server response body:', responseText);
-
-      if (!response.ok) {
-        throw new Error(`Erreur HTTP: ${response.status} - ${responseText}`);
-      }
-
-      const data: DocteurDetailResponse = JSON.parse(responseText);
-      console.log('✅ Doctor details loaded:', data.docteur.nomComplet);
-      return data;
-    } catch (error) {
-      console.error('❌ Erreur lors de la récupération du docteur:', error);
+      const response = await apiClient.get(API_ENDPOINTS.DOCTEUR_DETAIL(id));
+      return response.data.docteur;
+    } catch (error: any) {
+      console.error('❌ getDocteurById:', error.message);
       throw error;
     }
   }
 
   /**
-   * Récupère les disponibilités d'un docteur
+   * Récupère toutes les disponibilités d'un docteur
+   * @param docteurId - ID du docteur
+   * @param params - Filtres optionnels (date_debut, date_fin, type)
    */
-  async getDocteurDisponibilites(
-    id: number,
-    dateDebut?: string,
-    dateFin?: string,
-    type?: string
-  ): Promise<DisponibiliteListResponse> {
+  async getDisponibilites(
+    docteurId: number,
+    params?: {
+      date_debut?: string; // Format YYYY-MM-DD
+      date_fin?: string;   // Format YYYY-MM-DD
+      type?: 'hopital' | 'domicile' | 'en_ligne';
+    }
+  ): Promise<Disponibilite[]> {
     try {
-      const params = new URLSearchParams();
-      if (dateDebut) params.append('date_debut', dateDebut);
-      if (dateFin) params.append('date_fin', dateFin);
-      if (type) params.append('type', type);
-
-      const url = `${API_BASE_URL}/api/docteurs/${id}/disponibilites${
-        params.toString() ? `?${params.toString()}` : ''
-      }`;
-
-      console.log('🌐 Fetching disponibilites from:', url);
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const responseText = await response.text();
-      console.log('📨 Server response status:', response.status);
-      console.log('📨 Server response body:', responseText);
-
-      if (!response.ok) {
-        throw new Error(`Erreur HTTP: ${response.status} - ${responseText}`);
-      }
-
-      const data: DisponibiliteListResponse = JSON.parse(responseText);
-      console.log('✅ Disponibilites loaded:', data.count);
-      return data;
-    } catch (error) {
-      console.error('❌ Erreur lors de la récupération des disponibilités:', error);
-      throw error;
+      const response = await apiClient.get(
+        API_ENDPOINTS.DOCTEUR_DISPONIBILITES(docteurId),
+        { params }
+      );
+      return response.data.disponibilites || [];
+    } catch (error: any) {
+      console.error('❌ getDisponibilites:', error.message);
+      throw new Error(
+        error.response?.data?.message || 
+        'Erreur lors de la récupération des disponibilités'
+      );
     }
   }
 
   /**
-   * Récupère les créneaux disponibles pour une date spécifique
+   * Créneaux d'un docteur pour une date précise (format YYYY-MM-DD)
+   * @param id - ID du docteur
+   * @param date - Date au format YYYY-MM-DD
+   * @param type - Type de consultation (optionnel)
    */
-  async getDisponibilitesParDate(
-    id: number,
+  async getCreneauxParDate(
+    id: number, 
     date: string,
-    type?: string
-  ): Promise<DisponibiliteDateResponse> {
+    type?: 'hopital' | 'domicile' | 'en_ligne'
+  ): Promise<Creneau[]> {
     try {
-      const params = new URLSearchParams();
-      if (type) params.append('type', type);
-
-      const url = `${API_BASE_URL}/api/docteurs/${id}/disponibilites/${date}${
-        params.toString() ? `?${params.toString()}` : ''
-      }`;
-
-      console.log('🌐 Fetching creneaux from:', url);
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const responseText = await response.text();
-      console.log('📨 Server response status:', response.status);
-      console.log('📨 Server response body:', responseText);
-
-      if (!response.ok) {
-        throw new Error(`Erreur HTTP: ${response.status} - ${responseText}`);
-      }
-
-      const data: DisponibiliteDateResponse = JSON.parse(responseText);
-      console.log('✅ Creneaux loaded:', data.creneaux.length);
-      return data;
-    } catch (error) {
-      console.error('❌ Erreur lors de la récupération des créneaux:', error);
-      throw error;
+      const params = type ? { type } : undefined;
+      const response = await apiClient.get(
+        API_ENDPOINTS.DOCTEUR_CRENEAUX(id, date),
+        { params }
+      );
+      return response.data.creneaux ?? [];
+    } catch (error: any) {
+      console.error('❌ getCreneauxParDate:', error.message);
+      return [];
     }
   }
 
   /**
-   * Récupère la liste des spécialités
+   * Retourne le tarif minimum d'un docteur (pour affichage dans la liste)
    */
-  async getSpecialites(): Promise<SpecialiteListResponse> {
-    try {
-      const url = `${API_BASE_URL}${API_ENDPOINTS.SPECIALITES}`;
-      console.log('🌐 Fetching specialites from:', url);
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const responseText = await response.text();
-      console.log('📨 Server response status:', response.status);
-      console.log('📨 Server response body:', responseText);
-
-      if (!response.ok) {
-        throw new Error(`Erreur HTTP: ${response.status} - ${responseText}`);
-      }
-
-      const data: SpecialiteListResponse = JSON.parse(responseText);
-      console.log('✅ Specialites loaded:', data.count);
-      return data;
-    } catch (error) {
-      console.error('❌ Erreur lors de la récupération des spécialités:', error);
-      throw error;
-    }
+  getPrixMin(docteur: Docteur): number {
+    const { hopital, domicile, enLigne } = docteur.tarifs;
+    const tarifs = [hopital, domicile, enLigne].filter((t): t is number => t !== null);
+    return tarifs.length > 0 ? Math.min(...tarifs) : 0;
   }
 }
 
