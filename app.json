@@ -4,11 +4,11 @@
     "slug": "MyHospital-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/splash2.png",
+    "icon": "./assets/splash1.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-        "image": "./assets/splash2.png",
+        "image": "./assets/splash1.png",
         "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/splash2.png",
+        "foregroundImage": "./assets/splash1.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -25,7 +25,7 @@
       "package": "com.ouss_adilou.MyHospitalmobile"
     },
     "web": {
-      "favicon": "./assets/splash2.png"
+      "favicon": "./assets/splash1.png"
     },
     "extra": {
       "eas": {
