@@ -4,34 +4,39 @@
 // ─────────────────────────────────────────────────────────────
 // 🔧 CHANGER L'URL ICI UNIQUEMENT
 // ─────────────────────────────────────────────────────────────
-export const API_BASE_URL = 'http://192.168.241.115:8000';
+export const API_BASE_URL = 'http://192.168.1.65:8000';
 
 // ─────────────────────────────────────────────────────────────
 // 📋 TOUS LES ENDPOINTS DE L'APPLICATION
 // ─────────────────────────────────────────────────────────────
 export const API_ENDPOINTS = {
   // Authentification
-  LOGIN:    '/api/login',
+  LOGIN: '/api/login',
   REGISTER: '/api/register',
 
   // Docteurs
-  DOCTEURS:               '/api/docteurs',
-  DOCTEUR_DETAIL:         (id: number)               => `/api/docteurs/${id}`,
-  DOCTEUR_DISPONIBILITES: (id: number)               => `/api/docteurs/${id}/disponibilites`,
-  DOCTEUR_CRENEAUX:       (id: number, date: string) => `/api/docteurs/${id}/disponibilites/${date}`,
+  DOCTEURS: '/api/docteurs',
+  DOCTEUR_DETAIL: (id: number) => `/api/docteurs/${id}`,
+  DOCTEUR_DISPONIBILITES: (id: number) => `/api/docteurs/${id}/disponibilites`,
+  DOCTEUR_CRENEAUX: (id: number, date: string) => `/api/docteurs/${id}/disponibilites/${date}`,
+  NOTIFICATIONS: (userId: number) => `/api/notifications/${userId}`,
+  NOTIFICATIONS_UNREAD: (userId: number) => `/api/notifications/unread-count/${userId}`,
+  NOTIFICATION_READ: (id: number) => `/api/notifications/${id}/read`,
+  NOTIFICATIONS_READ_ALL: (userId: number) => `/api/notifications/user/${userId}/read-all`,
+  NOTIFICATION_DELETE: (id: number) => `/api/notifications/${id}`,
 
   // Spécialités
   SPECIALITES: '/api/specialites',
 
   // Rendez-vous
-  CREATE_RENDEZVOUS:    '/api/rendezvous/create',
-  MES_RENDEZVOUS:       '/api/patient/rendezvous/mes-rendezvous',  // ✅ Corrigé
-  RENDEZVOUS_DETAIL:    (id: number) => `/api/rendezvous/${id}`,
-  CANCEL_RENDEZVOUS:    (id: number) => `/api/rendezvous/${id}/cancel`,
+  CREATE_RENDEZVOUS: '/api/rendezvous/create',
+  MES_RENDEZVOUS: '/api/patient/rendezvous/mes-rendezvous',  // ✅ Corrigé
+  RENDEZVOUS_DETAIL: (id: number) => `/api/rendezvous/${id}`,
+  CANCEL_RENDEZVOUS: (id: number) => `/api/rendezvous/${id}/cancel`,
 
   // Paiements
-  PAIEMENT_STATUS:      (transactionId: string) => `/api/paiement/status/${transactionId}`,
-  PAYPLUS_WEBHOOK:      '/api/payplus/webhook',
+  PAIEMENT_STATUS: (transactionId: string) => `/api/paiement/status/${transactionId}`,
+  PAYPLUS_WEBHOOK: '/api/payplus/webhook',
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -82,13 +87,13 @@ class ApiClient {
 
   private buildUrl(url: string, params?: Record<string, any>): string {
     const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
-    
+
     if (!params) return fullUrl;
 
     const queryString = Object.entries(params)
       .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
       .join('&');
-    
+
     return queryString ? `${fullUrl}?${queryString}` : fullUrl;
   }
 
@@ -105,9 +110,9 @@ class ApiClient {
     } = config;
 
     const fullUrl = this.buildUrl(url, params);
-    const mergedHeaders = { 
-      ...this.defaultHeaders, 
-      ...headers 
+    const mergedHeaders = {
+      ...this.defaultHeaders,
+      ...headers
     };
 
     // ✅ Ajouter le token JWT si disponible
@@ -146,7 +151,7 @@ class ApiClient {
 
       let responseData;
       const contentType = response.headers.get('content-type');
-      
+
       if (contentType?.includes('application/json')) {
         responseData = await response.json();
       } else {
@@ -156,7 +161,7 @@ class ApiClient {
       if (!response.ok) {
         const errorMessage = responseData?.message || responseData?.error || response.statusText;
         console.error(`❌ [API] ${response.status} ${url} → ${errorMessage}`);
-        
+
         throw {
           response: {
             data: responseData,
