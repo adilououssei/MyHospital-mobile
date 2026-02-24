@@ -8,8 +8,8 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-        "image": "./assets/splash1.png",
-        "resizeMode": "contain",
+      "image": "./assets/splash1.png",
+      "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
@@ -19,10 +19,13 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/splash1.png",
         "backgroundColor": "#ffffff"
+        
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.ouss_adilou.MyHospitalmobile"
+      "package": "com.ouss_adilou.MyHospitalmobile",
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+
     },
     "web": {
       "favicon": "./assets/splash1.png"
@@ -31,6 +34,9 @@
       "eas": {
         "projectId": "eced3d8c-02f4-41ff-93ad-16b60d81fdae"
       }
-    }
+    },
+    "plugins": [
+      "expo-localization"
+    ]
   }
 }

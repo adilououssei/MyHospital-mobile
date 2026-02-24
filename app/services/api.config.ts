@@ -14,6 +14,9 @@ export const API_ENDPOINTS = {
   LOGIN: '/api/login',
   REGISTER: '/api/register',
 
+  PHARMACIES_ON_CALL:         '/api/pharmacies/on-call',
+  PHARMACIES_ON_CALL_REFRESH: '/api/pharmacies/on-call/refresh',
+
   // Docteurs
   DOCTEURS: '/api/docteurs',
   DOCTEUR_DETAIL: (id: number) => `/api/docteurs/${id}`,
@@ -30,7 +33,7 @@ export const API_ENDPOINTS = {
 
   // Rendez-vous
   CREATE_RENDEZVOUS: '/api/rendezvous/create',
-  MES_RENDEZVOUS: '/api/patient/rendezvous/mes-rendezvous',  // ✅ Corrigé
+  MES_RENDEZVOUS: '/api/patient/rendezvous/mes-rendezvous',
   RENDEZVOUS_DETAIL: (id: number) => `/api/rendezvous/${id}`,
   CANCEL_RENDEZVOUS: (id: number) => `/api/rendezvous/${id}/cancel`,
 
@@ -65,7 +68,7 @@ class ApiClient {
   private defaultHeaders: Record<string, string>;
   private authToken: string | null = null;
 
-  constructor(baseURL: string, timeout: number = 10000) {
+  constructor(baseURL: string, timeout: number = 30000) { // ✅ 10000 → 30000
     this.baseURL = baseURL;
     this.defaultTimeout = timeout;
     this.defaultHeaders = {
@@ -74,26 +77,21 @@ class ApiClient {
     };
   }
 
-  // ✅ Méthode pour définir le token d'authentification
   setAuthToken(token: string | null) {
     this.authToken = token;
     console.log('🔐 [API] Token configuré:', token ? `${token.substring(0, 20)}...` : 'NULL');
   }
 
-  // ✅ Méthode pour obtenir le token actuel
   getAuthToken(): string | null {
     return this.authToken;
   }
 
   private buildUrl(url: string, params?: Record<string, any>): string {
     const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
-
     if (!params) return fullUrl;
-
     const queryString = Object.entries(params)
       .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
       .join('&');
-
     return queryString ? `${fullUrl}?${queryString}` : fullUrl;
   }
 
@@ -110,29 +108,14 @@ class ApiClient {
     } = config;
 
     const fullUrl = this.buildUrl(url, params);
-    const mergedHeaders = {
-      ...this.defaultHeaders,
-      ...headers
-    };
+    const mergedHeaders = { ...this.defaultHeaders, ...headers };
 
-    // ✅ Ajouter le token JWT si disponible
     if (this.authToken) {
       mergedHeaders['Authorization'] = `Bearer ${this.authToken}`;
-      console.log('🔑 [API] Token ajouté aux headers');
-    } else {
-      console.warn('⚠️ [API] AUCUN TOKEN disponible pour cette requête');
     }
 
-    // Log de la requête
     console.log(`🌐 [API] ${method} ${fullUrl}`);
-    // ✅ NOUVEAU : Log des headers (sans afficher le token complet pour la sécurité)
-    const headersToLog = { ...mergedHeaders };
-    if (headersToLog['Authorization']) {
-      headersToLog['Authorization'] = 'Bearer ***';
-    }
-    console.log(`📤 [API] Headers:`, JSON.stringify(headersToLog, null, 2));
 
-    // Controller pour le timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -145,13 +128,10 @@ class ApiClient {
       });
 
       clearTimeout(timeoutId);
-
-      // Log de la réponse
       console.log(`✅ [API] ${response.status} ${url}`);
 
       let responseData;
       const contentType = response.headers.get('content-type');
-
       if (contentType?.includes('application/json')) {
         responseData = await response.json();
       } else {
@@ -161,13 +141,8 @@ class ApiClient {
       if (!response.ok) {
         const errorMessage = responseData?.message || responseData?.error || response.statusText;
         console.error(`❌ [API] ${response.status} ${url} → ${errorMessage}`);
-
         throw {
-          response: {
-            data: responseData,
-            status: response.status,
-            statusText: response.statusText,
-          },
+          response: { data: responseData, status: response.status, statusText: response.statusText },
           message: errorMessage,
           config,
         };
@@ -185,27 +160,16 @@ class ApiClient {
 
       if (error.name === 'AbortError') {
         console.error(`❌ [API] Timeout ${url}`);
-        throw {
-          message: 'Request timeout',
-          config,
-        };
+        throw { message: 'Request timeout', config };
       }
 
-      if (error.response) {
-        // Erreur déjà formatée
-        throw error;
-      }
+      if (error.response) throw error;
 
-      // Erreur réseau
       console.error(`❌ [API] Network error ${url}:`, error.message);
-      throw {
-        message: error.message || 'Network error',
-        config,
-      };
+      throw { message: error.message || 'Network error', config };
     }
   }
 
-  // Méthodes HTTP similaires à axios
   async get<T = any>(url: string, config?: Omit<RequestConfig, 'method' | 'data'>) {
     return this.makeRequest<T>(url, { ...config, method: 'GET' });
   }
@@ -226,21 +190,13 @@ class ApiClient {
     return this.makeRequest<T>(url, { ...config, data, method: 'PATCH' });
   }
 
-  // Propriété pour compatibilité avec axios
   interceptors = {
-    request: {
-      use: (onFulfilled?: any, onRejected?: any) => {
-        console.log('ℹ️ [API] Request interceptor registered (Note: Custom implementation)');
-      },
-    },
-    response: {
-      use: (onFulfilled?: any, onRejected?: any) => {
-        console.log('ℹ️ [API] Response interceptor registered (Note: Custom implementation)');
-      },
-    },
+    request: { use: (onFulfilled?: any, onRejected?: any) => {} },
+    response: { use: (onFulfilled?: any, onRejected?: any) => {} },
   };
 }
 
-const apiClient = new ApiClient(API_BASE_URL, 10000);
+// ✅ Timeout par défaut : 30 secondes (était 10s — causait des timeouts sur /pharmacies/on-call)
+const apiClient = new ApiClient(API_BASE_URL, 30000);
 
 export default apiClient;

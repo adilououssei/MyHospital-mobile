@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useApp } from '../context/AppContext';
+import { useApp, useAuth } from '../context/AppContext';
 import ScreenHeader from '../tabs/ScreenHeader';
 
 import {
@@ -37,7 +37,8 @@ const NotificationsScreen = ({
   onNavigate,
   onUpdateUnreadCount,
 }: NotificationsScreenProps) => {
-  const { colors, user } = useApp();
+  const { colors } = useApp();
+  const { user }   = useAuth();
 
   const [notifications, setNotifications]   = useState<ApiNotification[]>([]);
   const [loading, setLoading]               = useState(true);
