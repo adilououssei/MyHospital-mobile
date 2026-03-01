@@ -12,7 +12,7 @@ interface EmergencyScreenProps {
   onNavigate: (screen: string) => void;
 }
 
-const PHONE = '96712198';
+const PHONE = '170';
 
 const EmergencyScreen = ({ onNavigate }: EmergencyScreenProps) => {
   const { colors, t } = useApp();

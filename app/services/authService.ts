@@ -1,6 +1,3 @@
-// app/services/authService.ts
-// ✅ Service d'authentification - utilise Axios via apiClient
-
 import apiClient, { API_ENDPOINTS } from './api.config';
 
 // ─────────────────────────────────────────────────────────────
@@ -32,6 +29,10 @@ export interface User {
   email: string;
   nom: string;
   prenom: string;
+  ville?: string;      // ← AJOUTÉ : requis par AppContext
+  adresse?: string;
+  telephone?: string;
+  photo?: string;
 }
 
 export interface LoginResponse {
@@ -51,9 +52,6 @@ export interface RegisterResponse {
 // ─────────────────────────────────────────────────────────────
 
 class AuthService {
-  /**
-   * Connexion d'un utilisateur
-   */
   async login(data: LoginData): Promise<LoginResponse> {
     try {
       const response = await apiClient.post<LoginResponse>(API_ENDPOINTS.LOGIN, data);
@@ -66,9 +64,6 @@ class AuthService {
     }
   }
 
-  /**
-   * Inscription d'un nouvel utilisateur
-   */
   async register(data: RegisterData): Promise<RegisterResponse> {
     try {
       const response = await apiClient.post<RegisterResponse>(API_ENDPOINTS.REGISTER, data);
