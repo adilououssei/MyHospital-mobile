@@ -26,7 +26,6 @@ interface UserLocation { latitude: number; longitude: number; }
 interface Pharmacy extends ApiPharmacy {
   isFavorite: boolean;
   distanceKm: number | null;
-  slug?: string; // slug depuis l'API pour les images personnalisées
 }
 
 interface PharmacyScreenProps {
