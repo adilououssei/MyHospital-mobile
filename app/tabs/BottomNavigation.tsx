@@ -14,7 +14,6 @@ const BottomNavigation = ({ currentScreen, onNavigate, unreadCount = 0 }: Bottom
 
   const navItems = [
     { screen: 'home',        icon: 'home',           iconOutline: 'home-outline' },
-    { screen: 'messages',    icon: 'chatbubble',     iconOutline: 'chatbubble-outline' },
     { screen: 'chatbot',     icon: 'hardware-chip',  iconOutline: 'hardware-chip-outline' }, // ← IA
     { screen: 'appointments',icon: 'calendar',       iconOutline: 'calendar-outline' },
     { screen: 'profile',     icon: 'person',         iconOutline: 'person-outline' },

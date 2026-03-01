@@ -40,6 +40,7 @@ import PrivacyPolicyScreen from './app/components/PrivacyPolicyScreen';
 import RateAppScreen from './app/components/RateAppScreen';
 import TransactionHistoryScreen from './app/components/TransactionHistoryScreen';
 import PrescriptionsScreen from './app/components/PrescriptionsScreen';
+import ChatbotScreen from './app/components/ChatbotScreen';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -129,6 +130,7 @@ function AppContent() {
         );
       case 'createNewPassword': return <CreateNewPasswordScreen onNavigate={handleNavigation} />;
       case 'home':            return <HomeScreen onNavigate={handleNavigation} unreadCount={unreadCount} />;
+      case 'chatbot':         return <ChatbotScreen onNavigate={handleNavigation} />;
       case 'profile':         return <ProfileScreen onNavigate={handleNavigation} />;
       case 'pharmacy':        return <PharmacyScreen onNavigate={handleNavigation} />;
       case 'hospital':        return <HospitalScreen onNavigate={handleNavigation} />;

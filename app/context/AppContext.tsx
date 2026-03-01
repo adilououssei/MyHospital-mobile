@@ -1616,6 +1616,7 @@ i18n.defaultLocale = 'fr';
 // 🏷️ TYPES
 // ─────────────────────────────────────────────────────────────
 interface User {
+  ville: any;
   id: number;
   email: string;
   nom: string;
