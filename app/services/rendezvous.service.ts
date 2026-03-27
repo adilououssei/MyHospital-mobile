@@ -1,5 +1,5 @@
 // app/services/rendezvous.service.ts
-// ✅ Service rendez-vous et paiements
+// ✅ Service rendez-vous et paiements — meilleur logging d'erreur
 
 import apiClient, { API_ENDPOINTS } from './api.config';
 
@@ -22,28 +22,28 @@ export interface CreateRendezVousResponse {
   requiresPayment: boolean;
 }
 
-// ✅ MIS À JOUR : statuts complets (backend renvoie 'pending' et 'accepted', pas 'confirmed')
 export interface RendezVous {
+  jitsiRoom: null;
+  jitsiUrl: null;
   id:                number;
-  docteurId:         number;        // ✅ NOUVEAU : nécessaire pour le reschedule
+  docteurId:         number;
   docteurNom:        string;
   docteurPrenom:     string;
   docteurSpecialite: string | null;
-  docteurPhoto:      string | null; // ✅ NOUVEAU : chemin vers la photo du docteur
-  docteurTelephone:  string | null; // ✅ NOUVEAU : téléphone du docteur
+  docteurPhoto:      string | null;
+  docteurTelephone:  string | null;
   patientId:         number;
   dateRendezVous:    string;
   typeConsultation:  string;
-  // ✅ CORRECTIF : liste complète des statuts réellement renvoyés par le backend
   statut:
-    | 'pending'          // en attente de validation du docteur
-    | 'pending_payment'  // en attente de paiement (consultation en ligne)
-    | 'accepted'         // accepté par le docteur (= confirmé côté mobile)
-    | 'refused'          // refusé par le docteur
-    | 'cancelled'        // annulé par le patient
-    | 'completed';       // consultation terminée
+    | 'pending'
+    | 'pending_payment'
+    | 'accepted'
+    | 'refused'
+    | 'cancelled'
+    | 'completed';
   description:       string | null;
-  createdAt:         string | null; // ✅ NOUVEAU
+  createdAt:         string | null;
   paiement: {
     id:             number;
     montant:        number;
@@ -59,9 +59,8 @@ export interface PaiementStatus {
   message:       string;
 }
 
-// ✅ NOUVEAU : payload pour reprogrammer un RDV
 export interface RescheduleRequest {
-  date: string; // Format ISO: "2024-06-26T10:30:00"
+  date: string;
 }
 
 export interface RescheduleResponse {
@@ -78,11 +77,11 @@ export interface RescheduleResponse {
 class RendezVousService {
 
   /**
-   * ✅ Créer un rendez-vous (et générer le lien de paiement PayPlus si en_ligne)
+   * ✅ Créer un rendez-vous
    */
   async createRendezVous(data: CreateRendezVousRequest): Promise<CreateRendezVousResponse> {
     try {
-      console.log('📤 Création rendez-vous:', data);
+      console.log('📤 Création rendez-vous — payload envoyé:', JSON.stringify(data, null, 2));
 
       const response = await apiClient.post('/api/rendezvous/create', {
         docteurId:        data.docteurId,
@@ -94,63 +93,70 @@ class RendezVousService {
 
       console.log('✅ Rendez-vous créé:', response.data);
       return response.data;
+
     } catch (error: any) {
-      console.error('❌ Erreur création rendez-vous:', error);
-      throw new Error(
-        error.response?.data?.error ||
-        error.response?.data?.message ||
-        'Erreur lors de la création du rendez-vous'
-      );
+      // ✅ Log complet pour diagnostiquer le vrai message 500
+      console.log('❌ Erreur création RDV — statut HTTP:', error?.response?.status);
+      console.log('❌ Erreur création RDV — body complet:', JSON.stringify(error?.response?.data, null, 2));
+
+      // Extraire le message le plus précis possible
+      const serverMessage =
+        error?.response?.data?.detail ||      // Symfony exception detail
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        error?.response?.data?.title ||       // API Platform error title
+        error?.message ||
+        'Erreur lors de la création du rendez-vous';
+
+      console.log('❌ Message erreur final:', serverMessage);
+      throw new Error(serverMessage);
     }
   }
 
   /**
-   * ✅ NOUVEAU : Reprogrammer un rendez-vous (PATCH)
-   *    Uniquement pour les RDV encore en statut "pending"
+   * ✅ Reprogrammer un rendez-vous
    */
   async reschedule(rdvId: number, data: RescheduleRequest): Promise<RescheduleResponse> {
     try {
       console.log(`📤 Reprogrammation RDV #${rdvId}:`, data);
-
       const response = await apiClient.patch(
         `/api/rendezvous/${rdvId}/reschedule`,
         { date: data.date }
       );
-
       console.log('✅ RDV reprogrammé:', response.data);
       return response.data;
     } catch (error: any) {
-      console.error('❌ Erreur reprogrammation:', error);
+      console.error('❌ Erreur reprogrammation:', error?.response?.data);
       throw new Error(
-        error.response?.data?.error ||
-        error.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
         'Erreur lors de la reprogrammation du rendez-vous'
       );
     }
   }
 
   /**
-   * ✅ Récupérer la liste des rendez-vous du patient connecté
+   * ✅ Liste des rendez-vous du patient
    */
   async getMesRendezVous(): Promise<RendezVous[]> {
     try {
       const response = await apiClient.get('/api/patient/rendezvous/mes-rendezvous');
       return response.data.rendezVous || [];
     } catch (error: any) {
-      console.error('❌ Erreur récupération rendez-vous:', error);
+      console.error('❌ Erreur récupération rendez-vous:', error?.response?.data);
       throw new Error('Erreur lors de la récupération des rendez-vous');
     }
   }
 
   /**
-   * ✅ Récupérer les détails d'un rendez-vous spécifique
+   * ✅ Détails d'un rendez-vous
    */
   async getRendezVousById(id: number): Promise<RendezVous> {
     try {
       const response = await apiClient.get(`/api/rendezvous/${id}`);
       return response.data.rendezVous;
     } catch (error: any) {
-      console.error('❌ Erreur récupération détails rendez-vous:', error);
+      console.error('❌ Erreur récupération détails rendez-vous:', error?.response?.data);
       throw new Error('Erreur lors de la récupération du rendez-vous');
     }
   }
@@ -163,28 +169,26 @@ class RendezVousService {
       const response = await apiClient.post(`/api/rendezvous/${id}/cancel`);
       return response.data;
     } catch (error: any) {
-      console.error('❌ Erreur annulation rendez-vous:', error);
-      throw new Error('Erreur lors de l\'annulation du rendez-vous');
+      console.error('❌ Erreur annulation rendez-vous:', error?.response?.data);
+      throw new Error("Erreur lors de l'annulation du rendez-vous");
     }
   }
 
   /**
-   * ✅ Vérifier le statut d'un paiement via transaction ID
+   * ✅ Vérifier le statut d'un paiement
    */
   async checkPaiementStatus(transactionId: string): Promise<PaiementStatus> {
     try {
       const response = await apiClient.get(`/api/paiement/status/${transactionId}`);
       return response.data;
     } catch (error: any) {
-      console.error('❌ Erreur vérification paiement:', error);
+      console.error('❌ Erreur vérification paiement:', error?.response?.data);
       throw new Error('Erreur lors de la vérification du paiement');
     }
   }
 
   /**
-   * ✅ Mapper le type de consultation frontend → backend
-   *    Accepte aussi bien les valeurs frontend ('online', 'home', 'hospital')
-   *    que backend directes ('en_ligne', 'domicile', 'hopital')
+   * ✅ Mapper type de consultation frontend → backend
    */
   mapConsultationType(frontendType: string): 'hopital' | 'domicile' | 'en_ligne' {
     const typeMap: Record<string, 'hopital' | 'domicile' | 'en_ligne'> = {
@@ -199,7 +203,7 @@ class RendezVousService {
   }
 
   /**
-   * ✅ Mapper le mode de paiement frontend → backend
+   * ✅ Mapper mode de paiement frontend → backend
    */
   mapPaymentMethod(frontendMethod: string): 'tmoney' | 'flooz' {
     return frontendMethod === 'flooz' ? 'flooz' : 'tmoney';

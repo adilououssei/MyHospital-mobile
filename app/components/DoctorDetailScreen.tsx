@@ -28,20 +28,21 @@ const formatDateForDisplay = (dateStr: string) => {
   return { label: jours[d.getDay()], dateNum: d.getDate().toString(), fullDate: dateStr };
 };
 
-const CONFIRMATION_FEE = 2000;
+// ✅ Frais de confirmation : 200 FCFA
+const CONFIRMATION_FEE = 200;
 
 const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationType, description }: DoctorDetailScreenProps) => {
   const { colors, t } = useApp();
 
-  const [doctorDetails, setDoctorDetails]     = useState<DocteurDetail | null>(null);
-  const [loadingDetails, setLoadingDetails]   = useState(false);
-  const [errorDetails, setErrorDetails]       = useState<string | null>(null);
-  const [disponibilites, setDisponibilites]   = useState<Disponibilite[]>([]);
-  const [loadingDispos, setLoadingDispos]     = useState(false);
+  const [doctorDetails, setDoctorDetails]       = useState<DocteurDetail | null>(null);
+  const [loadingDetails, setLoadingDetails]     = useState(false);
+  const [errorDetails, setErrorDetails]         = useState<string | null>(null);
+  const [disponibilites, setDisponibilites]     = useState<Disponibilite[]>([]);
+  const [loadingDispos, setLoadingDispos]       = useState(false);
   const [datesDisponibles, setDatesDisponibles] = useState<Array<{ label: string; dateNum: string; fullDate: string }>>([]);
-  const [selectedDate, setSelectedDate]       = useState<string | null>(null);
-  const [creneaux, setCreneaux]               = useState<Creneau[]>([]);
-  const [selectedCreneau, setSelectedCreneau] = useState<Creneau | null>(null);
+  const [selectedDate, setSelectedDate]         = useState<string | null>(null);
+  const [creneaux, setCreneaux]                 = useState<Creneau[]>([]);
+  const [selectedCreneau, setSelectedCreneau]   = useState<Creneau | null>(null);
 
   const { isLoading: isCreatingRdv, createRendezVousAndPay } = usePayment(
     () => {
@@ -118,29 +119,49 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
   };
 
   const handleNext = async () => {
-    if (!selectedDate)   { Alert.alert('', t('ddSelectDate'));  return; }
-    if (!selectedCreneau){ Alert.alert('', t('ddSelectSlot'));  return; }
+    if (!selectedDate)    { Alert.alert('', t('ddSelectDate')); return; }
+    if (!selectedCreneau) { Alert.alert('', t('ddSelectSlot')); return; }
+
     const selectedDateObj = datesDisponibles.find(d => d.fullDate === selectedDate);
     const mappedType = rendezVousService.mapConsultationType(consultationType || '');
 
+    // ── Données docteur complètes à transmettre ────────────────────
+    const doctorPayload = {
+      id:         doc?.id ?? initialDoctor?.id,
+      name:       doctorDetails?.nomComplet ?? initialDoctor?.name ?? 'Médecin',
+      nomComplet: doctorDetails?.nomComplet ?? initialDoctor?.name ?? 'Médecin', // ✅
+      specialty:  doctorDetails?.specialite ?? initialDoctor?.specialty ?? 'Spécialiste',
+      specialite: doctorDetails?.specialite ?? initialDoctor?.specialty ?? 'Spécialiste', // ✅
+      rating:     doctorDetails?.note ?? initialDoctor?.rating ?? null,
+      note:       doctorDetails?.note ?? initialDoctor?.rating ?? null,           // ✅
+      photo:      doc?.photo ?? null,
+    };
+
     if (mappedType === 'en_ligne') {
+      // → Paiement requis
       onNavigate('paymentMethod', {
-        doctor: {
-          id: doc?.id, name: doctorDetails?.nomComplet ?? initialDoctor?.name,
-          specialty: doctorDetails?.specialite ?? initialDoctor?.specialty,
-          rating: doctorDetails?.note ?? initialDoctor?.rating, photo: doc?.photo,
-        },
-        consultationType, description,
-        date: selectedDate,
-        dateFormatted: selectedDateObj ? `${selectedDateObj.dateNum} (${selectedDateObj.label})` : selectedDate,
-        time: selectedCreneau.heure, creneauId: selectedCreneau.id,
-        consultationPrice, confirmationFee: CONFIRMATION_FEE,
+        doctor:           doctorPayload,
+        consultationType,
+        description,
+        date:             selectedDate,
+        // ✅ Date lisible transmise correctement
+        dateFormatted:    selectedDateObj
+          ? `${selectedDateObj.dateNum} ${selectedDateObj.label}`
+          : selectedDate,
+        time:             selectedCreneau.heure,
+        creneauId:        selectedCreneau.id,
+        consultationPrice,
+        confirmationFee:  CONFIRMATION_FEE, // ✅ 200 FCFA
       });
     } else {
+      // → Domicile / hôpital : création directe sans paiement
       const dateTime = `${selectedDate}T${selectedCreneau.heure}:00`;
       await createRendezVousAndPay({
-        docteurId: doc?.id || initialDoctor?.id, date: dateTime,
-        typeConsultation: mappedType, modePaiement: 'tmoney', description,
+        docteurId:        doc?.id || initialDoctor?.id,
+        date:             dateTime,
+        typeConsultation: mappedType,
+        modePaiement:     'tmoney',
+        description,
       });
     }
   };
@@ -321,7 +342,7 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
               </View>
             )}
 
-            {/* Récap prix (en_ligne) */}
+            {/* Récap prix consultation en ligne */}
             {consultationType === 'en_ligne' && (
               <>
                 <View style={[styles.pricingCard, { backgroundColor: colors.card }]}>
@@ -332,6 +353,7 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
                   </View>
                   <View style={styles.pricingRow}>
                     <Text style={[styles.pricingLabel, { color: colors.subText }]}>{t('ddConfirmFee')}</Text>
+                    {/* ✅ Affiche 200 FCFA */}
                     <Text style={[styles.pricingVal, { color: colors.text }]}>{CONFIRMATION_FEE.toLocaleString()} FCFA</Text>
                   </View>
                   <View style={[styles.divider, { backgroundColor: '#E0E0E0' }]} />

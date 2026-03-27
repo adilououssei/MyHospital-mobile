@@ -1,4 +1,4 @@
-// app/screens/PaymentMethodScreen.tsx
+// app/components/PaymentMethodScreen.tsx
 // ✅ Version avec intégration API PayPlus
 
 import React, { useState } from 'react';
@@ -25,8 +25,9 @@ interface PaymentMethodScreenProps {
   consultationType?: string;
   description?: string;
   date?: string;
+  dateFormatted?: string;
   time?: string;
-  selectedSlot?: any; // Le créneau sélectionné
+  selectedSlot?: any;
   consultationPrice?: number;
   confirmationFee?: number;
 }
@@ -37,31 +38,30 @@ const PaymentMethodScreen = ({
   consultationType,
   description,
   date,
+  dateFormatted,
   time,
   selectedSlot,
   consultationPrice = 15000,
-  confirmationFee = 2000,
+  confirmationFee = 200, // ✅ Frais de confirmation : 200 FCFA
 }: PaymentMethodScreenProps) => {
   const { colors } = useApp();
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Hook de paiement
   const { isLoading, createRendezVousAndPay } = usePayment(
     () => {
-      // Succès : afficher modal de confirmation
       setShowSuccessModal(true);
     },
     (error) => {
-      // Erreur déjà gérée dans le hook
       console.error('Erreur paiement:', error);
     }
   );
 
+  // ✅ Méthodes de paiement corrigées
   const paymentMethods = [
     {
       id: 'tmoney',
-      name: 'T-Money (TOGOCOM)',
+      name: 'Mix By Yas (TOGOCOM)',
       icon: 'phone-portrait',
       color: '#FF6B00',
     },
@@ -75,6 +75,22 @@ const PaymentMethodScreen = ({
 
   const totalAmount = consultationPrice + confirmationFee;
 
+  // ✅ Label lisible du type de consultation
+  const getConsultationTypeLabel = () => {
+    switch (consultationType) {
+      case 'en_ligne': return 'Consultation en ligne';
+      case 'domicile': return 'Consultation à domicile';
+      default:         return "Consultation à l'hôpital";
+    }
+  };
+
+  // ✅ Affichage de la date formatée
+  const getDisplayDate = () => {
+    if (dateFormatted) return dateFormatted;
+    if (date) return date;
+    return '—';
+  };
+
   const handleConfirm = async () => {
     if (!selectedMethod) {
       alert('Veuillez sélectionner un mode de paiement');
@@ -86,20 +102,16 @@ const PaymentMethodScreen = ({
       return;
     }
 
-    // Mapper le type de consultation au format backend
-    const mappedType = rendezVousService.mapConsultationType(consultationType);
+    const mappedType    = rendezVousService.mapConsultationType(consultationType);
     const mappedPayment = rendezVousService.mapPaymentMethod(selectedMethod);
+    const dateTime      = `${date}T${time || '10:00'}:00`;
 
-    // Créer la date complète avec l'heure
-    const dateTime = `${date}T${time || '10:00'}:00`;
-
-    // Appeler l'API pour créer le rendez-vous et obtenir le lien PayPlus
     await createRendezVousAndPay({
-      docteurId: doctor.id,
-      date: dateTime,
+      docteurId:        doctor.id,
+      date:             dateTime,
       typeConsultation: mappedType,
-      modePaiement: mappedPayment,
-      description: description,
+      modePaiement:     mappedPayment,
+      description:      description,
     });
   };
 
@@ -108,113 +120,146 @@ const PaymentMethodScreen = ({
     onNavigate('appointments');
   };
 
+  // ✅ Nom du docteur affiché correctement selon la structure reçue
+  const doctorDisplayName =
+    doctor?.nomComplet ??
+    (doctor?.name ? doctor.name : 'Médecin');
+
+  const doctorSpecialty =
+    doctor?.specialite ?? doctor?.specialty ?? 'Spécialiste';
+
+  const doctorRating =
+    doctor?.note ?? doctor?.rating ?? null;
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* Header */}
-      <ScreenHeader 
+      <ScreenHeader
         title="Paiement"
         onBack={() => onNavigate('doctorDetail')}
       />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          {/* Doctor Info */}
+
+          {/* ── Carte docteur ── */}
           <View style={[styles.doctorCard, { backgroundColor: colors.card }]}>
             <View style={styles.doctorImagePlaceholder}>
               <FontAwesome5 name="user-md" size={40} color="#0077b6" />
             </View>
             <View style={styles.doctorInfo}>
               <Text style={[styles.doctorName, { color: colors.text }]}>
-                {doctor?.nomComplet || 'Dr. Marcus Horizon'}
+                {doctorDisplayName}
               </Text>
               <Text style={[styles.doctorSpecialty, { color: colors.subText }]}>
-                {doctor?.specialite || 'Cardiologue'}
+                {doctorSpecialty}
               </Text>
-              <View style={styles.ratingContainer}>
-                <Ionicons name="star" size={14} color="#FFA500" />
-                <Text style={[styles.rating, { color: colors.subText }]}>{doctor?.note || 4.7}</Text>
-              </View>
+              {doctorRating !== null && (
+                <View style={styles.ratingContainer}>
+                  <Ionicons name="star" size={14} color="#FFA500" />
+                  <Text style={[styles.rating, { color: colors.subText }]}>
+                    {typeof doctorRating === 'number' ? doctorRating.toFixed(1) : doctorRating}
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
 
-          {/* Appointment Details */}
+          {/* ── Détails du rendez-vous ── */}
           <View style={[styles.detailsCard, { backgroundColor: colors.card }]}>
-            <Text style={[styles.detailsTitle, { color: colors.text }]}>Détails du rendez-vous</Text>
+            <Text style={[styles.detailsTitle, { color: colors.text }]}>
+              Détails du rendez-vous
+            </Text>
 
+            {/* Date */}
             <View style={styles.detailRow}>
               <Text style={[styles.detailLabel, { color: colors.subText }]}>Date</Text>
-              <View style={styles.detailValue}>
-                <Text style={[styles.detailText, { color: colors.text }]}>
-                  {date} | {time || '14:00'}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={[styles.detailLabel, { color: colors.subText }]}>Type</Text>
               <Text style={[styles.detailText, { color: colors.text }]}>
-                {consultationType === 'en_ligne' ? 'En ligne' : 
-                 consultationType === 'domicile' ? 'À domicile' : 
-                 "À l'hôpital"}
+                {getDisplayDate()}{time ? ` · ${time}` : ''}
               </Text>
             </View>
 
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
-            <Text style={[styles.detailsTitle, { color: colors.text }]}>Détail du paiement</Text>
-
-            <View style={styles.paymentRow}>
-              <Text style={[styles.paymentLabel, { color: colors.subText }]}>Consultation</Text>
-              <Text style={[styles.paymentValue, { color: colors.text }]}>{consultationPrice} FCFA</Text>
+            {/* Type */}
+            <View style={styles.detailRow}>
+              <Text style={[styles.detailLabel, { color: colors.subText }]}>Type</Text>
+              <Text style={[styles.detailText, { color: colors.text }]}>
+                {getConsultationTypeLabel()}
+              </Text>
             </View>
 
+            {/* Description */}
+            {!!description && (
+              <View style={styles.detailRow}>
+                <Text style={[styles.detailLabel, { color: colors.subText }]}>Motif</Text>
+                <Text
+                  style={[styles.detailText, { color: colors.text, flex: 1, textAlign: 'right' }]}
+                  numberOfLines={2}
+                >
+                  {description}
+                </Text>
+              </View>
+            )}
+
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+            {/* Récap paiement */}
+            <Text style={[styles.detailsTitle, { color: colors.text }]}>
+              Détail du paiement
+            </Text>
+
             <View style={styles.paymentRow}>
-              <Text style={[styles.paymentLabel, { color: colors.subText }]}>Frais de confirmation</Text>
-              <Text style={[styles.paymentValue, { color: colors.text }]}>{confirmationFee} FCFA</Text>
+              <Text style={[styles.paymentLabel, { color: colors.subText }]}>
+                Consultation
+              </Text>
+              <Text style={[styles.paymentValue, { color: colors.text }]}>
+                {consultationPrice.toLocaleString()} FCFA
+              </Text>
+            </View>
+
+            {/* ✅ Frais de confirmation : 200 FCFA */}
+            <View style={styles.paymentRow}>
+              <Text style={[styles.paymentLabel, { color: colors.subText }]}>
+                Frais de confirmation
+              </Text>
+              <Text style={[styles.paymentValue, { color: colors.text }]}>
+                {confirmationFee.toLocaleString()} FCFA
+              </Text>
             </View>
 
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             <View style={styles.paymentRow}>
               <Text style={[styles.totalLabel, { color: colors.text }]}>Total</Text>
-              <Text style={[styles.totalValue, { color: colors.text }]}>{totalAmount} FCFA</Text>
+              <Text style={[styles.totalValue, { color: '#0077b6' }]}>
+                {totalAmount.toLocaleString()} FCFA
+              </Text>
             </View>
           </View>
 
-          {/* Payment Method */}
+          {/* ── Mode de paiement ── */}
           <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Mode de paiement</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              Mode de paiement
+            </Text>
 
             {paymentMethods.map((method) => (
               <TouchableOpacity
                 key={method.id}
                 style={[
                   styles.methodCard,
-                  { 
-                    backgroundColor: colors.card,
-                    borderColor: colors.border
-                  },
+                  { backgroundColor: colors.card, borderColor: colors.border },
                   selectedMethod === method.id && styles.methodCardActive,
                 ]}
                 onPress={() => setSelectedMethod(method.id)}
                 disabled={isLoading}
               >
                 <View style={styles.methodLeft}>
-                  <View
-                    style={[
-                      styles.methodIcon,
-                      { backgroundColor: method.color + '20' },
-                    ]}
-                  >
-                    <Ionicons
-                      name={method.icon as any}
-                      size={28}
-                      color={method.color}
-                    />
+                  <View style={[styles.methodIcon, { backgroundColor: method.color + '20' }]}>
+                    <Ionicons name={method.icon as any} size={28} color={method.color} />
                   </View>
-                  <Text style={[styles.methodName, { color: colors.text }]}>{method.name}</Text>
+                  <Text style={[styles.methodName, { color: colors.text }]}>
+                    {method.name}
+                  </Text>
                 </View>
-
                 {selectedMethod === method.id ? (
                   <Ionicons name="radio-button-on" size={24} color="#0077b6" />
                 ) : (
@@ -224,9 +269,20 @@ const PaymentMethodScreen = ({
             ))}
           </View>
 
-          {/* Information PayPlus */}
+          {/* ── Note remboursement ── */}
+          <View style={[styles.noteCard, { backgroundColor: '#FFF9E6' }]}>
+            <Ionicons name="information-circle-outline" size={20} color="#FFA500" />
+            <Text style={[styles.noteText, { color: colors.subText }]}>
+              <Text style={{ color: colors.text, fontWeight: '600' }}>NB : </Text>
+              Les frais de confirmation de {confirmationFee} FCFA ne sont pas remboursables,
+              que le rendez-vous soit accepté ou refusé. Seul le montant de la consultation
+              est remboursé en cas de refus.
+            </Text>
+          </View>
+
+          {/* ── Info PayPlus ── */}
           <View style={[styles.infoCard, { backgroundColor: colors.inputBackground }]}>
-            <Ionicons name="information-circle-outline" size={20} color="#0077b6" />
+            <Ionicons name="shield-checkmark-outline" size={20} color="#0077b6" />
             <Text style={[styles.infoText, { color: colors.subText }]}>
               Vous serez redirigé vers PayPlus pour finaliser votre paiement en toute sécurité
             </Text>
@@ -234,14 +290,13 @@ const PaymentMethodScreen = ({
         </View>
       </ScrollView>
 
-      {/* Bottom Section */}
-      <View style={[styles.footer, { 
-        backgroundColor: colors.card,
-        borderTopColor: colors.border
-      }]}>
+      {/* ── Footer total + bouton ── */}
+      <View style={[styles.footer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
         <View style={styles.totalContainer}>
           <Text style={[styles.footerLabel, { color: colors.subText }]}>Total</Text>
-          <Text style={[styles.footerTotal, { color: colors.text }]}>{totalAmount} FCFA</Text>
+          <Text style={[styles.footerTotal, { color: colors.text }]}>
+            {totalAmount.toLocaleString()} FCFA
+          </Text>
         </View>
         <TouchableOpacity
           style={[
@@ -259,7 +314,7 @@ const PaymentMethodScreen = ({
         </TouchableOpacity>
       </View>
 
-      {/* Success Modal */}
+      {/* ── Modal succès ── */}
       <Modal
         visible={showSuccessModal}
         transparent
@@ -271,19 +326,16 @@ const PaymentMethodScreen = ({
             <View style={styles.modalIconContainer}>
               <Ionicons name="checkmark" size={50} color="#0077b6" />
             </View>
-
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Paiement en cours</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Paiement en cours
+            </Text>
             <Text style={[styles.modalDescription, { color: colors.subText }]}>
               Votre paiement est en cours de traitement.
             </Text>
             <Text style={[styles.modalDescription, { color: colors.subText }]}>
               Vous recevrez une confirmation une fois le paiement validé.
             </Text>
-
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={handleSuccess}
-            >
+            <TouchableOpacity style={styles.modalButton} onPress={handleSuccess}>
               <Text style={styles.modalButtonText}>Voir mes rendez-vous</Text>
             </TouchableOpacity>
           </View>
@@ -355,27 +407,27 @@ const styles = StyleSheet.create({
   detailsTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   detailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 10,
+    gap: 12,
   },
   detailLabel: {
     fontSize: 14,
-  },
-  detailValue: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexShrink: 0,
   },
   detailText: {
     fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'right',
   },
   divider: {
     height: 1,
-    marginVertical: 10,
+    marginVertical: 12,
   },
   paymentRow: {
     flexDirection: 'row',
@@ -434,12 +486,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  noteCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    borderRadius: 12,
+    padding: 14,
+    gap: 10,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#FFE4A0',
+  },
+  noteText: {
+    flex: 1,
+    fontSize: 12,
+    lineHeight: 18,
+  },
   infoCard: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
     borderRadius: 10,
     gap: 10,
+    marginBottom: 10,
   },
   infoText: {
     flex: 1,
@@ -456,10 +524,10 @@ const styles = StyleSheet.create({
   totalContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
   footerLabel: {
-    fontSize: 16,
-    marginRight: 10,
+    fontSize: 14,
   },
   footerTotal: {
     fontSize: 18,

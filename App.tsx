@@ -41,16 +41,17 @@ import RateAppScreen from './app/components/RateAppScreen';
 import TransactionHistoryScreen from './app/components/TransactionHistoryScreen';
 import PrescriptionsScreen from './app/components/PrescriptionsScreen';
 import ChatbotScreen from './app/components/ChatbotScreen';
+import VideoCallScreen from './app/components/VideoCallScreen';
 
 SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
-  const [isLoading, setIsLoading]   = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [appIsReady, setAppIsReady] = useState(false);
 
-  const [currentScreen, setCurrentScreen]       = useState('welcome');
-  const [screenParams, setScreenParams]         = useState<any>({});
-  const [unreadCount, setUnreadCount]           = useState(2);
+  const [currentScreen, setCurrentScreen] = useState('welcome');
+  const [screenParams, setScreenParams] = useState<any>({});
+  const [unreadCount, setUnreadCount] = useState(2);
   const [navigationHistory, setNavigationHistory] = useState<string[]>(['welcome']);
 
   // ── Init : restaure uniquement le token JWT ───────────────
@@ -116,10 +117,10 @@ function AppContent() {
   // ── Écrans ────────────────────────────────────────────────
   const renderScreen = () => {
     switch (currentScreen) {
-      case 'welcome':         return <WelcomeScreen onNavigate={handleNavigation} />;
-      case 'login':           return <LoginScreen onNavigate={handleNavigation} />;
-      case 'signup':          return <SignUpScreen onNavigate={handleNavigation} />;
-      case 'forgotPassword':  return <ForgotPasswordScreen onNavigate={handleNavigation} />;
+      case 'welcome': return <WelcomeScreen onNavigate={handleNavigation} />;
+      case 'login': return <LoginScreen onNavigate={handleNavigation} />;
+      case 'signup': return <SignUpScreen onNavigate={handleNavigation} />;
+      case 'forgotPassword': return <ForgotPasswordScreen onNavigate={handleNavigation} />;
       case 'verification':
         return (
           <VerificationCodeScreen
@@ -129,13 +130,13 @@ function AppContent() {
           />
         );
       case 'createNewPassword': return <CreateNewPasswordScreen onNavigate={handleNavigation} />;
-      case 'home':            return <HomeScreen onNavigate={handleNavigation} unreadCount={unreadCount} />;
-      case 'chatbot':         return <ChatbotScreen onNavigate={handleNavigation} />;
-      case 'profile':         return <ProfileScreen onNavigate={handleNavigation} />;
-      case 'pharmacy':        return <PharmacyScreen onNavigate={handleNavigation} />;
-      case 'hospital':        return <HospitalScreen onNavigate={handleNavigation} />;
-      case 'appointments':    return <AppointmentsScreen onNavigate={handleNavigation} />;
-      case 'bookingType':     return <BookingTypeScreen onNavigate={handleNavigation} />;
+      case 'home': return <HomeScreen onNavigate={handleNavigation} unreadCount={unreadCount} />;
+      case 'chatbot': return <ChatbotScreen onNavigate={handleNavigation} />;
+      case 'profile': return <ProfileScreen onNavigate={handleNavigation} />;
+      case 'pharmacy': return <PharmacyScreen onNavigate={handleNavigation} />;
+      case 'hospital': return <HospitalScreen onNavigate={handleNavigation} />;
+      case 'appointments': return <AppointmentsScreen onNavigate={handleNavigation} />;
+      case 'bookingType': return <BookingTypeScreen onNavigate={handleNavigation} />;
       case 'doctorsList':
         return (
           <DoctorsListScreen
@@ -151,6 +152,15 @@ function AppContent() {
             doctor={screenParams.doctor}
             consultationType={screenParams.consultationType}
             description={screenParams.description}
+          />
+        );
+      case 'videoCall':
+        return (
+          <VideoCallScreen
+            onNavigate={handleNavigation}
+            jitsiUrl={screenParams.jitsiUrl}
+            doctorName={screenParams.doctorName}
+            patientName={screenParams.patientName}
           />
         );
       case 'paymentMethod':
@@ -175,23 +185,23 @@ function AppContent() {
             notification={screenParams.notification}
           />
         );
-      case 'favorites':           return <FavoritesScreen onNavigate={handleNavigation} />;
-      case 'language':            return <LanguageScreen onNavigate={handleNavigation} />;
-      case 'theme':               return <ThemeScreen onNavigate={handleNavigation} />;
+      case 'favorites': return <FavoritesScreen onNavigate={handleNavigation} />;
+      case 'language': return <LanguageScreen onNavigate={handleNavigation} />;
+      case 'theme': return <ThemeScreen onNavigate={handleNavigation} />;
       case 'savedPaymentMethods': return <SavedPaymentMethodsScreen onNavigate={handleNavigation} />;
-      case 'faqs':                return <FAQsScreen onNavigate={handleNavigation} />;
-      case 'emergency':           return <EmergencyScreen onNavigate={handleNavigation} />;
-      case 'healthInfo':          return <HealthInfoScreen onNavigate={handleNavigation} />;
-      case 'editProfile':         return <EditProfileScreen onNavigate={handleNavigation} />;
-      case 'settings':            return <SettingsScreen onNavigate={handleNavigation} />;
-      case 'privacySecurity':     return <PrivacySecurityScreen onNavigate={handleNavigation} />;
-      case 'changePassword':      return <ChangePasswordScreen onNavigate={handleNavigation} />;
-      case 'terms':               return <TermsScreen onNavigate={handleNavigation} />;
-      case 'privacyPolicy':       return <PrivacyPolicyScreen onNavigate={handleNavigation} />;
-      case 'rateApp':             return <RateAppScreen onNavigate={handleNavigation} />;
-      case 'transactionHistory':  return <TransactionHistoryScreen onNavigate={handleNavigation} />;
-      case 'prescriptions':       return <PrescriptionsScreen onNavigate={handleNavigation} />;
-      default:                    return <WelcomeScreen onNavigate={handleNavigation} />;
+      case 'faqs': return <FAQsScreen onNavigate={handleNavigation} />;
+      case 'emergency': return <EmergencyScreen onNavigate={handleNavigation} />;
+      case 'healthInfo': return <HealthInfoScreen onNavigate={handleNavigation} />;
+      case 'editProfile': return <EditProfileScreen onNavigate={handleNavigation} />;
+      case 'settings': return <SettingsScreen onNavigate={handleNavigation} />;
+      case 'privacySecurity': return <PrivacySecurityScreen onNavigate={handleNavigation} />;
+      case 'changePassword': return <ChangePasswordScreen onNavigate={handleNavigation} />;
+      case 'terms': return <TermsScreen onNavigate={handleNavigation} />;
+      case 'privacyPolicy': return <PrivacyPolicyScreen onNavigate={handleNavigation} />;
+      case 'rateApp': return <RateAppScreen onNavigate={handleNavigation} />;
+      case 'transactionHistory': return <TransactionHistoryScreen onNavigate={handleNavigation} />;
+      case 'prescriptions': return <PrescriptionsScreen onNavigate={handleNavigation} />;
+      default: return <WelcomeScreen onNavigate={handleNavigation} />;
     }
   };
 
