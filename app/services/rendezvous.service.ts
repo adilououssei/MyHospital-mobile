@@ -1,5 +1,5 @@
 // app/services/rendezvous.service.ts
-// ✅ Service rendez-vous et paiements — meilleur logging d'erreur
+// ✅ Service rendez-vous et paiements — intégration PayPlus directe (sans redirection)
 
 import apiClient, { API_ENDPOINTS } from './api.config';
 
@@ -8,23 +8,29 @@ import apiClient, { API_ENDPOINTS } from './api.config';
 // ─────────────────────────────────────────────────────────────
 
 export interface CreateRendezVousRequest {
-  docteurId: number;
-  date: string; // Format ISO: "2024-06-26T10:30:00"
+  docteurId:        number;
+  date:             string;             // Format ISO: "2024-06-26T10:30:00"
   typeConsultation: 'hopital' | 'domicile' | 'en_ligne';
-  modePaiement: 'tmoney' | 'flooz';
-  description?: string;
+  modePaiement:     'tmoney' | 'flooz';
+  description?:     string;
+  paymentPhone?:    string;             // ✅ Numéro Mobile Money (requis pour en_ligne)
 }
 
 export interface CreateRendezVousResponse {
-  message: string;
-  paymentUrl?: string;
-  rendezVousId: number;
-  requiresPayment: boolean;
+  message:          string;
+  rendezVousId:     number;
+  requiresPayment:  boolean;
+  // ── Mode straight (sans redirection) ──
+  transactionId?:   string;            // Token PayPlus pour le polling
+  requiresPolling?: boolean;           // true = poller /api/paiement/status/{id}
+  pollingInterval?: number;            // Intervalle suggéré en ms (ex: 3000)
+  // ── Mode redirect (ancien) — conservé pour compatibilité ──
+  paymentUrl?:      string;
 }
 
 export interface RendezVous {
   jitsiRoom: null;
-  jitsiUrl: null;
+  jitsiUrl:  null;
   id:                number;
   docteurId:         number;
   docteurNom:        string;
@@ -42,8 +48,8 @@ export interface RendezVous {
     | 'refused'
     | 'cancelled'
     | 'completed';
-  description:       string | null;
-  createdAt:         string | null;
+  description: string | null;
+  createdAt:   string | null;
   paiement: {
     id:             number;
     montant:        number;
@@ -55,7 +61,10 @@ export interface RendezVous {
 
 export interface PaiementStatus {
   transactionId: string;
-  status:        'success' | 'failed' | 'pending';
+  status:        'paid' | 'failed' | 'unpaid'; // ✅ Valeurs renvoyées par le backend
+  rdvStatut?:    string;
+  jitsiRoom?:    string | null;
+  jitsiUrl?:     string | null;
   message:       string;
 }
 
@@ -78,6 +87,8 @@ class RendezVousService {
 
   /**
    * ✅ Créer un rendez-vous
+   * Pour typeConsultation === 'en_ligne', le champ paymentPhone est obligatoire.
+   * Le backend appellera PayPlus en mode straight (sans redirection).
    */
   async createRendezVous(data: CreateRendezVousRequest): Promise<CreateRendezVousResponse> {
     try {
@@ -89,28 +100,49 @@ class RendezVousService {
         typeConsultation: data.typeConsultation,
         modePaiement:     data.modePaiement,
         description:      data.description,
+        paymentPhone:     data.paymentPhone, // ✅ Numéro Mobile Money pour PayPlus straight
       });
 
       console.log('✅ Rendez-vous créé:', response.data);
       return response.data;
 
     } catch (error: any) {
-      // ✅ Log complet pour diagnostiquer le vrai message 500
       console.log('❌ Erreur création RDV — statut HTTP:', error?.response?.status);
       console.log('❌ Erreur création RDV — body complet:', JSON.stringify(error?.response?.data, null, 2));
 
-      // Extraire le message le plus précis possible
       const serverMessage =
-        error?.response?.data?.detail ||      // Symfony exception detail
-        error?.response?.data?.error ||
-        error?.response?.data?.message ||
-        error?.response?.data?.title ||       // API Platform error title
-        error?.message ||
+        error?.response?.data?.detail   ||
+        error?.response?.data?.error    ||
+        error?.response?.data?.message  ||
+        error?.response?.data?.title    ||
+        error?.message                  ||
         'Erreur lors de la création du rendez-vous';
 
       console.log('❌ Message erreur final:', serverMessage);
       throw new Error(serverMessage);
     }
+  }
+
+  /**
+   * ✅ Vérifier le statut d'un paiement (utilisé pour le polling après mode straight)
+   * Appelé par PaymentMethodScreen toutes les 3 secondes jusqu'à status === 'paid' | 'failed'
+   */
+  async checkPaymentStatus(transactionId: string): Promise<PaiementStatus> {
+    try {
+      const response = await apiClient.get(`/api/paiement/status/${transactionId}`);
+      console.log('🔄 Statut paiement:', response.data?.status, '— id:', transactionId);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Erreur vérification paiement:', error?.response?.data);
+      throw new Error('Erreur lors de la vérification du paiement');
+    }
+  }
+
+  /**
+   * ✅ Alias pour compatibilité avec l'ancien code qui appelait checkPaiementStatus
+   */
+  async checkPaiementStatus(transactionId: string): Promise<PaiementStatus> {
+    return this.checkPaymentStatus(transactionId);
   }
 
   /**
@@ -128,7 +160,7 @@ class RendezVousService {
     } catch (error: any) {
       console.error('❌ Erreur reprogrammation:', error?.response?.data);
       throw new Error(
-        error?.response?.data?.error ||
+        error?.response?.data?.error   ||
         error?.response?.data?.message ||
         'Erreur lors de la reprogrammation du rendez-vous'
       );
@@ -175,29 +207,16 @@ class RendezVousService {
   }
 
   /**
-   * ✅ Vérifier le statut d'un paiement
-   */
-  async checkPaiementStatus(transactionId: string): Promise<PaiementStatus> {
-    try {
-      const response = await apiClient.get(`/api/paiement/status/${transactionId}`);
-      return response.data;
-    } catch (error: any) {
-      console.error('❌ Erreur vérification paiement:', error?.response?.data);
-      throw new Error('Erreur lors de la vérification du paiement');
-    }
-  }
-
-  /**
    * ✅ Mapper type de consultation frontend → backend
    */
   mapConsultationType(frontendType: string): 'hopital' | 'domicile' | 'en_ligne' {
     const typeMap: Record<string, 'hopital' | 'domicile' | 'en_ligne'> = {
-      'online':   'en_ligne',
-      'home':     'domicile',
-      'hospital': 'hopital',
-      'en_ligne': 'en_ligne',
-      'domicile': 'domicile',
-      'hopital':  'hopital',
+      online:   'en_ligne',
+      home:     'domicile',
+      hospital: 'hopital',
+      en_ligne: 'en_ligne',
+      domicile: 'domicile',
+      hopital:  'hopital',
     };
     return typeMap[frontendType] || 'hopital';
   }

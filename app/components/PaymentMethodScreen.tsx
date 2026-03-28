@@ -1,7 +1,7 @@
 // app/components/PaymentMethodScreen.tsx
-// ✅ Version avec intégration API PayPlus
+// ✅ PayPlus DIRECT — UX modale (numéro → USSD sur téléphone → confirmation)
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,13 +10,16 @@ import {
   TouchableOpacity,
   Modal,
   ActivityIndicator,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useApp } from '../context/AppContext';
 import ScreenHeader from '../tabs/ScreenHeader';
-import { usePayment } from '../hooks/Usepayment';
 import rendezVousService from '../services/rendezvous.service';
 
 interface PaymentMethodScreenProps {
@@ -40,43 +43,161 @@ const PaymentMethodScreen = ({
   date,
   dateFormatted,
   time,
-  selectedSlot,
   consultationPrice = 15000,
-  confirmationFee = 200, // ✅ Frais de confirmation : 200 FCFA
+  confirmationFee   = 200,
 }: PaymentMethodScreenProps) => {
   const { colors } = useApp();
+
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  const { isLoading, createRendezVousAndPay } = usePayment(
-    () => {
-      setShowSuccessModal(true);
-    },
-    (error) => {
-      console.error('Erreur paiement:', error);
-    }
-  );
+  // Modal 1 : saisie du numéro
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [paymentPhone,   setPaymentPhone]   = useState('');
+  const [isSending,      setIsSending]      = useState(false);
 
-  // ✅ Méthodes de paiement corrigées
-  const paymentMethods = [
-    {
-      id: 'tmoney',
-      name: 'Mix By Yas (TOGOCOM)',
-      icon: 'phone-portrait',
-      color: '#FF6B00',
-    },
-    {
-      id: 'flooz',
-      name: 'Flooz (MOOV)',
-      icon: 'phone-portrait',
-      color: '#0066CC',
-    },
-  ];
+  // Modal 2 : attente USSD + polling
+  const [showWaitingModal, setShowWaitingModal] = useState(false);
+  const [pollingSeconds,   setPollingSeconds]   = useState(0);
+  const [paymentStatus,    setPaymentStatus]    = useState<'waiting' | 'success' | 'failed'>('waiting');
+
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timerRef   = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const totalAmount = consultationPrice + confirmationFee;
 
-  // ✅ Label lisible du type de consultation
-  const getConsultationTypeLabel = () => {
+  const paymentMethods = [
+    {
+      id:          'tmoney',
+      name:        'Mix By Yas (TOGOCOM)',
+      icon:        'phone-portrait' as const,
+      color:       '#FF6B00',
+      hint:        'Numéros Togocom : 90, 91, 92, 70, 71…',
+      placeholder: '90 00 00 00',
+    },
+    {
+      id:          'flooz',
+      name:        'Flooz (MOOV)',
+      icon:        'phone-portrait' as const,
+      color:       '#0066CC',
+      hint:        'Numéros Moov : 93, 96, 97, 98…',
+      placeholder: '96 00 00 00',
+    },
+  ];
+
+  const selectedMethodData = paymentMethods.find(m => m.id === selectedMethod);
+
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+      if (timerRef.current)   clearInterval(timerRef.current);
+    };
+  }, []);
+
+  const isPhoneValid = () => {
+    const cleaned = paymentPhone.replace(/[^0-9]/g, '');
+    return cleaned.length === 8 || (cleaned.length === 11 && cleaned.startsWith('228'));
+  };
+
+  const handleOpenPhoneModal = () => {
+    if (!selectedMethod) {
+      Alert.alert('Mode de paiement', 'Veuillez sélectionner un mode de paiement.');
+      return;
+    }
+    setPaymentPhone('');
+    setShowPhoneModal(true);
+  };
+
+  const handleSubmitPhone = async () => {
+    if (!isPhoneValid()) {
+      Alert.alert('Numéro invalide', `Entrez un numéro valide à 8 chiffres.\n${selectedMethodData?.hint}`);
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      const mappedType    = rendezVousService.mapConsultationType(consultationType ?? '');
+      const mappedPayment = rendezVousService.mapPaymentMethod(selectedMethod ?? '');
+      const dateTime      = `${date}T${time || '10:00'}:00`;
+
+      const result = await rendezVousService.createRendezVous({
+        docteurId:        doctor.id,
+        date:             dateTime,
+        typeConsultation: mappedType,
+        modePaiement:     mappedPayment,
+        description:      description,
+        paymentPhone:     paymentPhone.replace(/[^0-9]/g, ''),
+      });
+
+      if (!result.transactionId) {
+        throw new Error(result.message ?? 'Erreur lors de la création du paiement');
+      }
+
+      // Fermer modal 1 → ouvrir modal 2
+      setShowPhoneModal(false);
+      setPaymentStatus('waiting');
+      setPollingSeconds(0);
+      setShowWaitingModal(true);
+
+      // Chronomètre
+      timerRef.current = setInterval(() => {
+        setPollingSeconds(s => s + 1);
+      }, 1000);
+
+      // Polling toutes les 3s pendant 2min max
+      const txId = result.transactionId;
+      let count  = 0;
+      const MAX  = 40;
+
+      pollingRef.current = setInterval(async () => {
+        count++;
+        if (count >= MAX) {
+          clearInterval(pollingRef.current!);
+          clearInterval(timerRef.current!);
+          setPaymentStatus('failed');
+          return;
+        }
+        try {
+          const res = await rendezVousService.checkPaymentStatus(txId);
+          if (res?.status === 'paid') {
+            clearInterval(pollingRef.current!);
+            clearInterval(timerRef.current!);
+            setPaymentStatus('success');
+          } else if (res?.status === 'failed') {
+            clearInterval(pollingRef.current!);
+            clearInterval(timerRef.current!);
+            setPaymentStatus('failed');
+          }
+        } catch { /* réseau passager */ }
+      }, 3000);
+
+    } catch (err: any) {
+      Alert.alert('Erreur', err?.message ?? 'Erreur réseau');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleCancelWaiting = () => {
+    if (pollingRef.current) clearInterval(pollingRef.current);
+    if (timerRef.current)   clearInterval(timerRef.current);
+    setShowWaitingModal(false);
+    setPaymentStatus('waiting');
+  };
+
+  const handleGoToAppointments = () => {
+    setShowWaitingModal(false);
+    onNavigate('appointments');
+  };
+
+  const handleRetry = () => {
+    setShowWaitingModal(false);
+    setPaymentStatus('waiting');
+    setPaymentPhone('');
+    setShowPhoneModal(true);
+  };
+
+  const getDisplayDate = () => dateFormatted ?? date ?? '—';
+  const getTypeLabel   = () => {
     switch (consultationType) {
       case 'en_ligne': return 'Consultation en ligne';
       case 'domicile': return 'Consultation à domicile';
@@ -84,79 +205,29 @@ const PaymentMethodScreen = ({
     }
   };
 
-  // ✅ Affichage de la date formatée
-  const getDisplayDate = () => {
-    if (dateFormatted) return dateFormatted;
-    if (date) return date;
-    return '—';
-  };
-
-  const handleConfirm = async () => {
-    if (!selectedMethod) {
-      alert('Veuillez sélectionner un mode de paiement');
-      return;
-    }
-
-    if (!doctor || !date || !consultationType) {
-      alert('Informations manquantes pour créer le rendez-vous');
-      return;
-    }
-
-    const mappedType    = rendezVousService.mapConsultationType(consultationType);
-    const mappedPayment = rendezVousService.mapPaymentMethod(selectedMethod);
-    const dateTime      = `${date}T${time || '10:00'}:00`;
-
-    await createRendezVousAndPay({
-      docteurId:        doctor.id,
-      date:             dateTime,
-      typeConsultation: mappedType,
-      modePaiement:     mappedPayment,
-      description:      description,
-    });
-  };
-
-  const handleSuccess = () => {
-    setShowSuccessModal(false);
-    onNavigate('appointments');
-  };
-
-  // ✅ Nom du docteur affiché correctement selon la structure reçue
-  const doctorDisplayName =
-    doctor?.nomComplet ??
-    (doctor?.name ? doctor.name : 'Médecin');
-
-  const doctorSpecialty =
-    doctor?.specialite ?? doctor?.specialty ?? 'Spécialiste';
-
-  const doctorRating =
-    doctor?.note ?? doctor?.rating ?? null;
+  const doctorDisplayName = doctor?.nomComplet ?? doctor?.name ?? 'Médecin';
+  const doctorSpecialty   = doctor?.specialite ?? doctor?.specialty ?? 'Spécialiste';
+  const doctorRating      = doctor?.note ?? doctor?.rating ?? null;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScreenHeader
-        title="Paiement"
-        onBack={() => onNavigate('doctorDetail')}
-      />
+      <ScreenHeader title="Paiement" onBack={() => onNavigate('doctorDetail')} />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
 
           {/* ── Carte docteur ── */}
           <View style={[styles.doctorCard, { backgroundColor: colors.card }]}>
-            <View style={styles.doctorImagePlaceholder}>
-              <FontAwesome5 name="user-md" size={40} color="#0077b6" />
+            <View style={styles.avatarBox}>
+              <FontAwesome5 name="user-md" size={36} color="#0077b6" />
             </View>
-            <View style={styles.doctorInfo}>
-              <Text style={[styles.doctorName, { color: colors.text }]}>
-                {doctorDisplayName}
-              </Text>
-              <Text style={[styles.doctorSpecialty, { color: colors.subText }]}>
-                {doctorSpecialty}
-              </Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.doctorName, { color: colors.text }]}>{doctorDisplayName}</Text>
+              <Text style={[styles.doctorSpec, { color: colors.subText }]}>{doctorSpecialty}</Text>
               {doctorRating !== null && (
-                <View style={styles.ratingContainer}>
-                  <Ionicons name="star" size={14} color="#FFA500" />
-                  <Text style={[styles.rating, { color: colors.subText }]}>
+                <View style={styles.ratingRow}>
+                  <Ionicons name="star" size={13} color="#FFA500" />
+                  <Text style={[styles.ratingText, { color: colors.subText }]}>
                     {typeof doctorRating === 'number' ? doctorRating.toFixed(1) : doctorRating}
                   </Text>
                 </View>
@@ -164,70 +235,41 @@ const PaymentMethodScreen = ({
             </View>
           </View>
 
-          {/* ── Détails du rendez-vous ── */}
-          <View style={[styles.detailsCard, { backgroundColor: colors.card }]}>
-            <Text style={[styles.detailsTitle, { color: colors.text }]}>
-              Détails du rendez-vous
-            </Text>
-
-            {/* Date */}
-            <View style={styles.detailRow}>
-              <Text style={[styles.detailLabel, { color: colors.subText }]}>Date</Text>
-              <Text style={[styles.detailText, { color: colors.text }]}>
+          {/* ── Récapitulatif ── */}
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Récapitulatif</Text>
+            <View style={styles.row}>
+              <Text style={[styles.rowLabel, { color: colors.subText }]}>Date</Text>
+              <Text style={[styles.rowValue, { color: colors.text }]}>
                 {getDisplayDate()}{time ? ` · ${time}` : ''}
               </Text>
             </View>
-
-            {/* Type */}
-            <View style={styles.detailRow}>
-              <Text style={[styles.detailLabel, { color: colors.subText }]}>Type</Text>
-              <Text style={[styles.detailText, { color: colors.text }]}>
-                {getConsultationTypeLabel()}
-              </Text>
+            <View style={styles.row}>
+              <Text style={[styles.rowLabel, { color: colors.subText }]}>Type</Text>
+              <Text style={[styles.rowValue, { color: colors.text }]}>{getTypeLabel()}</Text>
             </View>
-
-            {/* Description */}
             {!!description && (
-              <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: colors.subText }]}>Motif</Text>
-                <Text
-                  style={[styles.detailText, { color: colors.text, flex: 1, textAlign: 'right' }]}
-                  numberOfLines={2}
-                >
-                  {description}
-                </Text>
+              <View style={styles.row}>
+                <Text style={[styles.rowLabel, { color: colors.subText }]}>Motif</Text>
+                <Text style={[styles.rowValue, { color: colors.text, flex: 1, textAlign: 'right' }]}
+                  numberOfLines={2}>{description}</Text>
               </View>
             )}
-
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
-            {/* Récap paiement */}
-            <Text style={[styles.detailsTitle, { color: colors.text }]}>
-              Détail du paiement
-            </Text>
-
-            <View style={styles.paymentRow}>
-              <Text style={[styles.paymentLabel, { color: colors.subText }]}>
-                Consultation
-              </Text>
-              <Text style={[styles.paymentValue, { color: colors.text }]}>
+            <View style={styles.row}>
+              <Text style={[styles.rowLabel, { color: colors.subText }]}>Consultation</Text>
+              <Text style={[styles.rowValue, { color: colors.text }]}>
                 {consultationPrice.toLocaleString()} FCFA
               </Text>
             </View>
-
-            {/* ✅ Frais de confirmation : 200 FCFA */}
-            <View style={styles.paymentRow}>
-              <Text style={[styles.paymentLabel, { color: colors.subText }]}>
-                Frais de confirmation
-              </Text>
-              <Text style={[styles.paymentValue, { color: colors.text }]}>
+            <View style={styles.row}>
+              <Text style={[styles.rowLabel, { color: colors.subText }]}>Frais de confirmation</Text>
+              <Text style={[styles.rowValue, { color: colors.text }]}>
                 {confirmationFee.toLocaleString()} FCFA
               </Text>
             </View>
-
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
-            <View style={styles.paymentRow}>
+            <View style={styles.row}>
               <Text style={[styles.totalLabel, { color: colors.text }]}>Total</Text>
               <Text style={[styles.totalValue, { color: '#0077b6' }]}>
                 {totalAmount.toLocaleString()} FCFA
@@ -235,13 +277,12 @@ const PaymentMethodScreen = ({
             </View>
           </View>
 
-          {/* ── Mode de paiement ── */}
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+          {/* ── Modes de paiement ── */}
+          <View style={{ marginBottom: 20 }}>
+            <Text style={[styles.cardTitle, { color: colors.text, marginBottom: 10 }]}>
               Mode de paiement
             </Text>
-
-            {paymentMethods.map((method) => (
+            {paymentMethods.map(method => (
               <TouchableOpacity
                 key={method.id}
                 style={[
@@ -250,94 +291,219 @@ const PaymentMethodScreen = ({
                   selectedMethod === method.id && styles.methodCardActive,
                 ]}
                 onPress={() => setSelectedMethod(method.id)}
-                disabled={isLoading}
               >
                 <View style={styles.methodLeft}>
-                  <View style={[styles.methodIcon, { backgroundColor: method.color + '20' }]}>
-                    <Ionicons name={method.icon as any} size={28} color={method.color} />
+                  <View style={[styles.methodIcon, { backgroundColor: method.color + '18' }]}>
+                    <Ionicons name={method.icon} size={26} color={method.color} />
                   </View>
-                  <Text style={[styles.methodName, { color: colors.text }]}>
-                    {method.name}
-                  </Text>
+                  <View>
+                    <Text style={[styles.methodName, { color: colors.text }]}>{method.name}</Text>
+                    <Text style={[styles.methodHint, { color: colors.subText }]}>{method.hint}</Text>
+                  </View>
                 </View>
-                {selectedMethod === method.id ? (
-                  <Ionicons name="radio-button-on" size={24} color="#0077b6" />
-                ) : (
-                  <Ionicons name="radio-button-off" size={24} color="#ccc" />
-                )}
+                <Ionicons
+                  name={selectedMethod === method.id ? 'radio-button-on' : 'radio-button-off'}
+                  size={22}
+                  color={selectedMethod === method.id ? '#0077b6' : '#ccc'}
+                />
               </TouchableOpacity>
             ))}
           </View>
 
-          {/* ── Note remboursement ── */}
-          <View style={[styles.noteCard, { backgroundColor: '#FFF9E6' }]}>
-            <Ionicons name="information-circle-outline" size={20} color="#FFA500" />
-            <Text style={[styles.noteText, { color: colors.subText }]}>
-              <Text style={{ color: colors.text, fontWeight: '600' }}>NB : </Text>
-              Les frais de confirmation de {confirmationFee} FCFA ne sont pas remboursables,
-              que le rendez-vous soit accepté ou refusé. Seul le montant de la consultation
-              est remboursé en cas de refus.
-            </Text>
-          </View>
-
-          {/* ── Info PayPlus ── */}
-          <View style={[styles.infoCard, { backgroundColor: colors.inputBackground }]}>
-            <Ionicons name="shield-checkmark-outline" size={20} color="#0077b6" />
-            <Text style={[styles.infoText, { color: colors.subText }]}>
-              Vous serez redirigé vers PayPlus pour finaliser votre paiement en toute sécurité
+          {/* ── Note ── */}
+          <View style={styles.noteCard}>
+            <Ionicons name="information-circle-outline" size={18} color="#FFA500" />
+            <Text style={styles.noteText}>
+              <Text style={{ fontWeight: '700' }}>NB : </Text>
+              Les {confirmationFee} FCFA de frais de confirmation ne sont pas remboursables.
+              Seul le montant de la consultation est remboursé en cas de refus.
             </Text>
           </View>
         </View>
       </ScrollView>
 
-      {/* ── Footer total + bouton ── */}
+      {/* ── Footer ── */}
       <View style={[styles.footer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
-        <View style={styles.totalContainer}>
-          <Text style={[styles.footerLabel, { color: colors.subText }]}>Total</Text>
+        <View>
+          <Text style={[styles.footerLabel, { color: colors.subText }]}>Total à payer</Text>
           <Text style={[styles.footerTotal, { color: colors.text }]}>
             {totalAmount.toLocaleString()} FCFA
           </Text>
         </View>
         <TouchableOpacity
-          style={[
-            styles.confirmButton,
-            (!selectedMethod || isLoading) && styles.confirmButtonDisabled,
-          ]}
-          onPress={handleConfirm}
-          disabled={!selectedMethod || isLoading}
+          style={[styles.payBtn, !selectedMethod && styles.payBtnDisabled]}
+          onPress={handleOpenPhoneModal}
+          disabled={!selectedMethod}
         >
-          {isLoading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.confirmButtonText}>Confirmer et payer</Text>
-          )}
+          <Text style={styles.payBtnText}>Confirmer et payer</Text>
         </TouchableOpacity>
       </View>
 
-      {/* ── Modal succès ── */}
+      {/* ══════════════════════════════════════════════════════════════════════
+          MODAL 1 — Saisie du numéro (bottom sheet)
+      ══════════════════════════════════════════════════════════════════════ */}
       <Modal
-        visible={showSuccessModal}
+        visible={showPhoneModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => !isSending && setShowPhoneModal(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <View style={[styles.modalSheet, { backgroundColor: colors.card }]}>
+            <View style={[styles.handle, { backgroundColor: colors.border }]} />
+
+            <View style={[styles.networkBadge, { backgroundColor: (selectedMethodData?.color ?? '#0077b6') + '15' }]}>
+              <Ionicons name="phone-portrait" size={30} color={selectedMethodData?.color ?? '#0077b6'} />
+            </View>
+
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Paiement via {selectedMethodData?.name}
+            </Text>
+            <Text style={[styles.modalSubtitle, { color: colors.subText }]}>
+              Entrez votre numéro {selectedMethodData?.name}. Un prompt USSD apparaîtra sur votre téléphone pour saisir votre code secret.
+            </Text>
+
+            {/* Champ numéro */}
+            <View style={[
+              styles.phoneInputWrapper,
+              {
+                borderColor: paymentPhone.length > 0
+                  ? (isPhoneValid() ? '#2ecc71' : '#e63946')
+                  : colors.border,
+                backgroundColor: (colors as any).inputBackground ?? colors.background,
+              },
+            ]}>
+              <Text style={[styles.prefix, { color: colors.subText }]}>+228</Text>
+              <View style={[styles.prefixSep, { backgroundColor: colors.border }]} />
+              <TextInput
+                style={[styles.phoneInput, { color: colors.text }]}
+                value={paymentPhone}
+                onChangeText={setPaymentPhone}
+                placeholder={selectedMethodData?.placeholder ?? '90 00 00 00'}
+                placeholderTextColor={colors.subText}
+                keyboardType="phone-pad"
+                maxLength={11}
+                autoFocus
+              />
+              {paymentPhone.length > 0 && (
+                <Ionicons
+                  name={isPhoneValid() ? 'checkmark-circle' : 'close-circle'}
+                  size={20}
+                  color={isPhoneValid() ? '#2ecc71' : '#e63946'}
+                />
+              )}
+            </View>
+
+            {/* Montant */}
+            <View style={[styles.amountBadge, { backgroundColor: '#E3F2FD' }]}>
+              <Text style={styles.amountText}>
+                Montant :{' '}
+                <Text style={{ fontWeight: '700', color: '#0077b6' }}>
+                  {totalAmount.toLocaleString()} FCFA
+                </Text>
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.sendBtn, (!isPhoneValid() || isSending) && styles.sendBtnDisabled]}
+              onPress={handleSubmitPhone}
+              disabled={!isPhoneValid() || isSending}
+            >
+              {isSending
+                ? <ActivityIndicator color="#fff" />
+                : <Text style={styles.sendBtnText}>Envoyer la demande</Text>
+              }
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={() => setShowPhoneModal(false)}
+              disabled={isSending}
+            >
+              <Text style={[styles.cancelBtnText, { color: colors.subText }]}>Annuler</Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          MODAL 2 — Attente USSD / Succès / Échec (centre)
+      ══════════════════════════════════════════════════════════════════════ */}
+      <Modal
+        visible={showWaitingModal}
         transparent
         animationType="fade"
-        onRequestClose={() => setShowSuccessModal(false)}
+        onRequestClose={() => {}}
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
-            <View style={styles.modalIconContainer}>
-              <Ionicons name="checkmark" size={50} color="#0077b6" />
-            </View>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>
-              Paiement en cours
-            </Text>
-            <Text style={[styles.modalDescription, { color: colors.subText }]}>
-              Votre paiement est en cours de traitement.
-            </Text>
-            <Text style={[styles.modalDescription, { color: colors.subText }]}>
-              Vous recevrez une confirmation une fois le paiement validé.
-            </Text>
-            <TouchableOpacity style={styles.modalButton} onPress={handleSuccess}>
-              <Text style={styles.modalButtonText}>Voir mes rendez-vous</Text>
-            </TouchableOpacity>
+        <View style={[styles.modalOverlay, { justifyContent: 'center' }]}>
+          <View style={[styles.waitingSheet, { backgroundColor: colors.card }]}>
+
+            {paymentStatus === 'waiting' && (
+              <>
+                <ActivityIndicator size="large" color="#0077b6" style={{ marginBottom: 14 }} />
+                <Text style={[styles.waitingTitle, { color: colors.text }]}>
+                  Validez sur votre téléphone
+                </Text>
+
+                {/* Instructions USSD */}
+                <View style={[styles.ussdBox, { backgroundColor: '#F0F8FF', borderColor: '#BDE0FF' }]}>
+                  <Ionicons name="phone-portrait-outline" size={22} color="#0077b6" style={{ marginBottom: 6, alignSelf: 'center' }} />
+                  <Text style={styles.ussdStep}>① Un menu USSD s'affiche sur votre téléphone</Text>
+                  <Text style={styles.ussdStep}>② Entrez votre code secret {selectedMethodData?.name}</Text>
+                  <Text style={styles.ussdStep}>③ Confirmez le paiement de <Text style={{ fontWeight: '700' }}>{totalAmount.toLocaleString()} FCFA</Text></Text>
+                </View>
+
+                <Text style={[styles.waitingPhone, { color: colors.subText }]}>
+                  Numéro :{' '}
+                  <Text style={{ fontWeight: '700', color: colors.text }}>+228 {paymentPhone}</Text>
+                </Text>
+                <Text style={[styles.waitingTimer, { color: colors.subText }]}>
+                  Vérification en cours… {pollingSeconds}s
+                </Text>
+
+                <TouchableOpacity style={styles.cancelWaitBtn} onPress={handleCancelWaiting}>
+                  <Text style={styles.cancelWaitText}>Annuler</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {paymentStatus === 'success' && (
+              <>
+                <Ionicons name="checkmark-circle" size={72} color="#2ecc71" style={{ marginBottom: 12 }} />
+                <Text style={[styles.waitingTitle, { color: colors.text }]}>Paiement réussi !</Text>
+                <Text style={[styles.waitingSubtitle, { color: colors.subText }]}>
+                  Votre rendez-vous est enregistré. Le docteur le confirmera bientôt.
+                </Text>
+                <TouchableOpacity
+                  style={[styles.sendBtn, { marginTop: 20, backgroundColor: '#2ecc71' }]}
+                  onPress={handleGoToAppointments}
+                >
+                  <Text style={styles.sendBtnText}>Voir mes rendez-vous</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {paymentStatus === 'failed' && (
+              <>
+                <Ionicons name="close-circle" size={72} color="#e63946" style={{ marginBottom: 12 }} />
+                <Text style={[styles.waitingTitle, { color: colors.text }]}>Paiement non confirmé</Text>
+                <Text style={[styles.waitingSubtitle, { color: colors.subText }]}>
+                  Le paiement n'a pas été validé dans les délais. Vérifiez votre solde ou réessayez.
+                </Text>
+                <TouchableOpacity
+                  style={[styles.sendBtn, { marginTop: 20, backgroundColor: '#e63946' }]}
+                  onPress={handleRetry}
+                >
+                  <Text style={styles.sendBtnText}>Réessayer</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.cancelBtn} onPress={handleCancelWaiting}>
+                  <Text style={[styles.cancelBtnText, { color: colors.subText }]}>Annuler</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </View>
       </Modal>
@@ -346,252 +512,101 @@ const PaymentMethodScreen = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingBottom: 30,
-  },
-  content: {
-    padding: 20,
-  },
+  container: { flex: 1 },
+  content:   { padding: 16, paddingBottom: 24 },
+
   doctorCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+    flexDirection: 'row', alignItems: 'center',
+    padding: 14, borderRadius: 12, marginBottom: 16,
+    elevation: 2, shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4, gap: 12,
   },
-  doctorImagePlaceholder: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#E3F2FD',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
+  avatarBox: {
+    width: 56, height: 56, borderRadius: 28,
+    backgroundColor: '#E3F2FD', justifyContent: 'center', alignItems: 'center',
   },
-  doctorInfo: {
-    flex: 1,
+  doctorName: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
+  doctorSpec: { fontSize: 13, marginBottom: 4 },
+  ratingRow:  { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  ratingText: { fontSize: 13 },
+
+  card: {
+    borderRadius: 12, padding: 14, marginBottom: 16,
+    elevation: 2, shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4,
   },
-  doctorName: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  doctorSpecialty: {
-    fontSize: 14,
-    marginBottom: 5,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rating: {
-    fontSize: 14,
-    marginLeft: 4,
-  },
-  detailsCard: {
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  detailsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 10,
-    gap: 12,
-  },
-  detailLabel: {
-    fontSize: 14,
-    flexShrink: 0,
-  },
-  detailText: {
-    fontSize: 14,
-    fontWeight: '500',
-    textAlign: 'right',
-  },
-  divider: {
-    height: 1,
-    marginVertical: 12,
-  },
-  paymentRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  paymentLabel: {
-    fontSize: 14,
-  },
-  paymentValue: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  totalLabel: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  totalValue: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 10,
-  },
+  cardTitle:  { fontSize: 15, fontWeight: '700', marginBottom: 12 },
+  row:        { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8, gap: 12 },
+  rowLabel:   { fontSize: 13 },
+  rowValue:   { fontSize: 13, fontWeight: '500' },
+  totalLabel: { fontSize: 15, fontWeight: '700' },
+  totalValue: { fontSize: 15, fontWeight: '700' },
+  divider:    { height: 1, marginVertical: 10 },
+
   methodCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    borderWidth: 1,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    padding: 14, borderRadius: 12, marginBottom: 10, borderWidth: 1.5,
   },
-  methodCardActive: {
-    borderColor: '#0077b6',
-    backgroundColor: '#E0F7FF',
-  },
-  methodLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  methodIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  methodName: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
+  methodCardActive: { borderColor: '#0077b6', backgroundColor: '#E0F7FF' },
+  methodLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  methodIcon: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
+  methodName: { fontSize: 14, fontWeight: '600', marginBottom: 2 },
+  methodHint: { fontSize: 11 },
+
   noteCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    borderRadius: 12,
-    padding: 14,
-    gap: 10,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: '#FFE4A0',
+    flexDirection: 'row', alignItems: 'flex-start',
+    backgroundColor: '#FFF9E6', borderRadius: 10, padding: 12, gap: 8,
+    borderWidth: 1, borderColor: '#FFE4A0',
   },
-  noteText: {
-    flex: 1,
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  infoCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 10,
-    gap: 10,
-    marginBottom: 10,
-  },
-  infoText: {
-    flex: 1,
-    fontSize: 12,
-    lineHeight: 18,
-  },
+  noteText: { flex: 1, fontSize: 12, lineHeight: 18, color: '#856404' },
+
   footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 15,
-    borderTopWidth: 1,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    padding: 14, borderTopWidth: 1,
   },
-  totalContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  footerLabel: { fontSize: 12, marginBottom: 2 },
+  footerTotal: { fontSize: 18, fontWeight: '700' },
+  payBtn:        { backgroundColor: '#0077b6', paddingVertical: 13, paddingHorizontal: 22, borderRadius: 10, minWidth: 160, alignItems: 'center' },
+  payBtnDisabled:{ backgroundColor: '#ccc' },
+  payBtnText:    { color: '#fff', fontSize: 15, fontWeight: '700' },
+
+  // Modaux
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'flex-end' },
+  modalSheet:   { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40, alignItems: 'center' },
+  handle:       { width: 40, height: 4, borderRadius: 2, marginBottom: 20 },
+  networkBadge: { width: 64, height: 64, borderRadius: 32, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  modalTitle:   { fontSize: 18, fontWeight: '700', marginBottom: 8, textAlign: 'center' },
+  modalSubtitle:{ fontSize: 13, textAlign: 'center', lineHeight: 20, marginBottom: 20, paddingHorizontal: 8 },
+
+  phoneInputWrapper: {
+    flexDirection: 'row', alignItems: 'center',
+    borderWidth: 1.5, borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12,
+    width: '100%', marginBottom: 14, gap: 10,
   },
-  footerLabel: {
-    fontSize: 14,
-  },
-  footerTotal: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  confirmButton: {
-    backgroundColor: '#0077b6',
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 8,
-    minWidth: 150,
-    alignItems: 'center',
-  },
-  confirmButtonDisabled: {
-    backgroundColor: '#ccc',
-  },
-  confirmButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    width: '80%',
-    borderRadius: 10,
-    padding: 20,
-    alignItems: 'center',
-  },
-  modalIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#E0F7FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 10,
-  },
-  modalDescription: {
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 5,
-  },
-  modalButton: {
-    marginTop: 15,
-    backgroundColor: '#0077b6',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-  },
-  modalButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  prefix:    { fontSize: 16, fontWeight: '600' },
+  prefixSep: { width: 1, height: 20 },
+  phoneInput:{ flex: 1, fontSize: 20, letterSpacing: 3 },
+
+  amountBadge: { borderRadius: 8, paddingVertical: 8, paddingHorizontal: 16, marginBottom: 20, width: '100%', alignItems: 'center' },
+  amountText:  { fontSize: 14, color: '#333' },
+
+  sendBtn:        { backgroundColor: '#0077b6', borderRadius: 12, paddingVertical: 14, width: '100%', alignItems: 'center', marginBottom: 10 },
+  sendBtnDisabled:{ backgroundColor: '#ccc' },
+  sendBtnText:    { color: '#fff', fontSize: 16, fontWeight: '700' },
+  cancelBtn:      { paddingVertical: 10, width: '100%', alignItems: 'center' },
+  cancelBtnText:  { fontSize: 14, fontWeight: '500' },
+
+  // Modal 2
+  waitingSheet:   { marginHorizontal: 24, borderRadius: 20, padding: 24, alignItems: 'center', elevation: 10 },
+  waitingTitle:   { fontSize: 18, fontWeight: '700', textAlign: 'center', marginBottom: 10 },
+  waitingSubtitle:{ fontSize: 13, textAlign: 'center', lineHeight: 20, marginBottom: 8 },
+  ussdBox:        { width: '100%', borderRadius: 12, borderWidth: 1, padding: 14, marginBottom: 14, gap: 8 },
+  ussdStep:       { fontSize: 13, lineHeight: 20, color: '#0055a5' },
+  waitingPhone:   { fontSize: 13, marginBottom: 4 },
+  waitingTimer:   { fontSize: 12, marginBottom: 16 },
+  cancelWaitBtn:  { paddingVertical: 8, paddingHorizontal: 20 },
+  cancelWaitText: { color: '#e63946', fontSize: 14, fontWeight: '600' },
 });
 
 export default PaymentMethodScreen;
