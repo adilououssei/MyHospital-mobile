@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     View,
     Text,
@@ -8,10 +8,17 @@ import {
     Alert,
     Modal,
     Share,
+    RefreshControl,
+    ActivityIndicator,
+    Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL } from '../services/api.config';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 
 interface Medication {
     name: string;
@@ -22,16 +29,18 @@ interface Medication {
 }
 
 interface Prescription {
-    id: string;
+    id: number;
     doctorName: string;
     doctorSpecialty: string;
-    appointmentId: string;
+    appointmentId: number;
     date: string;
     diagnosis: string;
     medications: Medication[];
     notes: string;
-    pdfUrl: string;
+    pdfUrl: string | null;
     isDownloaded: boolean;
+    texteComplet: string;
+    createdAt: string;
 }
 
 interface PrescriptionsScreenProps {
@@ -40,91 +49,195 @@ interface PrescriptionsScreenProps {
 
 const PrescriptionsScreen = ({ onNavigate }: PrescriptionsScreenProps) => {
     const { colors } = useApp();
+    const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
     const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [downloadingId, setDownloadingId] = useState<number | null>(null);
 
-    const prescriptions: Prescription[] = [
-        {
-            id: 'PRESC001',
-            doctorName: 'Dr. Marcus Horizon',
-            doctorSpecialty: 'Cardiologue',
-            appointmentId: 'APT001',
-            date: '26 Juin 2024',
-            diagnosis: 'Hypertension artérielle légère',
-            medications: [
-                {
-                    name: 'Amlodipine',
-                    dosage: '5mg',
-                    frequency: '1 fois par jour',
-                    duration: '30 jours',
-                    instructions: 'À prendre le matin avant le petit-déjeuner',
-                },
-                {
-                    name: 'Aspirine',
-                    dosage: '100mg',
-                    frequency: '1 fois par jour',
-                    duration: '30 jours',
-                    instructions: 'À prendre le soir après le dîner',
-                },
-            ],
-            notes: 'Surveiller la tension artérielle quotidiennement. Réduire le sel dans l\'alimentation.',
-            pdfUrl: 'https://example.com/prescription001.pdf',
-            isDownloaded: true,
-        },
-        {
-            id: 'PRESC002',
-            doctorName: 'Dr. Alysa Hana',
-            doctorSpecialty: 'Pédiatre',
-            appointmentId: 'APT002',
-            date: '20 Juin 2024',
-            diagnosis: 'Infection respiratoire',
-            medications: [
-                {
-                    name: 'Amoxicilline',
-                    dosage: '500mg',
-                    frequency: '3 fois par jour',
-                    duration: '7 jours',
-                    instructions: 'À prendre après les repas',
-                },
-                {
-                    name: 'Paracétamol',
-                    dosage: '500mg',
-                    frequency: 'Si fièvre',
-                    duration: '7 jours',
-                    instructions: 'Maximum 3 fois par jour',
-                },
-            ],
-            notes: 'Repos recommandé. Hydratation suffisante. Consulter si la fièvre persiste après 3 jours.',
-            pdfUrl: 'https://example.com/prescription002.pdf',
-            isDownloaded: false,
-        },
-    ];
+    // Récupérer les ordonnances depuis l'API
+    const fetchPrescriptions = useCallback(async () => {
+        try {
+            const token = await AsyncStorage.getItem('authToken');
+            if (!token) {
+                console.log('No token found');
+                return;
+            }
 
-    const handleDownloadPDF = async (prescription: Prescription) => {
-        // Simuler le téléchargement
-        Alert.alert(
-            'Téléchargement',
-            'L\'ordonnance est en cours de téléchargement...',
-            [
-                {
-                    text: 'OK',
-                    onPress: () => {
-                        // Logique de téléchargement réel ici
-                        console.log('Downloading PDF:', prescription.pdfUrl);
-                    }
-                }
-            ]
-        );
+            const response = await fetch(`${API_BASE_URL}/api/patient/prescriptions`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                const text = await response.text();
+                console.error('Response error:', text);
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Prescriptions fetched:', data);
+            
+            if (data.success && data.prescriptions) {
+                const formattedPrescriptions = data.prescriptions.map((presc: any) => ({
+                    id: presc.id,
+                    doctorName: presc.doctorName || `Dr. ${presc.docteur?.prenom || ''} ${presc.docteur?.nom || ''}`,
+                    doctorSpecialty: presc.doctorSpecialty || presc.docteur?.specialite || 'Médecin',
+                    appointmentId: presc.rendezVous?.id,
+                    date: new Date(presc.createdAt).toLocaleDateString('fr-FR', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                    }),
+                    diagnosis: presc.diagnostic,
+                    medications: parseMedications(presc.medicaments),
+                    notes: presc.conseils || '',
+                    pdfUrl: null,
+                    isDownloaded: false,
+                    texteComplet: presc.texteComplet,
+                    createdAt: presc.createdAt,
+                }));
+                
+                setPrescriptions(formattedPrescriptions);
+            } else {
+                setPrescriptions([]);
+            }
+        } catch (error) {
+            console.error('Network error:', error);
+            Alert.alert('Erreur', 'Impossible de charger vos ordonnances. Vérifiez votre connexion.');
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    }, []);
+
+    // Parser le texte des médicaments en objet structuré
+    const parseMedications = (medicamentsText: string): Medication[] => {
+        if (!medicamentsText) return [];
+        
+        const lines = medicamentsText.split('\n');
+        const medications: Medication[] = [];
+        
+        for (const line of lines) {
+            if (line.trim()) {
+                medications.push({
+                    name: line.trim(),
+                    dosage: '',
+                    frequency: '',
+                    duration: '',
+                    instructions: '',
+                });
+            }
+        }
+        
+        if (medications.length === 1 && medicamentsText.includes('—')) {
+            const parts = medicamentsText.split('—');
+            if (parts.length >= 2) {
+                medications[0] = {
+                    name: parts[0].trim(),
+                    dosage: parts[1].trim(),
+                    frequency: parts[2]?.trim() || '',
+                    duration: parts[3]?.trim() || '',
+                    instructions: '',
+                };
+            }
+        }
+        
+        return medications;
     };
 
+    // ✅ Télécharger le PDF de l'ordonnance
+    const handleDownloadPDF = async (prescription: Prescription) => {
+        try {
+            setDownloadingId(prescription.id);
+            
+            const token = await AsyncStorage.getItem('authToken');
+            if (!token) {
+                Alert.alert('Erreur', 'Vous devez être connecté');
+                return;
+            }
+            
+            // Appeler l'API pour générer le PDF
+            const response = await fetch(`${API_BASE_URL}/prescription/pdf/${prescription.id}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/pdf',
+                },
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const blob = await response.blob();
+            const reader = new FileReader();
+            
+            reader.onloadend = async () => {
+                const base64data = reader.result as string;
+                const fileName = `ordonnance_${prescription.id}_${Date.now()}.pdf`;
+                const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+                
+                // Sauvegarder le fichier
+                await FileSystem.writeAsStringAsync(fileUri, base64data.split(',')[1], {
+                    encoding: FileSystem.EncodingType.Base64,
+                });
+                
+                // Vérifier si le partage est disponible
+                if (await Sharing.isAvailableAsync()) {
+                    await Sharing.shareAsync(fileUri, {
+                        mimeType: 'application/pdf',
+                        dialogTitle: `Ordonnance - ${prescription.doctorName}`,
+                        UTI: 'com.adobe.pdf',
+                    });
+                } else {
+                    Alert.alert('Info', 'Le fichier a été téléchargé');
+                }
+            };
+            
+            reader.readAsDataURL(blob);
+            
+        } catch (error) {
+            console.error('Error downloading PDF:', error);
+            Alert.alert('Erreur', 'Impossible de télécharger le PDF. Réessayez plus tard.');
+        } finally {
+            setDownloadingId(null);
+        }
+    };
+
+    // ✅ Partager l'ordonnance
     const handleSharePrescription = async (prescription: Prescription) => {
         try {
+            const shareContent = `
+📋 ORDONNANCE MÉDICALE
+━━━━━━━━━━━━━━━━━━━━━━━━━
+Dr. ${prescription.doctorName}
+Date: ${prescription.date}
+━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📌 DIAGNOSTIC
+${prescription.diagnosis}
+
+💊 TRAITEMENTS
+${prescription.medications.map(m => `• ${m.name}`).join('\n')}
+
+${prescription.notes ? `📌 RECOMMANDATIONS\n${prescription.notes}\n` : ''}
+━━━━━━━━━━━━━━━━━━━━━━━━━
+Ordonnance médicale - Mon Hôpital Mobile
+            `.trim();
+            
             await Share.share({
-                message: `Ordonnance de ${prescription.doctorName}\nDate: ${prescription.date}\nDiagnostic: ${prescription.diagnosis}`,
-                url: prescription.pdfUrl,
+                message: shareContent,
+                title: `Ordonnance - ${prescription.doctorName}`,
             });
         } catch (error) {
             console.error('Error sharing:', error);
+            Alert.alert('Erreur', 'Impossible de partager l\'ordonnance');
         }
     };
 
@@ -137,8 +250,7 @@ const PrescriptionsScreen = ({ onNavigate }: PrescriptionsScreenProps) => {
                 {
                     text: 'Imprimer',
                     onPress: () => {
-                        // Logique d'impression ici
-                        console.log('Printing prescription:', prescription.id);
+                        Alert.alert('Information', 'Téléchargez d\'abord le PDF pour l\'imprimer');
                     }
                 }
             ]
@@ -150,33 +262,66 @@ const PrescriptionsScreen = ({ onNavigate }: PrescriptionsScreenProps) => {
         setShowDetailModal(true);
     };
 
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchPrescriptions();
+    };
+
+    useEffect(() => {
+        fetchPrescriptions();
+    }, [fetchPrescriptions]);
+
+    if (loading) {
+        return (
+            <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+                <View style={[styles.header, { backgroundColor: colors.card }]}>
+                    <TouchableOpacity style={styles.backButton} onPress={() => onNavigate('profile')}>
+                        <Ionicons name="arrow-back" size={24} color={colors.text} />
+                    </TouchableOpacity>
+                    <Text style={[styles.headerTitle, { color: colors.text }]}>Mes Ordonnances</Text>
+                    <View style={styles.placeholder} />
+                </View>
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#0077b6" />
+                    <Text style={[styles.loadingText, { color: colors.subText }]}>
+                        Chargement de vos ordonnances...
+                    </Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-            {/* Header */}
             <View style={[styles.header, { backgroundColor: colors.card }]}>
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => onNavigate('profile')}
-                >
+                <TouchableOpacity style={styles.backButton} onPress={() => onNavigate('profile')}>
                     <Ionicons name="arrow-back" size={24} color={colors.text} />
                 </TouchableOpacity>
                 <Text style={[styles.headerTitle, { color: colors.text }]}>
                     Mes Ordonnances
                 </Text>
-                <View style={styles.placeholder} />
+                <TouchableOpacity onPress={onRefresh} style={styles.refreshButton}>
+                    <Ionicons name="refresh-outline" size={24} color={colors.text} />
+                </TouchableOpacity>
             </View>
 
-            {/* Info Banner */}
             <View style={styles.infoBanner}>
                 <Ionicons name="information-circle" size={24} color="#0077b6" />
                 <View style={styles.infoBannerTextContainer}>
                     <Text style={[styles.infoBannerText, { color: colors.subText }]}>
-                        Téléchargez vos ordonnances pour les présenter en pharmacie
+                        {prescriptions.length > 0 
+                            ? `Vous avez ${prescriptions.length} ordonnance(s) disponible(s)`
+                            : 'Aucune ordonnance pour le moment'}
                     </Text>
                 </View>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView 
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0077b6']} />
+                }
+            >
                 <View style={styles.prescriptionsList}>
                     {prescriptions.length > 0 ? (
                         prescriptions.map((prescription) => (
@@ -184,7 +329,6 @@ const PrescriptionsScreen = ({ onNavigate }: PrescriptionsScreenProps) => {
                                 key={prescription.id}
                                 style={[styles.prescriptionCard, { backgroundColor: colors.card }]}
                             >
-                                {/* Header */}
                                 <View style={styles.cardHeader}>
                                     <View style={styles.cardHeaderLeft}>
                                         <View style={styles.doctorIcon}>
@@ -207,7 +351,6 @@ const PrescriptionsScreen = ({ onNavigate }: PrescriptionsScreenProps) => {
                                     </View>
                                 </View>
 
-                                {/* Diagnosis */}
                                 <View style={[styles.diagnosisContainer, { backgroundColor: colors.inputBackground }]}>
                                     <Text style={[styles.diagnosisLabel, { color: colors.subText }]}>
                                         Diagnostic
@@ -217,7 +360,6 @@ const PrescriptionsScreen = ({ onNavigate }: PrescriptionsScreenProps) => {
                                     </Text>
                                 </View>
 
-                                {/* Medications Count */}
                                 <View style={styles.medicationsCount}>
                                     <Ionicons name="medkit-outline" size={18} color="#0077b6" />
                                     <Text style={[styles.medicationsCountText, { color: colors.text }]}>
@@ -225,7 +367,7 @@ const PrescriptionsScreen = ({ onNavigate }: PrescriptionsScreenProps) => {
                                     </Text>
                                 </View>
 
-                                {/* Actions */}
+                                {/* ✅ Actions avec bouton PDF */}
                                 <View style={styles.actionsContainer}>
                                     <TouchableOpacity
                                         style={styles.actionButton}
@@ -235,17 +377,19 @@ const PrescriptionsScreen = ({ onNavigate }: PrescriptionsScreenProps) => {
                                         <Text style={styles.actionButtonText}>Voir</Text>
                                     </TouchableOpacity>
 
+                                    {/* ✅ NOUVEAU BOUTON PDF */}
                                     <TouchableOpacity
-                                        style={styles.actionButton}
+                                        style={[styles.actionButton, styles.pdfButton]}
                                         onPress={() => handleDownloadPDF(prescription)}
+                                        disabled={downloadingId === prescription.id}
                                     >
-                                        <Ionicons 
-                                            name={prescription.isDownloaded ? "checkmark-circle" : "download-outline"} 
-                                            size={20} 
-                                            color={prescription.isDownloaded ? "#00C48C" : "#0077b6"} 
-                                        />
-                                        <Text style={styles.actionButtonText}>
-                                            {prescription.isDownloaded ? 'Téléchargé' : 'Télécharger'}
+                                        {downloadingId === prescription.id ? (
+                                            <ActivityIndicator size="small" color="#dc3545" />
+                                        ) : (
+                                            <Ionicons name="document-text-outline" size={20} color="#dc3545" />
+                                        )}
+                                        <Text style={[styles.actionButtonText, styles.pdfButtonText]}>
+                                            {downloadingId === prescription.id ? 'Téléchargement...' : 'PDF'}
                                         </Text>
                                     </TouchableOpacity>
 
@@ -276,13 +420,20 @@ const PrescriptionsScreen = ({ onNavigate }: PrescriptionsScreenProps) => {
                             <Text style={[styles.emptyStateSubText, { color: colors.subText }]}>
                                 Les ordonnances de vos consultations apparaîtront ici
                             </Text>
+                            <TouchableOpacity 
+                                style={styles.refreshEmptyButton}
+                                onPress={onRefresh}
+                            >
+                                <Ionicons name="refresh-outline" size={20} color="#0077b6" />
+                                <Text style={styles.refreshEmptyText}>Rafraîchir</Text>
+                            </TouchableOpacity>
                         </View>
                     )}
                 </View>
                 <View style={{ height: 30 }} />
             </ScrollView>
 
-            {/* Detail Modal */}
+            {/* Detail Modal avec bouton PDF */}
             <Modal
                 visible={showDetailModal}
                 transparent
@@ -302,7 +453,17 @@ const PrescriptionsScreen = ({ onNavigate }: PrescriptionsScreenProps) => {
 
                         {selectedPrescription && (
                             <ScrollView showsVerticalScrollIndicator={false}>
-                                {/* Doctor Info */}
+                                <View style={styles.modalSection}>
+                                    <Text style={[styles.modalSectionTitle, { color: colors.text }]}>
+                                        Ordonnance médicale
+                                    </Text>
+                                    <View style={[styles.texteCompletBox, { backgroundColor: colors.inputBackground }]}>
+                                        <Text style={[styles.texteCompletText, { color: colors.text }]}>
+                                            {selectedPrescription.texteComplet}
+                                        </Text>
+                                    </View>
+                                </View>
+
                                 <View style={styles.modalSection}>
                                     <Text style={[styles.modalSectionTitle, { color: colors.text }]}>
                                         Médecin prescripteur
@@ -315,7 +476,6 @@ const PrescriptionsScreen = ({ onNavigate }: PrescriptionsScreenProps) => {
                                     </Text>
                                 </View>
 
-                                {/* Diagnosis */}
                                 <View style={styles.modalSection}>
                                     <Text style={[styles.modalSectionTitle, { color: colors.text }]}>
                                         Diagnostic
@@ -325,7 +485,6 @@ const PrescriptionsScreen = ({ onNavigate }: PrescriptionsScreenProps) => {
                                     </Text>
                                 </View>
 
-                                {/* Medications */}
                                 <View style={styles.modalSection}>
                                     <Text style={[styles.modalSectionTitle, { color: colors.text }]}>
                                         Médicaments prescrits
@@ -336,33 +495,16 @@ const PrescriptionsScreen = ({ onNavigate }: PrescriptionsScreenProps) => {
                                                 <Text style={[styles.medicationName, { color: colors.text }]}>
                                                     {med.name}
                                                 </Text>
-                                                <Text style={[styles.medicationDosage, { color: '#0077b6' }]}>
-                                                    {med.dosage}
-                                                </Text>
-                                            </View>
-                                            <View style={styles.medicationDetail}>
-                                                <Ionicons name="time-outline" size={14} color={colors.subText} />
-                                                <Text style={[styles.medicationDetailText, { color: colors.subText }]}>
-                                                    {med.frequency}
-                                                </Text>
-                                            </View>
-                                            <View style={styles.medicationDetail}>
-                                                <Ionicons name="calendar-outline" size={14} color={colors.subText} />
-                                                <Text style={[styles.medicationDetailText, { color: colors.subText }]}>
-                                                    Durée: {med.duration}
-                                                </Text>
-                                            </View>
-                                            <View style={styles.medicationDetail}>
-                                                <Ionicons name="information-circle-outline" size={14} color={colors.subText} />
-                                                <Text style={[styles.medicationDetailText, { color: colors.subText }]}>
-                                                    {med.instructions}
-                                                </Text>
+                                                {med.dosage ? (
+                                                    <Text style={[styles.medicationDosage, { color: '#0077b6' }]}>
+                                                        {med.dosage}
+                                                    </Text>
+                                                ) : null}
                                             </View>
                                         </View>
                                     ))}
                                 </View>
 
-                                {/* Notes */}
                                 {selectedPrescription.notes && (
                                     <View style={styles.modalSection}>
                                         <Text style={[styles.modalSectionTitle, { color: colors.text }]}>
@@ -374,19 +516,28 @@ const PrescriptionsScreen = ({ onNavigate }: PrescriptionsScreenProps) => {
                                     </View>
                                 )}
 
-                                {/* Download Button */}
-                                <TouchableOpacity
-                                    style={styles.downloadButton}
-                                    onPress={() => {
-                                        handleDownloadPDF(selectedPrescription);
-                                        setShowDetailModal(false);
-                                    }}
-                                >
-                                    <Ionicons name="download-outline" size={20} color="#fff" />
-                                    <Text style={styles.downloadButtonText}>
-                                        Télécharger le PDF
-                                    </Text>
-                                </TouchableOpacity>
+                                {/* ✅ Boutons d'action dans le modal */}
+                                <View style={styles.modalActions}>
+                                    <TouchableOpacity
+                                        style={[styles.modalActionButton, styles.pdfModalButton]}
+                                        onPress={() => {
+                                            handleDownloadPDF(selectedPrescription);
+                                        }}
+                                    >
+                                        <Ionicons name="document-text-outline" size={20} color="#fff" />
+                                        <Text style={styles.modalActionButtonText}>Télécharger PDF</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        style={[styles.modalActionButton, styles.shareModalButton]}
+                                        onPress={() => {
+                                            handleSharePrescription(selectedPrescription);
+                                        }}
+                                    >
+                                        <Ionicons name="share-social-outline" size={20} color="#fff" />
+                                        <Text style={styles.modalActionButtonText}>Partager</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </ScrollView>
                         )}
                     </View>
@@ -410,12 +561,24 @@ const styles = StyleSheet.create({
     backButton: {
         padding: 5,
     },
+    refreshButton: {
+        padding: 5,
+    },
     headerTitle: {
         fontSize: 18,
         fontWeight: '600',
     },
     placeholder: {
         width: 34,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 16,
+    },
+    loadingText: {
+        fontSize: 14,
     },
     infoBanner: {
         flexDirection: 'row',
@@ -527,6 +690,14 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         color: '#333',
     },
+    pdfButton: {
+        backgroundColor: '#FFF5F5',
+        borderWidth: 1,
+        borderColor: '#dc3545',
+    },
+    pdfButtonText: {
+        color: '#dc3545',
+    },
     emptyState: {
         alignItems: 'center',
         justifyContent: 'center',
@@ -542,6 +713,21 @@ const styles = StyleSheet.create({
         marginTop: 8,
         textAlign: 'center',
         paddingHorizontal: 40,
+    },
+    refreshEmptyButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginTop: 20,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        backgroundColor: '#E3F2FD',
+        borderRadius: 25,
+    },
+    refreshEmptyText: {
+        color: '#0077b6',
+        fontSize: 14,
+        fontWeight: '600',
     },
     modalOverlay: {
         flex: 1,
@@ -580,6 +766,16 @@ const styles = StyleSheet.create({
         fontSize: 13,
         marginTop: 4,
     },
+    texteCompletBox: {
+        padding: 15,
+        borderRadius: 10,
+        fontFamily: 'monospace',
+    },
+    texteCompletText: {
+        fontSize: 13,
+        lineHeight: 20,
+        fontFamily: 'monospace',
+    },
     medicationItem: {
         padding: 12,
         borderRadius: 10,
@@ -608,20 +804,32 @@ const styles = StyleSheet.create({
         fontSize: 13,
         flex: 1,
     },
-    downloadButton: {
-        backgroundColor: '#0077b6',
+    modalActions: {
+        flexDirection: 'row',
+        gap: 12,
+        marginTop: 10,
+        marginBottom: 20,
+    },
+    modalActionButton: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 16,
+        paddingVertical: 14,
         borderRadius: 30,
-        gap: 10,
-        marginTop: 10,
+        gap: 8,
     },
-    downloadButtonText: {
+    pdfModalButton: {
+        backgroundColor: '#dc3545',
+    },
+    shareModalButton: {
+        backgroundColor: '#0077b6',
+    },
+    modalActionButtonText: {
         color: '#fff',
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '600',
     },
 });
+
 export default PrescriptionsScreen;
