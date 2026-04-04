@@ -1,13 +1,13 @@
-// app/screens/ForgotPasswordScreen.tsx
-
+// app/components/ForgotPasswordScreen.tsx
 import React, { useState } from 'react';
 import {
-    View, Text, StyleSheet, TouchableOpacity,
-    TextInput, KeyboardAvoidingView, Platform, ScrollView, Alert,
+    View, Text, StyleSheet, TouchableOpacity, TextInput,
+    KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
+import authService from '../services/authService';
 
 interface ForgotPasswordScreenProps {
     onNavigate: (screen: string, params?: any) => void;
@@ -15,27 +15,73 @@ interface ForgotPasswordScreenProps {
 
 const ForgotPasswordScreen = ({ onNavigate }: ForgotPasswordScreenProps) => {
     const { t } = useApp();
-    const [activeTab, setActiveTab] = useState<'email' | 'phone'>('email');
-    const [email, setEmail]         = useState('');
-    const [phone, setPhone]         = useState('');
+    const [email, setEmail] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [emailSent, setEmailSent] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     const validateEmail = (text: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text);
 
-    const handleResetPassword = () => {
-        if (activeTab === 'email') {
-            if (!validateEmail(email)) { Alert.alert('', t('fpErrEmail')); return; }
-            onNavigate('verification', { contact: email, type: 'email' });
-        } else {
-            if (!phone || phone.length < 10) { Alert.alert('', t('fpErrPhone')); return; }
-            onNavigate('verification', { contact: phone, type: 'phone' });
+    const handleSendEmail = async () => {
+        if (!validateEmail(email)) {
+            setErrorMessage(t('forgotInvalidEmail'));
+            return;
+        }
+
+        setIsLoading(true);
+        setErrorMessage('');
+
+        try {
+            const response = await authService.requestPasswordReset(email);
+            setEmailSent(true);
+            Alert.alert(
+                t('forgotEmailSent'),
+                t('forgotEmailSentDesc'),
+                [{ text: 'OK', onPress: () => onNavigate('verificationCode', { email }) }]
+            );
+        } catch (error: any) {
+            setErrorMessage(error.error || t('forgotError'));
+        } finally {
+            setIsLoading(false);
         }
     };
+
+    if (emailSent) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <View style={styles.header}>
+                    <TouchableOpacity style={styles.backButton} onPress={() => onNavigate('login')}>
+                        <Ionicons name="chevron-back" size={24} color="#000" />
+                    </TouchableOpacity>
+                </View>
+                <View style={styles.successContainer}>
+                    <View style={styles.successIcon}>
+                        <Ionicons name="mail-outline" size={60} color="#0077b6" />
+                    </View>
+                    <Text style={styles.successTitle}>{t('forgotCheckEmail')}</Text>
+                    <Text style={styles.successText}>
+                        {t('forgotEmailSentTo')} {email}
+                    </Text>
+                    <Text style={styles.successSubtext}>
+                        {t('forgotEmailInstruction')}
+                    </Text>
+                    <TouchableOpacity 
+                        style={styles.resendButton}
+                        onPress={handleSendEmail}
+                        disabled={isLoading}>
+                        <Text style={styles.resendButtonText}>
+                            {t('forgotResend')}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView style={styles.container}>
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
                 <ScrollView showsVerticalScrollIndicator={false}>
-                    {/* Header */}
                     <View style={styles.header}>
                         <TouchableOpacity style={styles.backButton} onPress={() => onNavigate('login')}>
                             <Ionicons name="chevron-back" size={24} color="#000" />
@@ -43,50 +89,43 @@ const ForgotPasswordScreen = ({ onNavigate }: ForgotPasswordScreenProps) => {
                     </View>
 
                     <View style={styles.content}>
-                        <Text style={styles.title}>{t('fpTitle')}</Text>
-                        <Text style={styles.description}>{t('fpDesc1')}</Text>
-                        <Text style={styles.description}>{t('fpDesc2')}</Text>
+                        <Text style={styles.title}>{t('forgotTitle')}</Text>
+                        <Text style={styles.subtitle}>{t('forgotSubtitle')}</Text>
 
-                        {/* Tabs */}
-                        <View style={styles.tabsContainer}>
-                            <TouchableOpacity
-                                style={[styles.tab, activeTab === 'email' && styles.activeTab]}
-                                onPress={() => setActiveTab('email')}>
-                                <Text style={[styles.tabText, activeTab === 'email' && styles.activeTabText]}>
-                                    {t('email')}
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.tab, activeTab === 'phone' && styles.activeTab]}
-                                onPress={() => setActiveTab('phone')}>
-                                <Text style={[styles.tabText, activeTab === 'phone' && styles.activeTabText]}>
-                                    {t('fpTabPhone')}
-                                </Text>
-                            </TouchableOpacity>
+                        <View style={[styles.inputContainer, errorMessage ? styles.inputError : null]}>
+                            <Ionicons name="mail-outline" size={20} color="#999" />
+                            <TextInput
+                                style={styles.input}
+                                placeholder={t('forgotEmailPlaceholder')}
+                                placeholderTextColor="#999"
+                                value={email}
+                                onChangeText={text => { setEmail(text); setErrorMessage(''); }}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                                editable={!isLoading}
+                            />
+                            {email && validateEmail(email) && (
+                                <Ionicons name="checkmark" size={20} color="#0077b6" />
+                            )}
                         </View>
 
-                        {/* Input */}
-                        {activeTab === 'email' ? (
-                            <View style={styles.inputContainer}>
-                                <Ionicons name="mail-outline" size={20} color="#0077b6" />
-                                <TextInput style={styles.input}
-                                    placeholder={t('fpEmailPlaceholder')} placeholderTextColor="#999"
-                                    value={email} onChangeText={setEmail}
-                                    keyboardType="email-address" autoCapitalize="none" />
-                                {email && validateEmail(email) && <Ionicons name="checkmark" size={20} color="#0077b6" />}
-                            </View>
-                        ) : (
-                            <View style={styles.inputContainer}>
-                                <Ionicons name="call-outline" size={20} color="#0077b6" />
-                                <TextInput style={styles.input}
-                                    placeholder={t('fpPhonePlaceholder')} placeholderTextColor="#999"
-                                    value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
-                                {phone && phone.length >= 10 && <Ionicons name="checkmark" size={20} color="#0077b6" />}
-                            </View>
-                        )}
+                        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
-                        <TouchableOpacity style={styles.resetButton} onPress={handleResetPassword}>
-                            <Text style={styles.resetButtonText}>{t('fpResetBtn')}</Text>
+                        <TouchableOpacity 
+                            style={[styles.sendButton, isLoading && styles.sendButtonDisabled]}
+                            onPress={handleSendEmail}
+                            disabled={isLoading}>
+                            {isLoading ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <Text style={styles.sendButtonText}>{t('forgotSend')}</Text>
+                            )}
+                        </TouchableOpacity>
+
+                        <TouchableOpacity 
+                            style={styles.backToLogin}
+                            onPress={() => onNavigate('login')}>
+                            <Text style={styles.backToLoginText}>{t('forgotBackToLogin')}</Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
@@ -99,18 +138,36 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#fff' },
     header: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 20 },
     backButton: { padding: 5 },
-    content: { paddingHorizontal: 30, paddingTop: 10 },
-    title: { fontSize: 26, fontWeight: 'bold', color: '#000', marginBottom: 15 },
-    description: { fontSize: 14, color: '#999', lineHeight: 22 },
-    tabsContainer: { flexDirection: 'row', backgroundColor: '#F5F5F5', borderRadius: 25, padding: 4, marginTop: 30, marginBottom: 25 },
-    tab: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 22 },
-    activeTab: { backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
-    tabText: { fontSize: 15, color: '#999', fontWeight: '500' },
-    activeTabText: { color: '#0077b6', fontWeight: '600' },
-    inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F5F5F5', borderRadius: 25, paddingHorizontal: 20, paddingVertical: 15, marginBottom: 25 },
-    input: { flex: 1, marginLeft: 10, fontSize: 15, color: '#000' },
-    resetButton: { backgroundColor: '#0077b6', paddingVertical: 16, borderRadius: 30, alignItems: 'center', marginTop: 10 },
-    resetButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+    content: { paddingHorizontal: 30, paddingTop: 20 },
+    title: { fontSize: 28, fontWeight: 'bold', color: '#000', marginBottom: 12 },
+    subtitle: { fontSize: 14, color: '#999', marginBottom: 40, lineHeight: 20 },
+    inputContainer: {
+        flexDirection: 'row', alignItems: 'center',
+        backgroundColor: '#F5F5F5', borderRadius: 25,
+        paddingHorizontal: 20, paddingVertical: 15,
+        marginBottom: 15, borderWidth: 1, borderColor: '#F5F5F5'
+    },
+    inputError: { borderColor: '#FF6B6B', borderWidth: 2 },
+    input: { flex: 1, marginLeft: 10, fontSize: 14, color: '#000' },
+    errorText: { color: '#FF6B6B', fontSize: 12, marginBottom: 10, marginLeft: 20 },
+    sendButton: {
+        backgroundColor: '#0077b6',
+        paddingVertical: 16,
+        borderRadius: 30,
+        alignItems: 'center',
+        marginTop: 20
+    },
+    sendButtonDisabled: { backgroundColor: '#B0B0B0' },
+    sendButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+    backToLogin: { alignItems: 'center', marginTop: 20 },
+    backToLoginText: { color: '#0077b6', fontSize: 14, fontWeight: '500' },
+    successContainer: { paddingHorizontal: 30, alignItems: 'center', marginTop: 60 },
+    successIcon: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#E8F9F5', justifyContent: 'center', alignItems: 'center', marginBottom: 30 },
+    successTitle: { fontSize: 24, fontWeight: 'bold', color: '#000', marginBottom: 15, textAlign: 'center' },
+    successText: { fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 10 },
+    successSubtext: { fontSize: 13, color: '#999', textAlign: 'center', lineHeight: 20 },
+    resendButton: { marginTop: 30, paddingVertical: 12, paddingHorizontal: 30 },
+    resendButtonText: { color: '#0077b6', fontSize: 14, fontWeight: '600' }
 });
 
 export default ForgotPasswordScreen;

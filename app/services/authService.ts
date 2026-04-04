@@ -47,6 +47,23 @@ export interface RegisterResponse {
   message: string;
 }
 
+
+interface ForgotPasswordRequest {
+  email: string;
+}
+
+interface VerifyTokenRequest {
+  token: string;
+  email: string;
+}
+
+interface ResetPasswordRequest {
+  token: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
 // ─────────────────────────────────────────────────────────────
 // 🔐 AUTH SERVICE
 // ─────────────────────────────────────────────────────────────
@@ -75,6 +92,43 @@ class AuthService {
       };
     }
   }
+
+
+  // Demande de réinitialisation
+  async requestPasswordReset(email: string): Promise<any> {
+    try {
+      const response = await apiClient.post('/api/forgot-password/request', { email });
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { error: 'Erreur réseau' };
+    }
+  }
+
+  // Vérification du token
+  async verifyResetToken(token: string, email: string): Promise<any> {
+    try {
+      const response = await apiClient.post('/api/forgot-password/verify', { token, email });
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { error: 'Token invalide' };
+    }
+  }
+
+  // Réinitialisation du mot de passe
+  async resetPassword(token: string, email: string, password: string, confirmPassword: string): Promise<any> {
+    try {
+      const response = await apiClient.post('/api/forgot-password/reset', {
+        token,
+        email,
+        password,
+        confirmPassword
+      });
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { error: 'Erreur lors de la réinitialisation' };
+    }
+  }
+
 }
 
 export default new AuthService();

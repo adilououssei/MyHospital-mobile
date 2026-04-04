@@ -42,7 +42,7 @@ const BANNER_SLIDES = [
     screen: 'healthInfo',
     gradient: ['#0077b6', '#023e8a'] as [string, string],
     icon: 'shield-checkmark',
-    image: require('../../assets/doctor2.png'),
+    image: require('../../assets/doctor21.png'),
   },
   {
     id: '2',
@@ -662,7 +662,7 @@ const styles = StyleSheet.create({
     borderRadius: 20, alignSelf: 'flex-start',
   },
   slideBtnText: { color: '#0077b6', fontSize: 12, fontWeight: '700' },
-  slideImage: { width: 100, height: 130, marginLeft: 10 },
+  slideImage: { width: 100, height: 130, marginLeft: 10},
   slideIconBox: {
     width: 90, height: 90, justifyContent: 'center',
     alignItems: 'center', marginLeft: 10,
