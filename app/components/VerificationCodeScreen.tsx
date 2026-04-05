@@ -1,4 +1,5 @@
-// app/components/VerificationCodeScreen.tsx - Version ultra simple sans refs
+// app/components/VerificationCodeScreen.tsx - Version corrigée
+
 import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, TextInput,
@@ -12,14 +13,18 @@ import authService from '../services/authService';
 interface VerificationCodeScreenProps {
     onNavigate: (screen: string, params?: any) => void;
     route?: { params?: { email: string } };
+    contact?: string;  // Ajout de la prop contact
+    type?: string;     // Ajout de la prop type
 }
 
-const VerificationCodeScreen = ({ onNavigate, route }: VerificationCodeScreenProps) => {
+const VerificationCodeScreen = ({ onNavigate, route, contact, type }: VerificationCodeScreenProps) => {
     const { t } = useApp();
     const [code, setCode] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
-    const email = route?.params?.email || '';
+    
+    // Priorité à contact si fourni, sinon route.params.email
+    const email = contact || route?.params?.email || '';
 
     const handleCodeChange = (text: string) => {
         // Limiter à 6 chiffres
@@ -52,6 +57,28 @@ const VerificationCodeScreen = ({ onNavigate, route }: VerificationCodeScreenPro
     // Afficher les chiffres avec des espaces pour une meilleure lisibilité
     const displayCode = code.split('').join(' ');
 
+    // Texte d'affichage du contact (email ou téléphone)
+    const getContactDisplay = () => {
+        if (type === 'phone' && email) {
+            // Masquer partiellement le numéro de téléphone
+            if (email.length > 6) {
+                const start = email.slice(0, 4);
+                const end = email.slice(-2);
+                return `${start}****${end}`;
+            }
+            return email;
+        }
+        if (email && email.includes('@')) {
+            // Masquer partiellement l'email
+            const [localPart, domain] = email.split('@');
+            const maskedLocal = localPart.length > 3 
+                ? localPart.slice(0, 3) + '***' 
+                : localPart.slice(0, 1) + '***';
+            return `${maskedLocal}@${domain}`;
+        }
+        return email;
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
@@ -65,7 +92,7 @@ const VerificationCodeScreen = ({ onNavigate, route }: VerificationCodeScreenPro
                     <View style={styles.content}>
                         <Text style={styles.title}>{t('verificationTitle') || 'Vérification'}</Text>
                         <Text style={styles.subtitle}>
-                            {t('verificationSubtitle') || 'Entrez le code de vérification envoyé à'} {email}
+                            {t('verificationSubtitle') || `Entrez le code de vérification envoyé à ${getContactDisplay()}`}
                         </Text>
 
                         <View style={styles.codeContainer}>
@@ -74,7 +101,7 @@ const VerificationCodeScreen = ({ onNavigate, route }: VerificationCodeScreenPro
                                 value={displayCode}
                                 onChangeText={handleCodeChange}
                                 keyboardType="number-pad"
-                                maxLength={11} // 6 chiffres + 5 espaces
+                                maxLength={11}
                                 placeholder="● ● ● ● ● ●"
                                 placeholderTextColor="#ccc"
                                 textAlign="center"

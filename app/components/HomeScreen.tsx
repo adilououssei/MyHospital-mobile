@@ -1,4 +1,4 @@
-// app/components/HomeScreen.tsx — Version redesignée
+// app/components/HomeScreen.tsx - Version corrigée (sans prix et voir plus vers annuaire)
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -113,7 +113,6 @@ const BannerCarousel = ({ onNavigate }: { onNavigate: (s: string) => void }) => 
               end={{ x: 1, y: 1 }}
               style={styles.slideGradient}
             >
-              {/* Cercles décoratifs */}
               <View style={styles.slideBubble1} />
               <View style={styles.slideBubble2} />
 
@@ -144,7 +143,6 @@ const BannerCarousel = ({ onNavigate }: { onNavigate: (s: string) => void }) => 
         )}
       />
 
-      {/* Dots */}
       <View style={styles.dotsRow}>
         {BANNER_SLIDES.map((_, i) => (
           <TouchableOpacity
@@ -220,16 +218,12 @@ const NextAppointmentCard = ({
         colors={['#e8f4fd', '#dceefb']}
         style={styles.rdvCard}
       >
-        {/* Bande colorée gauche */}
         <View style={styles.rdvAccent} />
-
         <View style={styles.rdvDateBox}>
           <Text style={styles.rdvDay}>{day}</Text>
           <Text style={styles.rdvMonth}>{month.toUpperCase()}</Text>
         </View>
-
         <View style={styles.rdvDivider} />
-
         <View style={styles.rdvInfo}>
           <View style={styles.rdvLabelRow}>
             <Ionicons name="calendar" size={12} color="#0077b6" />
@@ -249,13 +243,17 @@ const NextAppointmentCard = ({
             </View>
           </View>
         </View>
-
         <View style={styles.rdvArrow}>
           <Ionicons name="chevron-forward" size={20} color="#0077b6" />
         </View>
       </LinearGradient>
     </TouchableOpacity>
   );
+};
+
+// ─── Fonction pour obtenir la spécialité du docteur ──────────────────────────
+const getDoctorSpecialty = (doctor: Docteur): string => {
+  return docteurService.getSpecialite(doctor);
 };
 
 // ─── Composant principal ──────────────────────────────────────────────────────
@@ -279,18 +277,18 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
       setLoadingDocs(true);
       setErrorDocs(null);
       const doctors = await docteurService.getDocteurs();
-      const sorted = [...doctors].sort((a, b) => b.note - a.note).slice(0, 5);
+      const sorted = [...doctors].sort((a, b) => (b.note || 0) - (a.note || 0)).slice(0, 5);
       setTopDoctors(sorted);
-    } catch {
+    } catch (err) {
+      console.error('Erreur:', err);
       setErrorDocs(t('cannotLoadDoctors'));
     } finally {
       setLoadingDocs(false);
     }
   };
 
-  // ── Services grid ──────────────────────────────────────────
   const SERVICES = [
-    { icon: 'user-md',   lib: 'fa5',     label: t('doctor'),   screen: 'doctorsList', color: '#0077b6', bg: '#e8f4fd' },
+    { icon: 'user-md',   lib: 'fa5',     label: t('doctor'),   screen: 'doctorsDirectory', color: '#0077b6', bg: '#e8f4fd' },
     { icon: 'medkit',    lib: 'ionicons', label: t('pharmacy'), screen: 'pharmacy',    color: '#0096c7', bg: '#e0f4fb' },
     { icon: 'business',  lib: 'ionicons', label: t('hospital'), screen: 'hospital',    color: '#023e8a', bg: '#dde8f8' },
     { icon: 'ambulance', lib: 'fa5',     label: t('ambulance'),screen: 'emergency',   color: '#e63946', bg: '#fdecea' },
@@ -303,7 +301,7 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
         contentContainerStyle={styles.scrollContent}
       >
 
-        {/* ─── Header ──────────────────────────────────────── */}
+        {/* Header */}
         <View style={styles.header}>
           <View>
             <Text style={[styles.greeting, { color: colors.subText }]}>
@@ -337,7 +335,7 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
           </View>
         </View>
 
-        {/* ─── Barre de recherche ───────────────────────────── */}
+        {/* Barre de recherche */}
         <View style={[styles.searchBar, { backgroundColor: colors.card }]}>
           <Ionicons name="search-outline" size={20} color="#0077b6" />
           <TextInput
@@ -352,10 +350,10 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
           </TouchableOpacity>
         </View>
 
-        {/* ─── Prochain RDV ─────────────────────────────────── */}
+        {/* Prochain RDV */}
         <NextAppointmentCard onNavigate={onNavigate} colors={colors} t={t} />
 
-        {/* ─── Services ─────────────────────────────────────── */}
+        {/* Services */}
         <View style={styles.servicesGrid}>
           {SERVICES.map(s => (
             <TouchableOpacity
@@ -377,10 +375,10 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
           ))}
         </View>
 
-        {/* ─── Carousel bannières ───────────────────────────── */}
+        {/* Carousel bannières */}
         <BannerCarousel onNavigate={onNavigate} />
 
-        {/* ─── Meilleurs docteurs ───────────────────────────── */}
+        {/* Meilleurs docteurs */}
         <View style={styles.sectionHeader}>
           <View>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('bestDoctors')}</Text>
@@ -388,14 +386,14 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
           </View>
           <TouchableOpacity
             style={styles.seeAllBtn}
-            onPress={() => onNavigate('doctorsList')}
+            onPress={() => onNavigate('doctorsDirectory')}  // ← Changé vers annuaire
           >
             <Text style={styles.seeAllText}>{t('seeAll')}</Text>
             <Ionicons name="arrow-forward" size={14} color="#0077b6" />
           </TouchableOpacity>
         </View>
 
-        {/* Doctors list */}
+        {/* Doctors list - Sans prix */}
         {loadingDocs ? (
           <View style={styles.docsLoading}>
             <ActivityIndicator size="small" color="#0077b6" />
@@ -416,17 +414,24 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
           >
             {topDoctors.map(doctor => {
               const photoUrl = doctor.photo ? `${API_BASE_URL}${doctor.photo}` : null;
-              const prix = docteurService.getPrixMin(doctor);
+              const specialty = getDoctorSpecialty(doctor);
+              
               return (
                 <TouchableOpacity
                   key={doctor.id}
                   style={[styles.doctorCard, { backgroundColor: colors.card }]}
-                  onPress={() => onNavigate('doctorDetail', {
+                  onPress={() => onNavigate('doctorProfile', {
                     doctor: {
-                      id: doctor.id, name: doctor.nomComplet, specialty: doctor.specialite,
-                      rating: doctor.note, ville: doctor.ville, price: prix,
-                      photo: doctor.photo, telephone: doctor.telephone,
-                      email: doctor.email, adresse: doctor.adresse,
+                      id: doctor.id,
+                      name: doctor.nomComplet,
+                      specialty: specialty,
+                      rating: doctor.note || 4.5,
+                      ville: doctor.ville,
+                      photo: doctor.photo,
+                      telephone: doctor.telephone,
+                      email: doctor.email,
+                      adresse: doctor.adresse,
+                      tarifs: doctor.tarifs,
                     },
                   })}
                   activeOpacity={0.85}
@@ -434,7 +439,7 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
                   {/* Badge spécialité */}
                   <View style={styles.doctorBadge}>
                     <Text style={styles.doctorBadgeText} numberOfLines={1}>
-                      {doctor.specialite ?? 'Généraliste'}
+                      {specialty}
                     </Text>
                   </View>
 
@@ -454,40 +459,48 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
                     {doctor.nomComplet}
                   </Text>
 
-                  {/* Rating */}
+                  {/* Rating (étoiles) */}
                   <View style={styles.ratingRow}>
                     {[1,2,3,4,5].map(i => (
                       <Ionicons
                         key={i}
-                        name={i <= Math.round(doctor.note) ? 'star' : 'star-outline'}
+                        name={i <= Math.round(doctor.note || 4.5) ? 'star' : 'star-outline'}
                         size={10}
                         color="#FFC107"
                       />
                     ))}
-                    <Text style={styles.ratingNum}>{doctor.note.toFixed(1)}</Text>
+                    <Text style={styles.ratingNum}>{(doctor.note || 4.5).toFixed(1)}</Text>
                   </View>
 
-                  {/* Localisation + prix */}
+                  {/* Localisation seulement (prix enlevé) */}
                   <View style={styles.doctorMeta}>
                     <View style={styles.doctorMetaRow}>
                       <Ionicons name="location-outline" size={11} color="#0077b6" />
                       <Text style={[styles.doctorCity, { color: colors.subText }]} numberOfLines={1}>
-                        {doctor.ville}
+                        {doctor.ville || 'Adresse non précisée'}
                       </Text>
                     </View>
-                    {prix > 0 && (
-                      <Text style={styles.doctorPrice}>
-                        {prix.toLocaleString()} F
-                      </Text>
-                    )}
                   </View>
 
-                  {/* Bouton */}
+                  {/* Bouton Voir détails (pas Consulter) */}
                   <TouchableOpacity
                     style={styles.doctorBookBtn}
-                    onPress={() => onNavigate('bookingType')}
+                    onPress={() => onNavigate('doctorProfile', {
+                      doctor: {
+                        id: doctor.id,
+                        name: doctor.nomComplet,
+                        specialty: specialty,
+                        rating: doctor.note || 4.5,
+                        ville: doctor.ville,
+                        photo: doctor.photo,
+                        telephone: doctor.telephone,
+                        email: doctor.email,
+                        adresse: doctor.adresse,
+                        tarifs: doctor.tarifs,
+                      },
+                    })}
                   >
-                    <Text style={styles.doctorBookBtnText}>Consulter</Text>
+                    <Text style={styles.doctorBookBtnText}>Voir détails</Text>
                   </TouchableOpacity>
                 </TouchableOpacity>
               );
@@ -500,7 +513,7 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
 
       <BottomNavigation currentScreen="home" onNavigate={onNavigate} unreadCount={unreadCount} />
 
-      {/* ─── Modal langue ─────────────────────────────────── */}
+      {/* Modal langue */}
       <Modal
         visible={showLangModal}
         transparent
@@ -535,12 +548,11 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
   );
 };
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
+// Styles (inchangés, garder les mêmes)
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { paddingBottom: 100 },
 
-  // Header
   header: {
     flexDirection: 'row', justifyContent: 'space-between',
     alignItems: 'flex-start', paddingHorizontal: 20,
@@ -570,7 +582,6 @@ const styles = StyleSheet.create({
   },
   notifBadgeText: { color: '#fff', fontSize: 9, fontWeight: '700' },
 
-  // Search
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
     marginHorizontal: 20, paddingHorizontal: 16, paddingVertical: 13,
@@ -585,7 +596,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#e8f4fd', justifyContent: 'center', alignItems: 'center',
   },
 
-  // RDV card
   rdvCardWrapper: { marginHorizontal: 20, marginBottom: 20 },
   rdvCard: {
     flexDirection: 'row', alignItems: 'center',
@@ -610,7 +620,6 @@ const styles = StyleSheet.create({
   rdvMetaText: { fontSize: 12, color: '#555' },
   rdvArrow: { paddingHorizontal: 14 },
 
-  // Services grid
   servicesGrid: {
     flexDirection: 'row', justifyContent: 'space-between',
     paddingHorizontal: 20, marginBottom: 20, gap: 10,
@@ -626,7 +635,6 @@ const styles = StyleSheet.create({
   },
   serviceLabel: { fontSize: 11, fontWeight: '600', textAlign: 'center' },
 
-  // Carousel
   carouselWrapper: { marginBottom: 24 },
   slide: {
     width: SCREEN_WIDTH - 40,
@@ -662,7 +670,7 @@ const styles = StyleSheet.create({
     borderRadius: 20, alignSelf: 'flex-start',
   },
   slideBtnText: { color: '#0077b6', fontSize: 12, fontWeight: '700' },
-  slideImage: { width: 100, height: 130, marginLeft: 10},
+  slideImage: { width: 100, height: 130, marginLeft: 10 },
   slideIconBox: {
     width: 90, height: 90, justifyContent: 'center',
     alignItems: 'center', marginLeft: 10,
@@ -680,7 +688,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#0077b6',
   },
 
-  // Section header
   sectionHeader: {
     flexDirection: 'row', justifyContent: 'space-between',
     alignItems: 'flex-end', paddingHorizontal: 20, marginBottom: 14,
@@ -690,7 +697,6 @@ const styles = StyleSheet.create({
   seeAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   seeAllText: { color: '#0077b6', fontSize: 13, fontWeight: '600' },
 
-  // Doctors
   doctorsScroll: { paddingLeft: 20, paddingRight: 10, gap: 12 },
   doctorCard: {
     width: 155, borderRadius: 18, padding: 14,
@@ -714,19 +720,17 @@ const styles = StyleSheet.create({
   },
   ratingNum: { fontSize: 11, color: '#888', marginLeft: 3, fontWeight: '600' },
   doctorMeta: {
-    flexDirection: 'row', justifyContent: 'space-between',
+    flexDirection: 'row', justifyContent: 'flex-start',
     alignItems: 'center', marginBottom: 10,
   },
-  doctorMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 3, flex: 1 },
-  doctorCity: { fontSize: 11, flex: 1 },
-  doctorPrice: { fontSize: 11, fontWeight: '700', color: '#0077b6' },
+  doctorMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  doctorCity: { fontSize: 11, flex: 1, color: '#666' },
   doctorBookBtn: {
     backgroundColor: '#0077b6', paddingVertical: 8, borderRadius: 10,
     alignItems: 'center',
   },
   doctorBookBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
 
-  // Loading/Error
   docsLoading: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     paddingVertical: 30, paddingHorizontal: 20, gap: 10,
@@ -739,7 +743,6 @@ const styles = StyleSheet.create({
   },
   retryText: { color: '#fff', fontSize: 13, fontWeight: '600' },
 
-  // Modal langue
   modalOverlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end',
   },

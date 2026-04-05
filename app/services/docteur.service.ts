@@ -1,19 +1,14 @@
 // app/services/docteur.service.ts
-// ✅ Service docteurs - utilise Axios via apiClient
 
 import apiClient, { API_ENDPOINTS } from './api.config';
-
-// ─────────────────────────────────────────────────────────────
-// 📋 INTERFACES
-// ─────────────────────────────────────────────────────────────
 
 export interface Docteur {
   id: number;
   nom: string;
   prenom: string;
   nomComplet: string;
-  specialite: string | null;
-  specialiteId: number[] | null;
+  specialite: string | null;  // ← Important: utiliser specialite (singulier)
+  specialites: string[];       // ← Tableau des spécialités
   photo: string | null;
   telephone: string;
   email: string;
@@ -65,14 +60,7 @@ export interface Disponibilite {
   creneaux: Creneau[];
 }
 
-// ─────────────────────────────────────────────────────────────
-// 🏥 DOCTEUR SERVICE
-// ─────────────────────────────────────────────────────────────
-
 class DocteurService {
-  /**
-   * Liste des docteurs (avec filtres optionnels)
-   */
   async getDocteurs(
     specialite?: number,
     search?: string,
@@ -92,9 +80,6 @@ class DocteurService {
     }
   }
 
-  /**
-   * Détails complets d'un docteur
-   */
   async getDocteurById(id: number): Promise<DocteurDetail> {
     try {
       const response = await apiClient.get(API_ENDPOINTS.DOCTEUR_DETAIL(id));
@@ -105,16 +90,11 @@ class DocteurService {
     }
   }
 
-  /**
-   * Récupère toutes les disponibilités d'un docteur
-   * @param docteurId - ID du docteur
-   * @param params - Filtres optionnels (date_debut, date_fin, type)
-   */
   async getDisponibilites(
     docteurId: number,
     params?: {
-      date_debut?: string; // Format YYYY-MM-DD
-      date_fin?: string;   // Format YYYY-MM-DD
+      date_debut?: string;
+      date_fin?: string;
       type?: 'hopital' | 'domicile' | 'en_ligne';
     }
   ): Promise<Disponibilite[]> {
@@ -133,12 +113,6 @@ class DocteurService {
     }
   }
 
-  /**
-   * Créneaux d'un docteur pour une date précise (format YYYY-MM-DD)
-   * @param id - ID du docteur
-   * @param date - Date au format YYYY-MM-DD
-   * @param type - Type de consultation (optionnel)
-   */
   async getCreneauxParDate(
     id: number, 
     date: string,
@@ -158,13 +132,38 @@ class DocteurService {
   }
 
   /**
-   * Retourne le tarif minimum d'un docteur (pour affichage dans la liste)
+   * Retourne la spécialité du docteur (version corrigée)
    */
+  // getSpecialite(docteur: Docteur): string {
+  //   // Priorité 1: Utiliser le champ specialite (string)
+  //   if (docteur.specialite && docteur.specialite !== '' && docteur.specialite !== 'null') {
+  //     return docteur.specialite;
+  //   }
+  //   // Priorité 2: Utiliser le tableau specialites
+  //   if (docteur.specialites && docteur.specialites.length > 0) {
+  //     return docteur.specialites[0];
+  //   }
+  //   return 'Médecin généraliste';
+  // }
+
   getPrixMin(docteur: Docteur): number {
     const { hopital, domicile, enLigne } = docteur.tarifs;
-    const tarifs = [hopital, domicile, enLigne].filter((t): t is number => t !== null);
+    const tarifs = [hopital, domicile, enLigne].filter((t): t is number => t !== null && t > 0);
     return tarifs.length > 0 ? Math.min(...tarifs) : 0;
   }
+
+
+  // Dans docteur.service.ts, ajoutez la méthode getSpecialite si ce n'est pas déjà fait
+
+getSpecialite(docteur: Docteur): string {
+  if (docteur.specialite && docteur.specialite !== '' && docteur.specialite !== 'null') {
+    return docteur.specialite;
+  }
+  if (docteur.specialites && docteur.specialites.length > 0) {
+    return docteur.specialites[0];
+  }
+  return 'Médecin généraliste';
+}
 }
 
 export default new DocteurService();
