@@ -47,7 +47,7 @@ const EmergencyScreen = ({ onNavigate }: EmergencyScreenProps) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenHeader title={t('emTitle')} onBack={() => onNavigate('home')} />
 
       <View style={styles.content}>

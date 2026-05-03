@@ -374,7 +374,7 @@ const HospitalScreen = ({ onNavigate }: Props) => {
   const activeRegionData = REGIONS.find(r => r.key === activeRegion);
 
   if (loading) return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenHeader title={t('hsTitle')} onBack={() => onNavigate('home')} showNotification unreadCount={4} onNotificationPress={() => onNavigate('messages')} />
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#e74c3c" />
@@ -388,7 +388,7 @@ const HospitalScreen = ({ onNavigate }: Props) => {
   );
 
   if (error) return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenHeader title={t('hsTitle')} onBack={() => onNavigate('home')} showNotification unreadCount={4} onNotificationPress={() => onNavigate('messages')} />
       <View style={styles.center}>
         <Ionicons name="wifi-outline" size={60} color={colors.subText} />
@@ -403,7 +403,7 @@ const HospitalScreen = ({ onNavigate }: Props) => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenHeader title={t('hsTitle')} onBack={() => onNavigate('home')} showNotification unreadCount={4} onNotificationPress={() => onNavigate('messages')} />
 
       <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>

@@ -164,7 +164,7 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
 
   // ── État erreur ───────────────────────────────────────────────
   if (error && notifications.length === 0) return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenHeader title={t('notifTitle')} onBack={() => onNavigate('home')} rightIcon="checkmark-done" onRightPress={handleMarkAllRead} />
       <View style={styles.emptyState}>
         <Ionicons name="wifi-outline" size={48} color="#cbd5e0" />
@@ -179,7 +179,7 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
 
   // ── Chargement initial ────────────────────────────────────────
   if (loading && notifications.length === 0) return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenHeader title={t('notifTitle')} onBack={() => onNavigate('home')} rightIcon="checkmark-done" onRightPress={handleMarkAllRead} />
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0077b6" />
@@ -190,7 +190,7 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
 
   // ── Vue principale ────────────────────────────────────────────
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenHeader title={t('notifTitle')} onBack={() => onNavigate('home')} rightIcon="checkmark-done" onRightPress={handleMarkAllRead} />
 
       {unreadCount > 0 && (

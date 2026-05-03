@@ -53,7 +53,7 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
         <ScreenHeader title="Profil du médecin" onBack={() => onNavigate('doctorsDirectory')} />
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color="#0077b6" />
@@ -68,7 +68,7 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
   const availableTypes = doctorDetail?.typesConsultation || [];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenHeader title="Profil du médecin" onBack={() => onNavigate('doctorsDirectory')} />
 
       <ScrollView showsVerticalScrollIndicator={false}>

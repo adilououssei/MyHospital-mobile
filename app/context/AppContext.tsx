@@ -1,6 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import * as Localization from "expo-localization";
+import { secureStorage } from "../services/secureStorage";
+import apiClient from "../services/api.config";
 
 const translations = {
   fr: {
@@ -578,7 +580,11 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem('user');
+    await Promise.all([
+      AsyncStorage.removeItem('user'),
+      secureStorage.clearTokens(),
+    ]);
+    apiClient.setAuthToken(null);
     setUser(null);
   };
 

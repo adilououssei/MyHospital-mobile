@@ -100,7 +100,7 @@ const handleDoctorPress = (doctor: Docteur) => {
   };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
             <ScreenHeader title="Annuaire des Médecins" onBack={() => onNavigate('home')} />
 
             <ScrollView showsVerticalScrollIndicator={false}>

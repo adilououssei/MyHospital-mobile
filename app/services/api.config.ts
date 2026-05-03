@@ -1,10 +1,7 @@
 // app/services/api.config.ts
 // ✅ FICHIER CENTRAL - Modifier seulement ici pour changer l'URL du serveur
 
-// ─────────────────────────────────────────────────────────────
-// 🔧 CHANGER L'URL ICI UNIQUEMENT
-// ─────────────────────────────────────────────────────────────
-export const API_BASE_URL = 'http://192.168.1.72:8000';
+export const API_BASE_URL = 'http://192.168.1.70:8000';
 
 // ─────────────────────────────────────────────────────────────
 // 📋 TOUS LES ENDPOINTS DE L'APPLICATION
@@ -13,6 +10,7 @@ export const API_ENDPOINTS = {
   // Authentification
   LOGIN: '/api/login',
   REGISTER: '/api/register',
+  REFRESH_TOKEN: '/api/token/refresh',
 
   PHARMACIES_ON_CALL:         '/api/pharmacies/on-call',
   PHARMACIES_ON_CALL_REFRESH: '/api/pharmacies/on-call/refresh',
@@ -43,7 +41,7 @@ export const API_ENDPOINTS = {
 };
 
 // ─────────────────────────────────────────────────────────────
-// 🚀 CLIENT API CUSTOM (compatible React Native)
+// CLIENT API CUSTOM (compatible React Native)
 // ─────────────────────────────────────────────────────────────
 
 interface RequestConfig {
@@ -67,8 +65,10 @@ class ApiClient {
   private defaultTimeout: number;
   private defaultHeaders: Record<string, string>;
   private authToken: string | null = null;
+  private isRefreshing = false;
+  private refreshSubscribers: ((token: string) => void)[] = [];
 
-  constructor(baseURL: string, timeout: number = 30000) { // ✅ 10000 → 30000
+  constructor(baseURL: string, timeout: number = 30000) {
     this.baseURL = baseURL;
     this.defaultTimeout = timeout;
     this.defaultHeaders = {
@@ -79,7 +79,15 @@ class ApiClient {
 
   setAuthToken(token: string | null) {
     this.authToken = token;
-    console.log('🔐 [API] Token configuré:', token ? `${token.substring(0, 20)}...` : 'NULL');
+  }
+
+  private onRefreshed(token: string) {
+    this.refreshSubscribers.forEach(cb => cb(token));
+    this.refreshSubscribers = [];
+  }
+
+  private addRefreshSubscriber(cb: (token: string) => void) {
+    this.refreshSubscribers.push(cb);
   }
 
   getAuthToken(): string | null {
@@ -114,7 +122,6 @@ class ApiClient {
       mergedHeaders['Authorization'] = `Bearer ${this.authToken}`;
     }
 
-    console.log(`🌐 [API] ${method} ${fullUrl}`);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -128,7 +135,6 @@ class ApiClient {
       });
 
       clearTimeout(timeoutId);
-      console.log(`✅ [API] ${response.status} ${url}`);
 
       let responseData;
       const contentType = response.headers.get('content-type');
@@ -139,8 +145,45 @@ class ApiClient {
       }
 
       if (!response.ok) {
+        // Refresh automatique sur 401 (token expiré)
+        if (response.status === 401 && !url.includes('/api/token/refresh') && !url.includes('/api/login')) {
+          return new Promise<ApiResponse<T>>((resolve, reject) => {
+            this.addRefreshSubscriber((newToken: string) => {
+              resolve(this.makeRequest<T>(url, { ...config, headers: { ...headers, Authorization: `Bearer ${newToken}` } }));
+            });
+
+            if (!this.isRefreshing) {
+              this.isRefreshing = true;
+              import('./secureStorage').then(({ secureStorage }) => {
+                secureStorage.getRefreshToken().then(refreshToken => {
+                  if (!refreshToken) {
+                    this.isRefreshing = false;
+                    reject({ response: { data: responseData, status: 401 }, message: 'Session expirée' });
+                    return;
+                  }
+                  this.makeRequest<{ token: string; refresh_token: string }>(
+                    API_ENDPOINTS.REFRESH_TOKEN,
+                    { method: 'POST', data: { refresh_token: refreshToken } }
+                  ).then(async refreshResponse => {
+                    const { token: newToken, refresh_token: newRefreshToken } = refreshResponse.data;
+                    this.setAuthToken(newToken);
+                    await secureStorage.setToken(newToken);
+                    await secureStorage.setRefreshToken(newRefreshToken);
+                    this.isRefreshing = false;
+                    this.onRefreshed(newToken);
+                  }).catch(() => {
+                    this.isRefreshing = false;
+                    secureStorage.clearTokens();
+                    this.setAuthToken(null);
+                    reject({ response: { data: responseData, status: 401 }, message: 'Session expirée' });
+                  });
+                });
+              });
+            }
+          });
+        }
+
         const errorMessage = responseData?.message || responseData?.error || response.statusText;
-        console.error(`❌ [API] ${response.status} ${url} → ${errorMessage}`);
         throw {
           response: { data: responseData, status: response.status, statusText: response.statusText },
           message: errorMessage,
@@ -159,13 +202,11 @@ class ApiClient {
       clearTimeout(timeoutId);
 
       if (error.name === 'AbortError') {
-        console.error(`❌ [API] Timeout ${url}`);
-        throw { message: 'Request timeout', config };
+          throw { message: 'Request timeout', config };
       }
 
       if (error.response) throw error;
 
-      console.error(`❌ [API] Network error ${url}:`, error.message);
       throw { message: error.message || 'Network error', config };
     }
   }

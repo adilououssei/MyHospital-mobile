@@ -6,9 +6,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import authService from '../services/authService';
 import apiClient from '../services/api.config';
+import { secureStorage } from '../services/secureStorage';
 import { useAuth, useApp } from '../context/AppContext';
 
 interface LoginScreenProps {
@@ -54,8 +54,10 @@ const LoginScreen = ({ onNavigate }: LoginScreenProps) => {
         const token = response.token;
         if (token) {
           apiClient.setAuthToken(token);
-          await AsyncStorage.setItem('authToken', token);
-          await AsyncStorage.setItem('user', JSON.stringify(response.user));
+          await secureStorage.setToken(token);
+          if ((response as any).refresh_token) {
+            await secureStorage.setRefreshToken((response as any).refresh_token);
+          }
         }
         await saveUser(response.user);
         setShowSuccessModal(true);

@@ -210,7 +210,7 @@ const PaymentMethodScreen = ({
   const doctorRating      = doctor?.note ?? doctor?.rating ?? null;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenHeader title="Paiement" onBack={() => onNavigate('doctorDetail')} />
 
       <ScrollView showsVerticalScrollIndicator={false}>

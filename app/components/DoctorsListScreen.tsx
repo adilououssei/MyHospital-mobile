@@ -65,7 +65,7 @@ const DoctorsListScreen = ({ onNavigate, consultationType, description }: Doctor
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenHeader title={t('dlTitle')} onBack={() => onNavigate('bookingType')} />
 
       <ScrollView showsVerticalScrollIndicator={false}>

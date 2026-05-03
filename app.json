@@ -19,13 +19,14 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/splash1.png",
         "backgroundColor": "#ffffff"
-        
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.ouss_adilou.MyHospitalmobile",
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
-
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/splash1.png"
@@ -36,7 +37,9 @@
       }
     },
     "plugins": [
-      "expo-localization"
-    ]
+      "expo-localization",
+      "expo-secure-store"
+    ],
+    "owner": "ouss_adilou"
   }
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '../context/AppContext';
 
 interface ScreenHeaderProps {
@@ -13,9 +14,9 @@ interface ScreenHeaderProps {
   onNotificationPress?: () => void;
 }
 
-const ScreenHeader = ({ 
-  title, 
-  onBack, 
+const ScreenHeader = ({
+  title,
+  onBack,
   rightIcon,
   onRightPress,
   showNotification,
@@ -23,9 +24,14 @@ const ScreenHeader = ({
   onNotificationPress
 }: ScreenHeaderProps) => {
   const { colors } = useApp();
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+    <View style={[styles.header, {
+      backgroundColor: colors.card,
+      borderBottomColor: colors.border,
+      paddingTop: insets.top + 15,
+    }]}>
       {/* Left Button (Back or Empty) */}
       {onBack ? (
         <TouchableOpacity style={styles.button} onPress={onBack}>
@@ -67,7 +73,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingBottom: 15,
     borderBottomWidth: 1,
   },
   button: {

@@ -5,9 +5,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useState, useEffect, useCallback } from 'react';
 import { BackHandler, View } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppProvider } from './app/context/AppContext';
 import apiClient from './app/services/api.config';
+import { secureStorage } from './app/services/secureStorage';
 import CustomSplashScreen from './app/components/SplashScreen';
 import WelcomeScreen from './app/components/WelcomeScreen';
 import LoginScreen from './app/components/LoginScreen';
@@ -61,10 +61,9 @@ function AppContent() {
   useEffect(() => {
     async function prepare() {
       try {
-        const token = await AsyncStorage.getItem('authToken');
+        const token = await secureStorage.getToken();
         if (token) {
           apiClient.setAuthToken(token);
-          console.log('✅ Token JWT restauré');
         }
         await new Promise(resolve => setTimeout(resolve, 200));
       } catch (e) {

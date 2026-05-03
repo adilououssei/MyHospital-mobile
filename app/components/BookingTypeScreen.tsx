@@ -34,7 +34,7 @@ const BookingTypeScreen = ({ onNavigate }: BookingTypeScreenProps) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenHeader title={t('bkTitle')} onBack={() => onNavigate('appointments')} />
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

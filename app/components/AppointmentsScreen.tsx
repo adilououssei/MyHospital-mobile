@@ -379,7 +379,7 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
     // ── Chargement initial ──────────────────────────────────────────────────────
     if (loading && appointments.length === 0) {
         return (
-            <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+            <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
                 <ScreenHeader title={t('aptTitle')} showNotification unreadCount={unreadCount}
                     onNotificationPress={() => onNavigate('notifications')} />
                 <View style={styles.loadingContainer}>
@@ -392,7 +392,7 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
     }
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
             <ScreenHeader title={t('aptTitle')} showNotification unreadCount={unreadCount}
                 onNotificationPress={() => onNavigate('notifications')} />
 
@@ -520,7 +520,7 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
                         </View>
                     )}
                 </View>
-                <View style={{ height: 120 }} />
+                <View style={{ height: 80 }} />
             </ScrollView>
 
             {/* ── FAB Nouveau RDV ── */}

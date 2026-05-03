@@ -65,7 +65,7 @@ const FAQsScreen = ({ onNavigate }: FAQsScreenProps) => {
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
             <ScreenHeader title={t('faqTitle')} onBack={() => onNavigate('profile')} />
 
             <ScrollView showsVerticalScrollIndicator={false}>

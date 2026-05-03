@@ -4,7 +4,7 @@ import {
   FlatList, KeyboardAvoidingView, Platform, ActivityIndicator,
   Animated,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp, useAuth } from '../context/AppContext';
 import BottomNavigation from '../tabs/BottomNavigation';
@@ -31,8 +31,6 @@ const QUICK_SUGGESTIONS = [
   { label: '🤰 Maternité',                  text: 'Je suis enceinte, quels médecins sont disponibles ?' },
 ];
 
-// Hauteur totale de BottomNavigation (paddingVertical:10 + paddingBottom:20 + icônes ~46px)
-const BOTTOM_NAV_HEIGHT = 80;
 
 // ─── Bulle de message ─────────────────────────────────────────────────────────
 const MessageBubble = ({ msg, colors }: { msg: Message; colors: any }) => {
@@ -82,6 +80,7 @@ const MessageBubble = ({ msg, colors }: { msg: Message; colors: any }) => {
 const ChatbotScreen = ({ onNavigate }: Props) => {
   const { colors } = useApp();
   const { user }   = useAuth();
+  const insets     = useSafeAreaInsets();
 
   const [messages, setMessages]               = useState<Message[]>([]);
   const [inputText, setInputText]             = useState('');
@@ -185,10 +184,10 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
-      edges={['top']}
+      edges={['bottom', 'left', 'right']}
     >
       {/* ── Header ── */}
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border, paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={() => onNavigate('home')} style={{ padding: 4 }}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
@@ -220,7 +219,7 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
            Sur iOS, keyboardVerticalOffset compense header + disclaimer (~115px).
       */}
       <KeyboardAvoidingView
-        style={styles.keyboardView}
+        style={[styles.keyboardView, { paddingBottom: insets.bottom + 64 }]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 115 : 0}
       >
@@ -301,12 +300,11 @@ const styles = StyleSheet.create({
   // → empêche l'inputArea de se cacher derrière la barre de navigation absolue
   keyboardView: {
     flex: 1,
-    paddingBottom: BOTTOM_NAV_HEIGHT,
   },
 
   header: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 14, paddingVertical: 12,
+    paddingHorizontal: 14, paddingBottom: 12,
     borderBottomWidth: 1, gap: 10,
   },
   headerCenter:   { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },

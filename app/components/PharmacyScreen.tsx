@@ -584,7 +584,7 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
 
   // ── Écran de chargement (seulement pour le premier chargement on-call) ───────
   if (loadingOnCall) return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenHeader title="Pharmacies" onBack={() => onNavigate('home')}
         showNotification unreadCount={4} onNotificationPress={() => onNavigate('messages')} />
       <View style={styles.centerContainer}>
@@ -598,7 +598,7 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
   );
 
   if (error) return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenHeader title="Pharmacies" onBack={() => onNavigate('home')}
         showNotification unreadCount={4} onNotificationPress={() => onNavigate('messages')} />
       <View style={styles.centerContainer}>
@@ -615,7 +615,7 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
 
   // ── Rendu ────────────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenHeader title="Pharmacies" onBack={() => onNavigate('home')}
         showNotification unreadCount={4} onNotificationPress={() => onNavigate('messages')} />
 

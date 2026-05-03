@@ -5,7 +5,7 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Modal, Image, ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useApp, useAuth } from '../context/AppContext';
@@ -23,6 +23,7 @@ interface ProfileScreenProps {
 const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
   const { colors, isDarkMode, language } = useApp();
   const { user, logout }                 = useAuth();
+  const insets                           = useSafeAreaInsets();
 
   const [profile, setProfile]                 = useState<PatientProfile | null>(null);
   const [loading, setLoading]                 = useState(true);
@@ -241,7 +242,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
         )}
 
         {menuItems.map(renderMenuItem)}
-        <View style={{ height: 100 }} />
+        <View style={{ height: insets.bottom + 80 }} />
       </ScrollView>
 
       <BottomNavigation currentScreen="profile" onNavigate={onNavigate} unreadCount={unreadCount} />

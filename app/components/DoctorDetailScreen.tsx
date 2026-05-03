@@ -167,7 +167,7 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
       <ScreenHeader title={t('ddTitle')} onBack={() => onNavigate('doctorsList')} rightIcon="ellipsis-vertical" />
 
       {loadingDetails ? (

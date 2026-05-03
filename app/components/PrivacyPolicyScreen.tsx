@@ -69,7 +69,7 @@ const PrivacyPolicyScreen = ({ onNavigate }: PrivacyPolicyScreenProps) => {
     ];
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
             {/* Header */}
             <ScreenHeader 
                 title="Politique de confidentialité"

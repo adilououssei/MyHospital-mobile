@@ -15,8 +15,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '../services/api.config';
+import { secureStorage } from '../services/secureStorage';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
@@ -59,7 +59,7 @@ const PrescriptionsScreen = ({ onNavigate }: PrescriptionsScreenProps) => {
     // Récupérer les ordonnances depuis l'API
     const fetchPrescriptions = useCallback(async () => {
         try {
-            const token = await AsyncStorage.getItem('authToken');
+            const token = await secureStorage.getToken();
             if (!token) {
                 console.log('No token found');
                 return;
@@ -156,7 +156,7 @@ const PrescriptionsScreen = ({ onNavigate }: PrescriptionsScreenProps) => {
         try {
             setDownloadingId(prescription.id);
             
-            const token = await AsyncStorage.getItem('authToken');
+            const token = await secureStorage.getToken();
             if (!token) {
                 Alert.alert('Erreur', 'Vous devez être connecté');
                 return;

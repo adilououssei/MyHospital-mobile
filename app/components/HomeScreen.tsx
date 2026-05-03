@@ -6,7 +6,7 @@ import {
   TouchableOpacity, Image, ActivityIndicator, Modal,
   Dimensions, FlatList, NativeScrollEvent, NativeSyntheticEvent,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
@@ -117,7 +117,7 @@ const BannerCarousel = ({ onNavigate }: { onNavigate: (s: string) => void }) => 
               <View style={styles.slideBubble2} />
 
               <View style={styles.slideContent}>
-                <View style={styles.slideLeft}>
+                <View style={[styles.slideLeft, item.image ? styles.slideLeftWithImage : null]}>
                   <View style={styles.slideBadge}>
                     <Ionicons name={item.icon as any} size={14} color="#fff" />
                     <Text style={styles.slideBadgeText}>MyHospital</Text>
@@ -130,14 +130,16 @@ const BannerCarousel = ({ onNavigate }: { onNavigate: (s: string) => void }) => 
                   </View>
                 </View>
 
-                {item.image ? (
-                  <Image source={item.image} style={styles.slideImage} resizeMode="contain" />
-                ) : (
+                {!item.image && (
                   <View style={styles.slideIconBox}>
                     <Ionicons name={item.icon as any} size={52} color="rgba(255,255,255,0.25)" />
                   </View>
                 )}
               </View>
+
+              {item.image && (
+                <Image source={item.image} style={styles.slideImage} resizeMode="cover" />
+              )}
             </LinearGradient>
           </TouchableOpacity>
         )}
@@ -260,6 +262,7 @@ const getDoctorSpecialty = (doctor: Docteur): string => {
 const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
   const { colors, t, language, setLanguage } = useApp();
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
 
   const [topDoctors, setTopDoctors] = useState<Docteur[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
@@ -298,7 +301,7 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 80 }]}
       >
 
         {/* Header */}
@@ -551,7 +554,7 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
 // Styles (inchangés, garder les mêmes)
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  scrollContent: { paddingBottom: 100 },
+  scrollContent: {},
 
   header: {
     flexDirection: 'row', justifyContent: 'space-between',
@@ -643,7 +646,7 @@ const styles = StyleSheet.create({
     shadowColor: '#0077b6', shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2, shadowRadius: 10, elevation: 6,
   },
-  slideGradient: { borderRadius: 20, padding: 20, minHeight: 160 },
+  slideGradient: { borderRadius: 20, padding: 20, height: 165, overflow: 'hidden' },
   slideBubble1: {
     position: 'absolute', right: -30, top: -30,
     width: 130, height: 130, borderRadius: 65,
@@ -656,6 +659,7 @@ const styles = StyleSheet.create({
   },
   slideContent: { flexDirection: 'row', alignItems: 'center' },
   slideLeft: { flex: 1 },
+  slideLeftWithImage: { paddingRight: 110 },
   slideBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10,
@@ -670,7 +674,7 @@ const styles = StyleSheet.create({
     borderRadius: 20, alignSelf: 'flex-start',
   },
   slideBtnText: { color: '#0077b6', fontSize: 12, fontWeight: '700' },
-  slideImage: { width: 100, height: 130, marginLeft: 10 },
+  slideImage: { position: 'absolute', right: -5, bottom: 0, width: 135, height: 175 },
   slideIconBox: {
     width: 90, height: 90, justifyContent: 'center',
     alignItems: 'center', marginLeft: 10,

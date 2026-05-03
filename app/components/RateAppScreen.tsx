@@ -69,7 +69,7 @@ const RateAppScreen = ({ onNavigate }: RateAppScreenProps) => {
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
             {/* Header avec composant réutilisable */}
             <ScreenHeader
                 title="Noter l'application"

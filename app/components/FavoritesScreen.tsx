@@ -38,7 +38,7 @@ const FavoritesScreen = ({ onNavigate }: FavoritesScreenProps) => {
     const hospitalCount = favorites.filter(f => f.type === 'hospital').length;
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
             <ScreenHeader title={t('favTitle')} onBack={() => onNavigate('profile')} />
 
             {/* Tabs */}
