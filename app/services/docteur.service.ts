@@ -99,10 +99,15 @@ class DocteurService {
     }
   ): Promise<Disponibilite[]> {
     try {
+      console.log('🔍 [SERVICE] Appel API disponibilités - docteurId:', docteurId, 'params:', params);
+      
       const response = await apiClient.get(
         API_ENDPOINTS.DOCTEUR_DISPONIBILITES(docteurId),
         { params }
       );
+      
+      console.log('🔍 [SERVICE] Réponse API disponibilités:', JSON.stringify(response.data, null, 2));
+      
       return response.data.disponibilites || [];
     } catch (error: any) {
       console.error('❌ getDisponibilites:', error.message);
@@ -120,10 +125,18 @@ class DocteurService {
   ): Promise<Creneau[]> {
     try {
       const params = type ? { type } : undefined;
+      
+      console.log('🔍 [SERVICE] Appel API créneaux - id:', id, 'date:', date, 'type:', type);
+      console.log('🔍 [SERVICE] URL:', API_ENDPOINTS.DOCTEUR_CRENEAUX(id, date));
+      console.log('🔍 [SERVICE] Params:', params);
+      
       const response = await apiClient.get(
         API_ENDPOINTS.DOCTEUR_CRENEAUX(id, date),
         { params }
       );
+      
+      console.log('🔍 [SERVICE] Réponse API créneaux:', JSON.stringify(response.data, null, 2));
+      
       return response.data.creneaux ?? [];
     } catch (error: any) {
       console.error('❌ getCreneauxParDate:', error.message);

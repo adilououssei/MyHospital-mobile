@@ -16,12 +16,16 @@ interface SettingsScreenProps {
 }
 
 const SettingsScreen = ({ onNavigate }: SettingsScreenProps) => {
-    const { colors, theme } = useApp();
+    const { colors, theme, t, language } = useApp();
 
     const [notifications, setNotifications] = useState(true);
     const [emailNotifications, setEmailNotifications] = useState(false);
     const [smsNotifications, setSmsNotifications] = useState(true);
     const [locationServices, setLocationServices] = useState(true);
+
+    const LANG_LABELS: Record<string, string> = {
+      fr: '🇫🇷 Français', en: '🇬🇧 English', de: '🇩🇪 Deutsch',
+    };
 
     const SettingsSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
         <View style={styles.section}>
@@ -116,126 +120,126 @@ const SettingsScreen = ({ onNavigate }: SettingsScreenProps) => {
                     <Ionicons name="arrow-back" size={24} color={colors.text} />
                 </TouchableOpacity>
                 <Text style={[styles.headerTitle, { color: colors.text }]}>
-                    Paramètres
+                    {t('settingsTitle')}
                 </Text>
                 <View style={{ width: 40 }} />
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
                 {/* Account Settings */}
-                <SettingsSection title="COMPTE">
+                <SettingsSection title={t('settingsAccount')}>
                     <SettingsItem
                         icon="person-outline"
-                        title="Informations du compte"
-                        subtitle="Modifier votre profil"
+                        title={t('settingsAccountInfo')}
+                        subtitle={t('settingsAccountInfoSub')}
                         onPress={() => onNavigate('editProfile')}
                     />
                     <SettingsItem
                         icon="shield-checkmark-outline"
-                        title="Confidentialité et sécurité"
-                        subtitle="Gérer vos données"
+                        title={t('settingsPrivacy')}
+                        subtitle={t('settingsPrivacySub')}
                         onPress={() => onNavigate('privacySecurity')}
                     />
                     <SettingsItem
                         icon="lock-closed-outline"
-                        title="Changer le mot de passe"
+                        title={t('settingsChangePassword')}
                         onPress={() => onNavigate('changePassword')}
                     />
                 </SettingsSection>
 
                 {/* Notifications */}
-                <SettingsSection title="NOTIFICATIONS">
+                <SettingsSection title={t('settingsNotif')}>
                     <ToggleItem
                         icon="notifications-outline"
-                        title="Notifications Push"
-                        subtitle="Recevoir des alertes sur votre téléphone"
+                        title={t('settingsPush')}
+                        subtitle={t('settingsPushSub')}
                         value={notifications}
                         onValueChange={setNotifications}
                     />
                     <ToggleItem
                         icon="mail-outline"
-                        title="Notifications Email"
-                        subtitle="Recevoir des mises à jour par email"
+                        title={t('settingsEmailNotif')}
+                        subtitle={t('settingsEmailSub')}
                         value={emailNotifications}
                         onValueChange={setEmailNotifications}
                     />
                     <ToggleItem
                         icon="chatbubble-outline"
-                        title="Notifications SMS"
-                        subtitle="Recevoir des rappels par SMS"
+                        title={t('settingsSmsNotif')}
+                        subtitle={t('settingsSmsSub')}
                         value={smsNotifications}
                         onValueChange={setSmsNotifications}
                     />
                 </SettingsSection>
 
                 {/* Preferences */}
-                <SettingsSection title="PRÉFÉRENCES">
+                <SettingsSection title={t('settingsPrefs')}>
                     <SettingsItem
                         icon="language-outline"
-                        title="Langue"
-                        subtitle="Français"
+                        title={t('settingsLang')}
+                        subtitle={LANG_LABELS[language] ?? 'Français'}
                         onPress={() => onNavigate('language')}
                     />
                     <SettingsItem
                         icon={theme === 'dark' ? 'moon' : 'moon-outline'}
-                        title="Thème"
-                        subtitle={theme === 'dark' ? 'Mode sombre' : 'Mode clair'}
+                        title={t('settingsTheme')}
+                        subtitle={theme === 'dark' ? t('settingsDark') : t('settingsLight')}
                         onPress={() => onNavigate('theme')}
                     />
                     <ToggleItem
                         icon="location-outline"
-                        title="Services de localisation"
-                        subtitle="Trouver des hôpitaux à proximité"
+                        title={t('settingsLocation')}
+                        subtitle={t('settingsLocationSub')}
                         value={locationServices}
                         onValueChange={setLocationServices}
                     />
                 </SettingsSection>
 
                 {/* Payment */}
-                <SettingsSection title="PAIEMENT">
+                <SettingsSection title={t('settingsPayment')}>
                     <SettingsItem
                         icon="card-outline"
-                        title="Moyens de paiement"
-                        subtitle="Gérer vos moyens de paiement"
+                        title={t('settingsPaymentMethods')}
+                        subtitle={t('settingsPaymentSub')}
                         onPress={() => onNavigate('savedPaymentMethods')}
                     />
                     <SettingsItem
                         icon="receipt-outline"
-                        title="Historique des transactions"
+                        title={t('settingsTransactionHistory')}
                         onPress={() => onNavigate('transactionHistory')}
                     />
                 </SettingsSection>
 
                 {/* Support */}
-                <SettingsSection title="AIDE ET SUPPORT">
+                <SettingsSection title={t('settingsHelp')}>
                     <SettingsItem
                         icon="help-circle-outline"
-                        title="Centre d'aide (FAQs)"
+                        title={t('settingsHelpCenter')}
                         onPress={() => onNavigate('faqs')}
                     />
                     <SettingsItem
                         icon="document-text-outline"
-                        title="Conditions d'utilisation"
+                        title={t('settingsTerms')}
                         onPress={() => onNavigate('terms')}
                     />
                 </SettingsSection>
 
                 {/* About */}
-                <SettingsSection title="À PROPOS">
+                <SettingsSection title={t('settingsAbout')}>
                     <SettingsItem
                         icon="information-circle-outline"
-                        title="Version de l'application"
+                        title={t('settingsAppVersion')}
                         subtitle="v1.0.0"
                         showArrow={false}
                     />
                     <SettingsItem
                         icon="star-outline"
-                        title="Noter l'application"
+                        title={t('settingsRateApp')}
                         onPress={() => onNavigate('rateApp')}
                     />
                     <SettingsItem
                         icon="share-social-outline"
-                        title="Partager l'application"
+                        title={t('settingsShareApp')}
                         onPress={() => console.log('Share app')}
                     />
                 </SettingsSection>

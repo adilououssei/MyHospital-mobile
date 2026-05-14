@@ -5,7 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useState, useEffect, useCallback } from 'react';
 import { BackHandler, View } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
-import { AppProvider } from './app/context/AppContext';
+import { AppProvider, useApp } from './app/context/AppContext';
 import apiClient from './app/services/api.config';
 import { secureStorage } from './app/services/secureStorage';
 import CustomSplashScreen from './app/components/SplashScreen';
@@ -50,6 +50,7 @@ import DoctorProfileScreen from './app/components/DoctorProfileScreen';
 SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
+  const { language } = useApp();
   const [isLoading, setIsLoading] = useState(true);
   const [appIsReady, setAppIsReady] = useState(false);
 
@@ -139,7 +140,7 @@ function AppContent() {
       case 'chatbot':
         return <ChatbotScreen onNavigate={handleNavigation} />;
       case 'profile':
-        return <ProfileScreen onNavigate={handleNavigation} />;
+        return <ProfileScreen key={language} onNavigate={handleNavigation} />;
       case 'pharmacy':
         return <PharmacyScreen onNavigate={handleNavigation} />;
       case 'hospital':

@@ -8,12 +8,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useApp } from '../context/AppContext';
 
 interface SplashScreenProps {
     onFinish: () => void;
 }
 
 const SplashScreen = ({ onFinish }: SplashScreenProps) => {
+    const { t } = useApp();
     const fadeAnim = new Animated.Value(0);
     const scaleAnim = new Animated.Value(0.8);
     const [imageError, setImageError] = useState(false);
@@ -77,7 +79,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
 
                 {/* App Name */}
                 <Text style={styles.appName}>MyHospital</Text>
-                <Text style={styles.tagline}>Votre santé, notre priorité</Text>
+                <Text style={styles.tagline}>{t('splashTagline')}</Text>
 
                 {/* Loading Indicator */}
                 <View style={styles.loadingContainer}>

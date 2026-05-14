@@ -21,7 +21,7 @@ interface ProfileScreenProps {
 }
 
 const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
-  const { colors, isDarkMode, language } = useApp();
+  const { colors, isDarkMode, language, t } = useApp();
   const { user, logout }                 = useAuth();
   const insets                           = useSafeAreaInsets();
 
@@ -57,64 +57,61 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
 
   // ── Labels langue pour affichage dans le menu ──────────────
   const LANG_LABELS: Record<string, string> = {
-    fr: '🇫🇷 Français', en: '🇬🇧 English', es: '🇪🇸 Español',
-    de: '🇩🇪 Deutsch',  ar: '🇸🇦 عربي',    zh: '🇨🇳 中文',
+    fr: '🇫🇷 Français', en: '🇬🇧 English', de: '🇩🇪 Deutsch',
   };
 
   // ── Menu items (COMPLET avec Langue + Apparence) ───────────
   const menuItems = [
     {
       id: '1', icon: 'person-outline',
-      label: 'Modifier le profil', screen: 'editProfile',
+      label: t('editProfile'), screen: 'editProfile',
       iconColor: '#0077b6', bgColor: '#e4f4fc',
     },
     {
       id: '2', icon: 'heart-outline',
-      label: 'Mes Favoris', screen: 'favorites',
+      label: t('favorites'), screen: 'favorites',
       iconColor: '#0077b6', bgColor: '#e4f4fc',
     },
     {
       id: '3', icon: 'calendar-outline',
-      label: 'Rendez-vous', screen: 'appointments',
+      label: t('appointments'), screen: 'appointments',
       iconColor: '#0077b6', bgColor: '#e4f4fc',
     },
     {
       id: '4', icon: 'document-text-outline',
-      label: 'Mes Ordonnances', screen: 'prescriptions',
+      label: t('prescriptions'), screen: 'prescriptions',
       iconColor: '#0077b6', bgColor: '#e4f4fc',
     },
     {
       id: '5', icon: 'notifications-outline',
-      label: 'Notifications', screen: 'notifications',
+      label: t('notifications'), screen: 'notifications',
       iconColor: '#0077b6', bgColor: '#e4f4fc',
     },
     {
-      // ✅ LANGUE — affiche la langue actuelle en sous-titre
       id: '6', icon: 'language-outline',
-      label: 'Langue', screen: 'language',
+      label: t('language'), screen: 'language',
       iconColor: '#0077b6', bgColor: '#e4f4fc',
       badge: LANG_LABELS[language] ?? '🇫🇷 Français',
     },
     {
-      // ✅ APPARENCE — affiche le mode actuel en sous-titre
       id: '7', icon: isDarkMode ? 'moon' : 'sunny-outline',
-      label: 'Apparence', screen: 'theme',
+      label: t('theme'), screen: 'theme',
       iconColor: '#0077b6', bgColor: '#e4f4fc',
-      badge: isDarkMode ? 'Mode sombre' : 'Mode clair',
+      badge: isDarkMode ? t('settingsDark') : t('settingsLight'),
     },
     {
       id: '8', icon: 'card-outline',
-      label: 'Moyen de Paiement', screen: 'savedPaymentMethods',
+      label: t('paymentMethod'), screen: 'savedPaymentMethods',
       iconColor: '#0077b6', bgColor: '#e4f4fc',
     },
     {
       id: '9', icon: 'help-circle-outline',
-      label: 'FAQs', screen: 'faqs',
+      label: t('faqs'), screen: 'faqs',
       iconColor: '#0077b6', bgColor: '#e4f4fc',
     },
     {
       id: '10', icon: 'log-out-outline',
-      label: 'Déconnexion', screen: null,
+      label: t('logout'), screen: null,
       iconColor: '#FF6B6B', bgColor: '#FFE8E8',
       isLogout: true,
     },
@@ -197,19 +194,19 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
               <Ionicons name="barbell-outline" size={22} color="#fff" style={styles.statIcon} />
-              <Text style={styles.statLabel}>Poids</Text>
+              <Text style={styles.statLabel}>{t('weight')}</Text>
               <Text style={styles.statValue}>{poids ? `${poids} kg` : '--'}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Ionicons name="resize-outline" size={22} color="#fff" style={styles.statIcon} />
-              <Text style={styles.statLabel}>Taille</Text>
+              <Text style={styles.statLabel}>{t('height')}</Text>
               <Text style={styles.statValue}>{taille ? formatTaille(taille) : '--'}</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Ionicons name="fitness-outline" size={22} color="#fff" style={styles.statIcon} />
-              <Text style={styles.statLabel}>IMC</Text>
+              <Text style={styles.statLabel}>{t('imc')}</Text>
               <Text style={styles.statValue}>{imc ? imc.toString() : '--'}</Text>
             </View>
           </View>
@@ -224,13 +221,13 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
       >
         {profile && (
           <View style={[styles.infoCard, { backgroundColor: colors.background }]}>
-            <Text style={[styles.infoCardTitle, { color: colors.text }]}>Informations de santé</Text>
+            <Text style={[styles.infoCardTitle, { color: colors.text }]}>{t('healthInfo')}</Text>
             {[
-              { icon: 'water-outline',       label: 'Groupe sanguin', value: profile.health_info.groupe_sanguin ?? 'Non renseigné' },
-              { icon: 'person-outline',      label: 'Genre',          value: getGenreLabel(profile.health_info.genre) },
-              { icon: 'calendar-outline',    label: 'Âge',            value: profile.health_info.age ? `${profile.health_info.age} ans` : 'Non renseigné' },
-              ...(imc ? [{ icon: 'fitness-outline', label: 'Statut IMC', value: getImcLabel(imc) }] : []),
-              { icon: 'stats-chart-outline', label: 'Rendez-vous',    value: String(profile.stats.appointments_count) },
+              { icon: 'water-outline',       label: t('bloodType'), value: profile.health_info.groupe_sanguin ?? 'Non renseigné' },
+              { icon: 'person-outline',      label: t('gender'),          value: getGenreLabel(profile.health_info.genre) },
+              { icon: 'calendar-outline',    label: t('age'),            value: profile.health_info.age ? `${profile.health_info.age} ans` : 'Non renseigné' },
+              ...(imc ? [{ icon: 'fitness-outline', label: t('bmi'), value: getImcLabel(imc) }] : []),
+              { icon: 'stats-chart-outline', label: t('appointments'),    value: String(profile.stats.appointments_count) },
             ].map(row => (
               <View key={row.label} style={styles.infoRow}>
                 <Ionicons name={row.icon as any} size={18} color="#0077b6" />
@@ -253,12 +250,12 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
           <View style={[styles.menuModalContent, { backgroundColor: colors.card }]}>
             <TouchableOpacity style={styles.menuModalItem} onPress={() => { setShowMenuModal(false); onNavigate('settings'); }}>
               <Ionicons name="settings-outline" size={22} color="#0077b6" />
-              <Text style={[styles.menuModalItemText, { color: colors.text }]}>Paramètres</Text>
+              <Text style={[styles.menuModalItemText, { color: colors.text }]}>{t('settings')}</Text>
             </TouchableOpacity>
             <View style={[styles.menuModalDivider, { backgroundColor: colors.border }]} />
             <TouchableOpacity style={styles.menuModalItem} onPress={() => { setShowMenuModal(false); setShowLogoutModal(true); }}>
               <Ionicons name="log-out-outline" size={22} color="#FF6B6B" />
-              <Text style={[styles.menuModalItemText, { color: '#FF6B6B' }]}>Déconnexion</Text>
+              <Text style={[styles.menuModalItemText, { color: '#FF6B6B' }]}>{t('logout')}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -271,13 +268,13 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
             <View style={styles.modalIconContainer}>
               <Ionicons name="log-out-outline" size={40} color="#0077b6" />
             </View>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Êtes-vous sûr de vouloir</Text>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>vous déconnecter ?</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{t('logoutTitle')}</Text>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>{t('logoutTitle2')}</Text>
             <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-              <Text style={styles.logoutButtonText}>Déconnexion</Text>
+              <Text style={styles.logoutButtonText}>{t('logout')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={() => setShowLogoutModal(false)}>
-              <Text style={styles.cancelButtonText}>Annuler</Text>
+              <Text style={styles.cancelButtonText}>{t('cancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -8,12 +8,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useApp } from '../context/AppContext';
 
 interface WelcomeScreenProps {
   onNavigate: (screen: string) => void;
 }
 
 const WelcomeScreen = ({ onNavigate }: WelcomeScreenProps) => {
+  const { t } = useApp();
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -29,12 +32,12 @@ const WelcomeScreen = ({ onNavigate }: WelcomeScreenProps) => {
 
         {/* Title and Description */}
         <View style={styles.textContainer}>
-          <Text style={styles.title}>Commençons !</Text>
+          <Text style={styles.title}>{t('welcomeStart')}</Text>
           <Text style={styles.description}>
-            Connectez-vous pour profiter des fonctionnalités
+            {t('welcomeDesc1')}
           </Text>
           <Text style={styles.description}>
-            que nous avons fournies et restez en bonne santé !
+            {t('welcomeDesc2')}
           </Text>
         </View>
 
@@ -44,14 +47,14 @@ const WelcomeScreen = ({ onNavigate }: WelcomeScreenProps) => {
             style={styles.loginButton}
             onPress={() => onNavigate('login')}
           >
-            <Text style={styles.loginButtonText}>Connexion</Text>
+            <Text style={styles.loginButtonText}>{t('welcomeLogin')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.signupButton}
             onPress={() => onNavigate('signup')}
           >
-            <Text style={styles.signupButtonText}>Inscription</Text>
+            <Text style={styles.signupButtonText}>{t('welcomeSignup')}</Text>
           </TouchableOpacity>
         </View>
       </View>

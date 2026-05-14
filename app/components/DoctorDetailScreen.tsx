@@ -28,7 +28,6 @@ const formatDateForDisplay = (dateStr: string) => {
   return { label: jours[d.getDay()], dateNum: d.getDate().toString(), fullDate: dateStr };
 };
 
-// ✅ Frais de confirmation : 200 FCFA
 const CONFIRMATION_FEE = 200;
 
 const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationType, description }: DoctorDetailScreenProps) => {
@@ -37,12 +36,12 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
   const [doctorDetails, setDoctorDetails]       = useState<DocteurDetail | null>(null);
   const [loadingDetails, setLoadingDetails]     = useState(false);
   const [errorDetails, setErrorDetails]         = useState<string | null>(null);
-  const [disponibilites, setDisponibilites]     = useState<Disponibilite[]>([]);
   const [loadingDispos, setLoadingDispos]       = useState(false);
   const [datesDisponibles, setDatesDisponibles] = useState<Array<{ label: string; dateNum: string; fullDate: string }>>([]);
   const [selectedDate, setSelectedDate]         = useState<string | null>(null);
   const [creneaux, setCreneaux]                 = useState<Creneau[]>([]);
   const [selectedCreneau, setSelectedCreneau]   = useState<Creneau | null>(null);
+  const [loadingCreneaux, setLoadingCreneaux]   = useState(false);
 
   const { isLoading: isCreatingRdv, createRendezVousAndPay } = usePayment(
     () => {
@@ -76,26 +75,63 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
       const dateDebut = today.toISOString().split('T')[0];
       const dateFin   = in30Days.toISOString().split('T')[0];
       const params: any = { date_debut: dateDebut, date_fin: dateFin };
-      if (consultationType === 'hospital') params.type = 'hopital';
-      else if (consultationType === 'home') params.type = 'domicile';
-      else if (consultationType === 'video') params.type = 'en_ligne';
+      
+      if (consultationType) {
+        params.type = consultationType;
+      }
+      
+      console.log('🔍 [DEBUG] consultationType reçu:', consultationType);
+      console.log('🔍 [DEBUG] Params envoyés au backend:', params);
+      
       const dispos = await docteurService.getDisponibilites(id, params);
-      setDisponibilites(dispos);
+      
+      console.log('🔍 [DEBUG] Disponibilités reçues du backend:', JSON.stringify(dispos, null, 2));
+      
       const dates = dispos.map(d => formatDateForDisplay(d.date));
       setDatesDisponibles(dates);
-      if (dates.length > 0) setSelectedDate(dates[0].fullDate);
+      if (dates.length > 0) {
+        setSelectedDate(dates[0].fullDate);
+      } else {
+        setSelectedDate(null);
+      }
     } catch (err: any) {
+      console.log('❌ [DEBUG] Erreur loadDisponibilites:', err);
       setDatesDisponibles([]);
+      setSelectedDate(null);
     } finally { setLoadingDispos(false); }
   };
 
   useEffect(() => {
-    if (selectedDate) {
-      const dispo = disponibilites.find(d => d.date === selectedDate);
-      setCreneaux(dispo?.creneaux || []);
-      setSelectedCreneau(null);
+    if (selectedDate && initialDoctor?.id) {
+      loadCreneauxForDate(selectedDate);
     }
-  }, [selectedDate, disponibilites]);
+    setSelectedCreneau(null);
+  }, [selectedDate, initialDoctor?.id]);
+
+  const loadCreneauxForDate = async (date: string) => {
+    try {
+      setLoadingCreneaux(true);
+      let typeParam: 'hopital' | 'domicile' | 'en_ligne' | undefined;
+      if (consultationType === 'en_ligne' || consultationType === 'domicile' || consultationType === 'hopital') {
+        typeParam = consultationType;
+      }
+
+      console.log('🔍 [DEBUG] consultationType:', consultationType);
+      console.log('🔍 [DEBUG] typeParam envoyé:', typeParam);
+      console.log('🔍 [DEBUG] Date demandée:', date);
+
+      const creneauxData = await docteurService.getCreneauxParDate(initialDoctor.id, date, typeParam);
+      
+      console.log('🔍 [DEBUG] Créneaux reçus du backend:', JSON.stringify(creneauxData, null, 2));
+
+      setCreneaux(creneauxData);
+    } catch (err: any) {
+      console.log('❌ [DEBUG] Erreur loadCreneauxForDate:', err);
+      setCreneaux([]);
+    } finally {
+      setLoadingCreneaux(false);
+    }
+  };
 
   const doc = doctorDetails ?? initialDoctor;
   const photoUrl = doc?.photo ? `${API_BASE_URL}${doc.photo}` : null;
@@ -125,36 +161,32 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
     const selectedDateObj = datesDisponibles.find(d => d.fullDate === selectedDate);
     const mappedType = rendezVousService.mapConsultationType(consultationType || '');
 
-    // ── Données docteur complètes à transmettre ────────────────────
     const doctorPayload = {
       id:         doc?.id ?? initialDoctor?.id,
       name:       doctorDetails?.nomComplet ?? initialDoctor?.name ?? 'Médecin',
-      nomComplet: doctorDetails?.nomComplet ?? initialDoctor?.name ?? 'Médecin', // ✅
+      nomComplet: doctorDetails?.nomComplet ?? initialDoctor?.name ?? 'Médecin',
       specialty:  doctorDetails?.specialite ?? initialDoctor?.specialty ?? 'Spécialiste',
-      specialite: doctorDetails?.specialite ?? initialDoctor?.specialty ?? 'Spécialiste', // ✅
+      specialite: doctorDetails?.specialite ?? initialDoctor?.specialty ?? 'Spécialiste',
       rating:     doctorDetails?.note ?? initialDoctor?.rating ?? null,
-      note:       doctorDetails?.note ?? initialDoctor?.rating ?? null,           // ✅
+      note:       doctorDetails?.note ?? initialDoctor?.rating ?? null,
       photo:      doc?.photo ?? null,
     };
 
     if (mappedType === 'en_ligne') {
-      // → Paiement requis
       onNavigate('paymentMethod', {
         doctor:           doctorPayload,
         consultationType,
         description,
         date:             selectedDate,
-        // ✅ Date lisible transmise correctement
         dateFormatted:    selectedDateObj
           ? `${selectedDateObj.dateNum} ${selectedDateObj.label}`
           : selectedDate,
         time:             selectedCreneau.heure,
         creneauId:        selectedCreneau.id,
         consultationPrice,
-        confirmationFee:  CONFIRMATION_FEE, // ✅ 200 FCFA
+        confirmationFee:  CONFIRMATION_FEE,
       });
     } else {
-      // → Domicile / hôpital : création directe sans paiement
       const dateTime = `${selectedDate}T${selectedCreneau.heure}:00`;
       await createRendezVousAndPay({
         docteurId:        doc?.id || initialDoctor?.id,
@@ -278,9 +310,27 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
               <View style={styles.section}>
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('ddPrices')}</Text>
                 <View style={[styles.tarifGrid, { backgroundColor: colors.card }]}>
-                  {doctorDetails.tarifs.hopital  != null && <View style={styles.tarifItem}><Ionicons name="business-outline" size={20} color="#0077b6" /><Text style={[styles.tarifLabel, { color: colors.subText }]}>{t('ddConsultHospital')}</Text><Text style={styles.tarifPrice}>{doctorDetails.tarifs.hopital.toLocaleString()} FCFA</Text></View>}
-                  {doctorDetails.tarifs.domicile != null && <View style={styles.tarifItem}><Ionicons name="home-outline"     size={20} color="#0077b6" /><Text style={[styles.tarifLabel, { color: colors.subText }]}>{t('ddConsultHome')}</Text>    <Text style={styles.tarifPrice}>{doctorDetails.tarifs.domicile.toLocaleString()} FCFA</Text></View>}
-                  {doctorDetails.tarifs.enLigne  != null && <View style={styles.tarifItem}><Ionicons name="videocam-outline" size={20} color="#0077b6" /><Text style={[styles.tarifLabel, { color: colors.subText }]}>{t('ddConsultOnline')}</Text>  <Text style={styles.tarifPrice}>{doctorDetails.tarifs.enLigne.toLocaleString()} FCFA</Text></View>}
+                  {doctorDetails.tarifs.hopital != null && (
+                    <View style={styles.tarifItem}>
+                      <Ionicons name="business-outline" size={20} color="#0077b6" />
+                      <Text style={[styles.tarifLabel, { color: colors.subText }]}>{t('ddConsultHospital')}</Text>
+                      <Text style={styles.tarifPrice}>{doctorDetails.tarifs.hopital.toLocaleString()} FCFA</Text>
+                    </View>
+                  )}
+                  {doctorDetails.tarifs.domicile != null && (
+                    <View style={styles.tarifItem}>
+                      <Ionicons name="home-outline" size={20} color="#0077b6" />
+                      <Text style={[styles.tarifLabel, { color: colors.subText }]}>{t('ddConsultHome')}</Text>
+                      <Text style={styles.tarifPrice}>{doctorDetails.tarifs.domicile.toLocaleString()} FCFA</Text>
+                    </View>
+                  )}
+                  {doctorDetails.tarifs.enLigne != null && (
+                    <View style={styles.tarifItem}>
+                      <Ionicons name="videocam-outline" size={20} color="#0077b6" />
+                      <Text style={[styles.tarifLabel, { color: colors.subText }]}>{t('ddConsultOnline')}</Text>
+                      <Text style={styles.tarifPrice}>{doctorDetails.tarifs.enLigne.toLocaleString()} FCFA</Text>
+                    </View>
+                  )}
                 </View>
               </View>
             )}
@@ -319,7 +369,12 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
             {selectedDate && (
               <View style={styles.section}>
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('ddAvailableSlots')}</Text>
-                {creneaux.length === 0 ? (
+                {loadingCreneaux ? (
+                  <View style={[styles.creneauxEmpty, { backgroundColor: colors.card }]}>
+                    <ActivityIndicator size="small" color="#0077b6" />
+                    <Text style={[styles.creneauxEmptyText, { color: colors.subText, marginTop: 10 }]}>{t('ddLoading')}</Text>
+                  </View>
+                ) : creneaux.length === 0 ? (
                   <View style={[styles.creneauxEmpty, { backgroundColor: colors.card }]}>
                     <Ionicons name="time-outline" size={32} color={colors.subText} />
                     <Text style={[styles.creneauxEmptyText, { color: colors.subText }]}>{t('ddNoSlots')}</Text>
@@ -353,7 +408,6 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
                   </View>
                   <View style={styles.pricingRow}>
                     <Text style={[styles.pricingLabel, { color: colors.subText }]}>{t('ddConfirmFee')}</Text>
-                    {/* ✅ Affiche 200 FCFA */}
                     <Text style={[styles.pricingVal, { color: colors.text }]}>{CONFIRMATION_FEE.toLocaleString()} FCFA</Text>
                   </View>
                   <View style={[styles.divider, { backgroundColor: '#E0E0E0' }]} />

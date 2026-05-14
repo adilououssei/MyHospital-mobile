@@ -16,12 +16,9 @@ interface LoginScreenProps {
 }
 
 const LANGUAGES = [
-  { code: 'fr', flag: '🇫🇷', label: 'FR' },
-  { code: 'en', flag: '🇬🇧', label: 'EN' },
-  { code: 'es', flag: '🇪🇸', label: 'ES' },
-  { code: 'de', flag: '🇩🇪', label: 'DE' },
-  { code: 'ar', flag: '🇸🇦', label: 'AR' },
-  { code: 'zh', flag: '🇨🇳', label: 'ZH' },
+  { code: 'fr', flag: '🇫🇷', label: 'Français' },
+  { code: 'en', flag: '🇬🇧', label: 'English' },
+  { code: 'de', flag: '🇩🇪', label: 'Deutsch' },
 ];
 
 const LoginScreen = ({ onNavigate }: LoginScreenProps) => {

@@ -33,7 +33,7 @@ const QUICK_SUGGESTIONS = [
 
 
 // ─── Bulle de message ─────────────────────────────────────────────────────────
-const MessageBubble = ({ msg, colors }: { msg: Message; colors: any }) => {
+const MessageBubble = ({ msg, colors, t }: { msg: Message; colors: any; t: (key: string) => string }) => {
   const isUser = msg.role === 'user';
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -61,7 +61,7 @@ const MessageBubble = ({ msg, colors }: { msg: Message; colors: any }) => {
         {msg.loading ? (
           <View style={styles.typingIndicator}>
             <ActivityIndicator size="small" color="#0077b6" />
-            <Text style={[styles.typingText, { color: colors.subText }]}>MedBot réfléchit...</Text>
+            <Text style={[styles.typingText, { color: colors.subText }]}>{t('chatbotThinking')}</Text>
           </View>
         ) : (
           <Text style={[styles.bubbleText, { color: isUser ? '#fff' : colors.text }]}>
@@ -78,7 +78,7 @@ const MessageBubble = ({ msg, colors }: { msg: Message; colors: any }) => {
 
 // ─── Composant principal ──────────────────────────────────────────────────────
 const ChatbotScreen = ({ onNavigate }: Props) => {
-  const { colors } = useApp();
+  const { colors, t } = useApp();
   const { user }   = useAuth();
   const insets     = useSafeAreaInsets();
 
@@ -92,7 +92,7 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
     setMessages([{
       id: 'welcome',
       role: 'assistant',
-      content: `Bonjour${user?.prenom ? ' ' + user.prenom : ''} ! 👋 Je suis MedBot, votre assistant santé.\n\nJe peux vous aider à :\n• 💊 Trouver une pharmacie de garde\n• 👨‍⚕️ Choisir le bon médecin\n• 🏥 Localiser un hôpital\n• 📅 Prendre un rendez-vous\n• 🩺 Répondre à vos questions de santé\n\nQue puis-je faire pour vous ?`,
+      content: `${t('chatbotWelcome')}${user?.prenom ? ' ' + user.prenom : ''}${t('chatbotWelcome2')}${t('chatbotWelcome3')}`,
       timestamp: new Date(),
     }]);
   }, []);
@@ -139,7 +139,7 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
         userContext,
       });
 
-      const botContent = response.data.message || 'Désolé, je n\'ai pas pu répondre.';
+      const botContent = response.data.message || t('chatbotNoResponse');
       setMessages((prev) => [
         ...prev.filter((m) => m.id !== 'loading'),
         {
@@ -155,7 +155,7 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
         {
           id: Date.now().toString() + '_err',
           role: 'assistant',
-          content: '❌ Impossible de contacter MedBot. Vérifiez votre connexion.',
+          content: t('chatbotError'),
           timestamp: new Date(),
         },
       ]);
@@ -169,15 +169,15 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
     setMessages([{
       id: 'welcome_' + Date.now(),
       role: 'assistant',
-      content: 'Conversation réinitialisée. Comment puis-je vous aider ?',
+      content: t('chatbotReset'),
       timestamp: new Date(),
     }]);
     setShowSuggestions(true);
   }, []);
 
   const renderItem = useCallback(({ item }: { item: Message }) => (
-    <MessageBubble msg={item} colors={colors} />
-  ), [colors]);
+    <MessageBubble msg={item} colors={colors} t={t} />
+  ), [colors, t]);
 
   const keyExtractor = useCallback((item: Message) => item.id, []);
 
@@ -197,7 +197,7 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
           </View>
           <View>
             <Text style={[styles.headerTitle, { color: colors.text }]}>MedBot</Text>
-            <Text style={styles.headerSubtitle}>Assistant santé IA • En ligne</Text>
+            <Text style={styles.headerSubtitle}>{t('chatbotAssistant')} • {t('chatbotOnline')}</Text>
           </View>
         </View>
         <TouchableOpacity onPress={clearHistory} style={{ padding: 4 }}>
@@ -209,7 +209,7 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
       <View style={styles.disclaimer}>
         <Ionicons name="information-circle-outline" size={13} color="#e67e22" />
         <Text style={styles.disclaimerText}>
-          MedBot ne remplace pas un médecin. En cas d'urgence : appelez le 170 (Ambulance Togo)
+          {t('chatbotDisclaimer')}
         </Text>
       </View>
 
@@ -237,7 +237,7 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
             showSuggestions ? (
               <View style={styles.suggestions}>
                 <Text style={[styles.suggestionsLabel, { color: colors.subText }]}>
-                  Questions fréquentes
+                  {t('chatbotSuggestions')}
                 </Text>
                 <View style={styles.suggestionsGrid}>
                   {QUICK_SUGGESTIONS.map((s, i) => (
@@ -263,7 +263,7 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
               color: colors.text,
               borderColor: colors.border,
             }]}
-            placeholder="Posez votre question..."
+            placeholder={t('searchPlaceholder')}
             placeholderTextColor={colors.subText}
             value={inputText}
             onChangeText={setInputText}

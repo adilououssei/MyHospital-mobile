@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import authService from '../services/authService';
+import { useApp } from '../context/AppContext';
 
 interface Country {
   code: string;
@@ -29,6 +30,7 @@ interface SignUpScreenProps {
 }
 
 const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
+  const { t, language } = useApp();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -89,20 +91,8 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
   const [selectedYear, setSelectedYear] = useState<number>(2000);
 
   const days = Array.from({ length: 31 }, (_, i) => i + 1);
-  const months = [
-    { value: 1, label: 'Janvier' },
-    { value: 2, label: 'Février' },
-    { value: 3, label: 'Mars' },
-    { value: 4, label: 'Avril' },
-    { value: 5, label: 'Mai' },
-    { value: 6, label: 'Juin' },
-    { value: 7, label: 'Juillet' },
-    { value: 8, label: 'Août' },
-    { value: 9, label: 'Septembre' },
-    { value: 10, label: 'Octobre' },
-    { value: 11, label: 'Novembre' },
-    { value: 12, label: 'Décembre' },
-  ];
+  const monthKeys = ['signupMonth1','signupMonth2','signupMonth3','signupMonth4','signupMonth5','signupMonth6','signupMonth7','signupMonth8','signupMonth9','signupMonth10','signupMonth11','signupMonth12'];
+  const months = Array.from({ length: 12 }, (_, i) => ({ value: i + 1 }));
   const years = Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i);
 
   const validateEmail = (text: string) => {
@@ -146,13 +136,13 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
   const handleNextStep = () => {
     if (currentStep === 1) {
       if (!isStep1Valid()) {
-        if (!firstName.trim()) Alert.alert('Erreur', 'Veuillez entrer votre prénom');
-        else if (!lastName.trim()) Alert.alert('Erreur', 'Veuillez entrer votre nom');
-        else if (!email) Alert.alert('Erreur', 'Veuillez entrer votre email');
-        else if (!validateEmail(email)) Alert.alert('Erreur', 'Email invalide');
-        else if (!password) Alert.alert('Erreur', 'Veuillez entrer un mot de passe');
-        else if (!validatePassword(password)) Alert.alert('Erreur', 'Mot de passe trop court (min. 8 caractères)');
-        else if (password !== confirmPassword) Alert.alert('Erreur', 'Les mots de passe ne correspondent pas');
+        if (!firstName.trim()) Alert.alert(t('signupErr'), t('firstName') + ' requis');
+        else if (!lastName.trim()) Alert.alert(t('signupErr'), t('lastName') + ' requis');
+        else if (!email) Alert.alert(t('signupErr'), t('email') + ' requis');
+        else if (!validateEmail(email)) Alert.alert(t('signupErr'), t('loginErrEmail'));
+        else if (!password) Alert.alert(t('signupErr'), t('cpErrNew'));
+        else if (!validatePassword(password)) Alert.alert(t('signupErr'), t('cpErrLen'));
+        else if (password !== confirmPassword) Alert.alert(t('signupErr'), t('signupPasswordNoMatch'));
         return;
       }
       setCurrentStep(2);
@@ -160,16 +150,16 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
   };
 
   const handleSignUp = async () => {
-    if (!isStep2Valid()) {
-      if (!phoneNumber) Alert.alert('Erreur', 'Veuillez entrer votre numéro de téléphone');
-      else if (!validatePhoneNumber(phoneNumber)) Alert.alert('Erreur', 'Numéro de téléphone invalide');
-      else if (!address.trim()) Alert.alert('Erreur', 'Veuillez entrer votre adresse');
-      else if (!city.trim()) Alert.alert('Erreur', 'Veuillez entrer votre ville');
-      else if (!dateOfBirth) Alert.alert('Erreur', 'Veuillez sélectionner votre date de naissance');
-      else if (!gender) Alert.alert('Erreur', 'Veuillez sélectionner votre genre');
-      else if (!bloodGroup) Alert.alert('Erreur', 'Veuillez sélectionner votre groupe sanguin');
-      else if (!agreedToTerms) Alert.alert('Erreur', 'Veuillez accepter les conditions');
-      return;
+      if (!isStep2Valid()) {
+        if (!phoneNumber) Alert.alert(t('signupErr'), t('phone') + ' requis');
+        else if (!validatePhoneNumber(phoneNumber)) Alert.alert(t('signupErr'), t('fpErrPhone'));
+        else if (!address.trim()) Alert.alert(t('signupErr'), t('address') + ' requise');
+        else if (!city.trim()) Alert.alert(t('signupErr'), t('city') + ' requise');
+        else if (!dateOfBirth) Alert.alert(t('signupErr'), t('signupDateOfBirth') + ' requise');
+        else if (!gender) Alert.alert(t('signupErr'), t('signupGender') + ' requis');
+        else if (!bloodGroup) Alert.alert(t('signupErr'), t('signupBloodGroup') + ' requis');
+        else if (!agreedToTerms) Alert.alert(t('signupErr'), t('signupTermsError'));
+        return;
     }
 
     setIsLoading(true);
@@ -207,12 +197,12 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
       if (response.status === 'success') {
         setShowSuccessModal(true);
       } else {
-        Alert.alert('Erreur', response.message || 'Erreur lors de l\'inscription');
+        Alert.alert(t('error'), response.message || t('loginErrServer'));
       }
     } catch (error: any) {
       setIsLoading(false);
       console.error('❌ Erreur inscription:', error);
-      Alert.alert('Erreur', 'Impossible de se connecter au serveur');
+      Alert.alert(t('error'), t('loginErrServer'));
     }
   };
 
@@ -260,7 +250,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
             >
               <Ionicons name="chevron-back" size={24} color="#000" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Inscription</Text>
+            <Text style={styles.headerTitle}>{t('signupTitle')}</Text>
             <View style={styles.placeholder} />
           </View>
 
@@ -277,12 +267,12 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
             </View>
 
             <Text style={styles.welcomeText}>
-              {currentStep === 1 ? 'Créer un compte' : 'Informations complémentaires'}
+              {currentStep === 1 ? t('signupStep1') : t('signupStep2')}
             </Text>
             <Text style={styles.subtitleText}>
               {currentStep === 1
-                ? 'Remplissez vos informations personnelles'
-                : 'Complétez votre profil'}
+                ? t('signupStep1Sub')
+                : t('signupStep2Sub')}
             </Text>
 
             {/* ÉTAPE 1 */}
@@ -292,7 +282,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                   <Ionicons name="person-outline" size={20} color="#999" />
                   <TextInput
                     style={styles.input}
-                    placeholder="Prénom"
+                    placeholder={t('firstName')}
                     placeholderTextColor="#999"
                     value={firstName}
                     onChangeText={setFirstName}
@@ -308,7 +298,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                   <Ionicons name="person-outline" size={20} color="#999" />
                   <TextInput
                     style={styles.input}
-                    placeholder="Nom"
+                    placeholder={t('lastName')}
                     placeholderTextColor="#999"
                     value={lastName}
                     onChangeText={setLastName}
@@ -341,7 +331,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                   <Ionicons name="lock-closed-outline" size={20} color="#999" />
                   <TextInput
                     style={styles.input}
-                    placeholder="Mot de passe (min. 8 caractères)"
+                    placeholder={t('signupPasswordPlaceholder')}
                     placeholderTextColor="#999"
                     value={password}
                     onChangeText={setPassword}
@@ -375,7 +365,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                   <Ionicons name="lock-closed-outline" size={20} color="#999" />
                   <TextInput
                     style={styles.input}
-                    placeholder="Confirmer le mot de passe"
+                    placeholder={t('signupConfirmPassword')}
                     placeholderTextColor="#999"
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
@@ -396,13 +386,13 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                     {password === confirmPassword ? (
                       <View style={styles.passwordMatchRow}>
                         <Ionicons name="checkmark-circle" size={16} color="#00C48C" />
-                        <Text style={styles.passwordMatchText}>Les mots de passe correspondent</Text>
+                        <Text style={styles.passwordMatchText}>{t('signupPasswordMatch')}</Text>
                       </View>
                     ) : (
                       <View style={styles.passwordMatchRow}>
                         <Ionicons name="close-circle" size={16} color="#FF6B6B" />
                         <Text style={[styles.passwordMatchText, { color: '#FF6B6B' }]}>
-                          Les mots de passe ne correspondent pas
+                          {t('signupPasswordNoMatch')}
                         </Text>
                       </View>
                     )}
@@ -414,7 +404,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                   onPress={handleNextStep}
                   disabled={isLoading}
                 >
-                  <Text style={styles.buttonText}>Suivant</Text>
+                  <Text style={styles.buttonText}>{t('signupNext')}</Text>
                   <Ionicons name="arrow-forward" size={20} color="#fff" />
                 </TouchableOpacity>
               </>
@@ -444,7 +434,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                   </View>
                   <TextInput
                     style={styles.phoneInput}
-                    placeholder="Numéro de téléphone"
+                    placeholder={t('signupPhonePlaceholder')}
                     placeholderTextColor="#999"
                     value={phoneNumber}
                     onChangeText={setPhoneNumber}
@@ -461,7 +451,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                   <Ionicons name="location-outline" size={20} color="#999" />
                   <TextInput
                     style={styles.input}
-                    placeholder="Adresse"
+                    placeholder={t('address')}
                     placeholderTextColor="#999"
                     value={address}
                     onChangeText={setAddress}
@@ -477,7 +467,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                   <Ionicons name="business-outline" size={20} color="#999" />
                   <TextInput
                     style={styles.input}
-                    placeholder="Ville"
+                    placeholder={t('city')}
                     placeholderTextColor="#999"
                     value={city}
                     onChangeText={setCity}
@@ -496,17 +486,19 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                 >
                   <Ionicons name="calendar-outline" size={20} color="#999" />
                   <Text style={[styles.inputText, dateOfBirth ? { color: '#000' } : { color: '#999' }]}>
-                    {dateOfBirth || 'Date de naissance'}
+                    {dateOfBirth || t('signupDateOfBirth')}
                   </Text>
                   <Ionicons name="chevron-down" size={20} color="#999" />
                 </TouchableOpacity>
 
                 {/* Gender Selector */}
                 <View style={styles.labelContainer}>
-                  <Text style={styles.label}>Genre</Text>
+                  <Text style={styles.label}>{t('signupGender')}</Text>
                 </View>
                 <View style={styles.genderContainer}>
-                  {['Masculin', 'Féminin', 'Autre'].map((g) => (
+                  {['Masculin', 'Féminin', 'Autre'].map((g) => {
+                    const genderKey = g === 'Masculin' ? 'signupMale' : g === 'Féminin' ? 'signupFemale' : 'signupOther';
+                    return (
                     <TouchableOpacity
                       key={g}
                       style={[
@@ -520,10 +512,11 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                         styles.genderButtonText,
                         gender === g && styles.genderButtonTextActive
                       ]}>
-                        {g}
+                        {t(genderKey)}
                       </Text>
                     </TouchableOpacity>
-                  ))}
+                    );
+                  })}
                 </View>
 
                 {/* Blood Group */}
@@ -534,21 +527,21 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                 >
                   <Ionicons name="water-outline" size={20} color="#999" />
                   <Text style={[styles.inputText, bloodGroup ? { color: '#000' } : { color: '#999' }]}>
-                    {bloodGroup || 'Groupe sanguin'}
+                    {bloodGroup || t('signupBloodGroup')}
                   </Text>
                   <Ionicons name="chevron-down" size={20} color="#999" />
                 </TouchableOpacity>
 
                 {/* Height & Weight (Optional) */}
                 <View style={styles.labelContainer}>
-                  <Text style={styles.label}>Informations supplémentaires (optionnel)</Text>
+                  <Text style={styles.label}>{t('signupOptionalInfo')}</Text>
                 </View>
                 <View style={styles.rowInputs}>
                   <View style={styles.halfInputContainer}>
                     <Ionicons name="resize-outline" size={20} color="#999" />
                     <TextInput
                       style={styles.halfInput}
-                      placeholder="Taille (cm)"
+                      placeholder={t('signupHeightPlaceholder')}
                       placeholderTextColor="#999"
                       value={height}
                       onChangeText={setHeight}
@@ -560,7 +553,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                     <Ionicons name="barbell-outline" size={20} color="#999" />
                     <TextInput
                       style={styles.halfInput}
-                      placeholder="Poids (kg)"
+                      placeholder={t('signupWeightPlaceholder')}
                       placeholderTextColor="#999"
                       value={weight}
                       onChangeText={setWeight}
@@ -580,8 +573,8 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                     {agreedToTerms && <Ionicons name="checkmark" size={16} color="#fff" />}
                   </View>
                   <Text style={styles.checkboxText}>
-                    J'accepte les <Text style={styles.linkText}>Conditions d'utilisation</Text> et la{' '}
-                    <Text style={styles.linkText}>Politique de confidentialité</Text>
+                    {t('signupTermsAccept')}<Text style={styles.linkText}>{t('signupTerms')}</Text>{t('signupAnd')}{' '}
+                    <Text style={styles.linkText}>{t('signupPrivacy')}</Text>
                   </Text>
                 </TouchableOpacity>
 
@@ -594,7 +587,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                   {isLoading ? (
                     <ActivityIndicator color="#fff" />
                   ) : (
-                    <Text style={styles.buttonText}>S'inscrire</Text>
+                    <Text style={styles.buttonText}>{t('signupSignUp')}</Text>
                   )}
                 </TouchableOpacity>
               </>
@@ -602,9 +595,9 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
 
             {/* Login Link */}
             <View style={styles.loginContainer}>
-              <Text style={styles.loginText}>Vous avez déjà un compte ? </Text>
+              <Text style={styles.loginText}>{t('signupHaveAccount')} </Text>
               <TouchableOpacity onPress={() => onNavigate('login')} disabled={isLoading}>
-                <Text style={styles.loginLink}>Se connecter</Text>
+                <Text style={styles.loginLink}>{t('signupSignIn')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -621,7 +614,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
         <View style={styles.modalOverlay}>
           <View style={styles.pickerModal}>
             <View style={styles.pickerHeader}>
-              <Text style={styles.pickerTitle}>Sélectionnez votre pays</Text>
+              <Text style={styles.pickerTitle}>{t('signupCountryPicker')}</Text>
               <TouchableOpacity onPress={() => setShowCountryPicker(false)}>
                 <Ionicons name="close" size={24} color="#000" />
               </TouchableOpacity>
@@ -631,7 +624,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
               <Ionicons name="search-outline" size={20} color="#999" />
               <TextInput
                 style={styles.searchInput}
-                placeholder="Rechercher un pays..."
+                placeholder={t('signupCountrySearch')}
                 placeholderTextColor="#999"
                 value={countrySearch}
                 onChangeText={setCountrySearch}
@@ -666,7 +659,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
         <View style={styles.modalOverlay}>
           <View style={styles.pickerModal}>
             <View style={styles.pickerHeader}>
-              <Text style={styles.pickerTitle}>Date de naissance</Text>
+              <Text style={styles.pickerTitle}>{t('signupBirthTitle')}</Text>
               <TouchableOpacity onPress={() => setShowDatePicker(false)}>
                 <Ionicons name="close" size={24} color="#000" />
               </TouchableOpacity>
@@ -695,7 +688,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                     onPress={() => setSelectedMonth(month.value)}
                   >
                     <Text style={[styles.dateItemText, selectedMonth === month.value && styles.dateItemTextSelected]}>
-                      {month.label}
+                      {t(monthKeys[month.value - 1])}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -717,7 +710,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
             </View>
 
             <TouchableOpacity style={styles.confirmButton} onPress={handleSelectDate}>
-              <Text style={styles.confirmButtonText}>Confirmer</Text>
+              <Text style={styles.confirmButtonText}>{t('confirm')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -733,7 +726,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
         <View style={styles.modalOverlay}>
           <View style={styles.pickerModal}>
             <View style={styles.pickerHeader}>
-              <Text style={styles.pickerTitle}>Groupe sanguin</Text>
+              <Text style={styles.pickerTitle}>{t('signupBloodGroup')}</Text>
               <TouchableOpacity onPress={() => setShowBloodGroupPicker(false)}>
                 <Ionicons name="close" size={24} color="#000" />
               </TouchableOpacity>
@@ -768,16 +761,16 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
               <Ionicons name="checkmark" size={50} color="#fff" />
             </View>
 
-            <Text style={styles.modalTitle}>Inscription réussie !</Text>
+            <Text style={styles.modalTitle}>{t('signupSuccessTitle')}</Text>
             <Text style={styles.modalDescription}>
-              Bienvenue {firstName} {lastName} !
+              {t('signupSuccessDesc')}{firstName} {lastName} !
             </Text>
             <Text style={styles.modalSubDescription}>
-              Votre compte a été créé avec succès
+              {t('signupSuccessSub')}
             </Text>
 
             <TouchableOpacity style={styles.modalButton} onPress={handleGoToLogin}>
-              <Text style={styles.modalButtonText}>Se connecter</Text>
+              <Text style={styles.modalButtonText}>{t('signupSignIn')}</Text>
             </TouchableOpacity>
           </View>
         </View>

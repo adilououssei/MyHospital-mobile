@@ -16,10 +16,7 @@ interface LanguageScreenProps {
 const LANGUAGES = [
   { code: 'fr', name: 'Français',  nativeName: 'Français',   flag: '🇫🇷' },
   { code: 'en', name: 'Anglais',   nativeName: 'English',    flag: '🇬🇧' },
-  { code: 'es', name: 'Espagnol',  nativeName: 'Español',    flag: '🇪🇸' },
   { code: 'de', name: 'Allemand',  nativeName: 'Deutsch',    flag: '🇩🇪' },
-  { code: 'ar', name: 'Arabe',     nativeName: 'العربية',    flag: '🇸🇦' },
-  { code: 'zh', name: 'Chinois',   nativeName: '中文',        flag: '🇨🇳' },
 ];
 
 const LanguageScreen = ({ onNavigate }: LanguageScreenProps) => {

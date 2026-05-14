@@ -26,10 +26,7 @@ interface HomeScreenProps {
 const LANGUAGES = [
   { code: 'fr', flag: '🇫🇷', label: 'FR' },
   { code: 'en', flag: '🇬🇧', label: 'EN' },
-  { code: 'es', flag: '🇪🇸', label: 'ES' },
   { code: 'de', flag: '🇩🇪', label: 'DE' },
-  { code: 'ar', flag: '🇸🇦', label: 'AR' },
-  { code: 'zh', flag: '🇨🇳', label: 'ZH' },
 ];
 
 // ─── Slides du carousel ───────────────────────────────────────────────────────
@@ -646,7 +643,7 @@ const styles = StyleSheet.create({
     shadowColor: '#0077b6', shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2, shadowRadius: 10, elevation: 6,
   },
-  slideGradient: { borderRadius: 20, padding: 20, height: 165, overflow: 'hidden' },
+  slideGradient: { borderRadius: 20, padding: 20, height: 190, overflow: 'hidden' },
   slideBubble1: {
     position: 'absolute', right: -30, top: -30,
     width: 130, height: 130, borderRadius: 65,
@@ -659,22 +656,22 @@ const styles = StyleSheet.create({
   },
   slideContent: { flexDirection: 'row', alignItems: 'center' },
   slideLeft: { flex: 1 },
-  slideLeftWithImage: { paddingRight: 110 },
+  slideLeftWithImage: { paddingRight: 125 },
   slideBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10,
     paddingVertical: 4, borderRadius: 20, alignSelf: 'flex-start', marginBottom: 10,
   },
   slideBadgeText: { color: '#fff', fontSize: 11, fontWeight: '600' },
-  slideTitle: { fontSize: 16, fontWeight: '800', color: '#fff', lineHeight: 22, marginBottom: 6 },
-  slideSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.8)', lineHeight: 17, marginBottom: 14 },
+  slideTitle: { fontSize: 16, fontWeight: '800', color: '#fff', lineHeight: 22, marginBottom: 4 },
+  slideSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.8)', lineHeight: 17, marginBottom: 8 },
   slideBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     backgroundColor: '#fff', paddingHorizontal: 14, paddingVertical: 8,
     borderRadius: 20, alignSelf: 'flex-start',
   },
   slideBtnText: { color: '#0077b6', fontSize: 12, fontWeight: '700' },
-  slideImage: { position: 'absolute', right: -5, bottom: 0, width: 135, height: 175 },
+  slideImage: { position: 'absolute', right: 0, bottom: -20, width: 110, height: 150 },
   slideIconBox: {
     width: 90, height: 90, justifyContent: 'center',
     alignItems: 'center', marginLeft: 10,
