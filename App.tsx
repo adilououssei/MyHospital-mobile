@@ -1,11 +1,12 @@
 // App.tsx - Version corrigée (sans DoctorBookingScreen)
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useState, useEffect, useCallback } from 'react';
 import { BackHandler, View } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
-import { AppProvider, useApp } from './app/context/AppContext';
+import { AppProvider, useApp, useAuth } from './app/context/AppContext';
 import apiClient from './app/services/api.config';
 import { secureStorage } from './app/services/secureStorage';
 import CustomSplashScreen from './app/components/SplashScreen';
@@ -51,6 +52,7 @@ SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
   const { language } = useApp();
+  const { login: authLogin, logout: authLogout, isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [appIsReady, setAppIsReady] = useState(false);
 
@@ -62,10 +64,25 @@ function AppContent() {
   useEffect(() => {
     async function prepare() {
       try {
-        const token = await secureStorage.getToken();
+        const [token, savedUser] = await Promise.all([
+          secureStorage.getToken(),
+          AsyncStorage.getItem('user'),
+        ]);
         if (token) {
           apiClient.setAuthToken(token);
         }
+        if (token && savedUser) {
+          const userData = JSON.parse(savedUser);
+          await authLogin(userData);
+          setCurrentScreen('home');
+          setNavigationHistory(['home']);
+        }
+        apiClient.setOnSessionExpired(async () => {
+          await authLogout();
+          setCurrentScreen('login');
+          setNavigationHistory(['login']);
+          setScreenParams({});
+        });
         await new Promise(resolve => setTimeout(resolve, 200));
       } catch (e) {
         console.error('❌ Erreur initialisation:', e);
@@ -80,7 +97,19 @@ function AppContent() {
     if (appIsReady) await SplashScreen.hideAsync();
   }, [appIsReady]);
 
+  const PROTECTED_SCREENS = [
+    'appointments', 'profile', 'bookingType', 'paymentMethod',
+    'notifications', 'favorites', 'editProfile', 'changePassword',
+    'prescriptions', 'savedPaymentMethods', 'transactionHistory',
+  ];
+
   const handleNavigation = (screen: string, params?: any) => {
+    if (!isAuthenticated && PROTECTED_SCREENS.includes(screen)) {
+      setCurrentScreen('login');
+      setNavigationHistory(prev => [...prev, 'login']);
+      setScreenParams({ returnTo: screen });
+      return;
+    }
     setCurrentScreen(screen);
     setNavigationHistory(prev => [...prev, screen]);
     if (params) setScreenParams(params);
@@ -120,7 +149,7 @@ function AppContent() {
       case 'welcome':
         return <WelcomeScreen onNavigate={handleNavigation} />;
       case 'login':
-        return <LoginScreen onNavigate={handleNavigation} />;
+        return <LoginScreen onNavigate={handleNavigation} returnTo={screenParams.returnTo} />;
       case 'signup':
         return <SignUpScreen onNavigate={handleNavigation} />;
       case 'forgotPassword':

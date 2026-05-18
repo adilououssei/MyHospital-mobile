@@ -1,7 +1,7 @@
 // app/services/api.config.ts
 // ✅ FICHIER CENTRAL - Modifier seulement ici pour changer l'URL du serveur
 
-export const API_BASE_URL = 'http://192.168.1.68:8000';
+export const API_BASE_URL = 'http://192.168.1.66:8000';
 
 // ─────────────────────────────────────────────────────────────
 // 📋 TOUS LES ENDPOINTS DE L'APPLICATION
@@ -25,6 +25,9 @@ export const API_ENDPOINTS = {
   NOTIFICATION_READ: (id: number) => `/api/notifications/${id}/read`,
   NOTIFICATIONS_READ_ALL: (userId: number) => `/api/notifications/user/${userId}/read-all`,
   NOTIFICATION_DELETE: (id: number) => `/api/notifications/${id}`,
+
+  // Lieu de consultation
+  DOCTEUR_UPDATE_LOCATION: '/api/docteur/lieu-consultation',
 
   // Spécialités
   SPECIALITES: '/api/specialites',
@@ -65,8 +68,7 @@ class ApiClient {
   private defaultTimeout: number;
   private defaultHeaders: Record<string, string>;
   private authToken: string | null = null;
-  private isRefreshing = false;
-  private refreshSubscribers: ((token: string) => void)[] = [];
+  private onSessionExpired: (() => void) | null = null;
 
   constructor(baseURL: string, timeout: number = 30000) {
     this.baseURL = baseURL;
@@ -81,17 +83,12 @@ class ApiClient {
     this.authToken = token;
   }
 
-  private onRefreshed(token: string) {
-    this.refreshSubscribers.forEach(cb => cb(token));
-    this.refreshSubscribers = [];
-  }
-
-  private addRefreshSubscriber(cb: (token: string) => void) {
-    this.refreshSubscribers.push(cb);
-  }
-
   getAuthToken(): string | null {
     return this.authToken;
+  }
+
+  setOnSessionExpired(callback: () => void) {
+    this.onSessionExpired = callback;
   }
 
   private buildUrl(url: string, params?: Record<string, any>): string {
@@ -145,42 +142,10 @@ class ApiClient {
       }
 
       if (!response.ok) {
-        // Refresh automatique sur 401 (token expiré)
-        if (response.status === 401 && !url.includes('/api/token/refresh') && !url.includes('/api/login')) {
-          return new Promise<ApiResponse<T>>((resolve, reject) => {
-            this.addRefreshSubscriber((newToken: string) => {
-              resolve(this.makeRequest<T>(url, { ...config, headers: { ...headers, Authorization: `Bearer ${newToken}` } }));
-            });
-
-            if (!this.isRefreshing) {
-              this.isRefreshing = true;
-              import('./secureStorage').then(({ secureStorage }) => {
-                secureStorage.getRefreshToken().then(refreshToken => {
-                  if (!refreshToken) {
-                    this.isRefreshing = false;
-                    reject({ response: { data: responseData, status: 401 }, message: 'Session expirée' });
-                    return;
-                  }
-                  this.makeRequest<{ token: string; refresh_token: string }>(
-                    API_ENDPOINTS.REFRESH_TOKEN,
-                    { method: 'POST', data: { refresh_token: refreshToken } }
-                  ).then(async refreshResponse => {
-                    const { token: newToken, refresh_token: newRefreshToken } = refreshResponse.data;
-                    this.setAuthToken(newToken);
-                    await secureStorage.setToken(newToken);
-                    await secureStorage.setRefreshToken(newRefreshToken);
-                    this.isRefreshing = false;
-                    this.onRefreshed(newToken);
-                  }).catch(() => {
-                    this.isRefreshing = false;
-                    secureStorage.clearTokens();
-                    this.setAuthToken(null);
-                    reject({ response: { data: responseData, status: 401 }, message: 'Session expirée' });
-                  });
-                });
-              });
-            }
-          });
+        if (response.status === 401 && !url.includes('/api/login')) {
+          if (this.onSessionExpired) {
+            this.onSessionExpired();
+          }
         }
 
         const errorMessage = responseData?.message || responseData?.error || response.statusText;

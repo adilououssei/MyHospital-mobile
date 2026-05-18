@@ -132,6 +132,35 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
             </View>
           )}
 
+          {/* Lieu de consultation */}
+          {doctorDetail?.consultationLocation?.latitude && doctorDetail?.consultationLocation?.longitude && (
+            <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
+              <Ionicons name="navigate-outline" size={22} color="#198754" />
+              <View style={styles.infoCardContent}>
+                <Text style={[styles.infoCardTitle, { color: colors.text }]}>Lieu de consultation</Text>
+                {doctorDetail.consultationLocation.adresse && (
+                  <Text style={[styles.infoCardValue, { color: colors.subText }]}>
+                    {doctorDetail.consultationLocation.adresse}
+                  </Text>
+                )}
+                {doctorDetail.consultationLocation.indication && (
+                  <Text style={[styles.infoCardValue, { color: colors.subText, marginTop: 4, fontStyle: 'italic' }]}>
+                    {doctorDetail.consultationLocation.indication}
+                  </Text>
+                )}
+                <TouchableOpacity
+                  style={styles.routeButton}
+                  onPress={() => Linking.openURL(
+                    `https://www.google.com/maps/dir/?api=1&destination=${doctorDetail.consultationLocation.latitude},${doctorDetail.consultationLocation.longitude}`
+                  )}
+                >
+                  <Ionicons name="navigate" size={16} color="#fff" />
+                  <Text style={styles.routeButtonText}>Ouvrir l'itinéraire</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
           {/* Tarifs des consultations */}
           {availableTypes.length > 0 && (
             <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
@@ -222,6 +251,12 @@ const styles = StyleSheet.create({
   contactBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 25 },
   contactBtnText: { fontSize: 14, fontWeight: '500' },
   
+  routeButton: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: '#198754', paddingHorizontal: 16, paddingVertical: 8,
+    borderRadius: 20, marginTop: 10, alignSelf: 'flex-start',
+  },
+  routeButtonText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   infoCard: { flexDirection: 'row', padding: 16, borderRadius: 12, marginBottom: 16, gap: 12 },
   infoCardContent: { flex: 1 },
   infoCardTitle: { fontSize: 16, fontWeight: '600', marginBottom: 8 },

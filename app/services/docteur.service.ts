@@ -7,8 +7,8 @@ export interface Docteur {
   nom: string;
   prenom: string;
   nomComplet: string;
-  specialite: string | null;  // ← Important: utiliser specialite (singulier)
-  specialites: string[];       // ← Tableau des spécialités
+  specialite: string | null;
+  specialites: string[];
   photo: string | null;
   telephone: string;
   email: string;
@@ -20,6 +20,12 @@ export interface Docteur {
     enLigne: number | null;
   };
   typesConsultation: string[];
+  consultationLocation?: {
+    latitude: number | null;
+    longitude: number | null;
+    adresse: string | null;
+    indication: string | null;
+  };
   note: number;
   nombreAvis: number;
 }
@@ -41,6 +47,12 @@ export interface DocteurDetail extends Omit<Docteur, 'typesConsultation'> {
     dateFormatted: string;
     creneauxDisponibles: number;
   }>;
+  consultationLocation?: {
+    latitude: number | null;
+    longitude: number | null;
+    adresse: string | null;
+    indication: string | null;
+  };
 }
 
 export interface Creneau {
@@ -165,18 +177,25 @@ class DocteurService {
     return tarifs.length > 0 ? Math.min(...tarifs) : 0;
   }
 
-
-  // Dans docteur.service.ts, ajoutez la méthode getSpecialite si ce n'est pas déjà fait
-
-getSpecialite(docteur: Docteur): string {
-  if (docteur.specialite && docteur.specialite !== '' && docteur.specialite !== 'null') {
-    return docteur.specialite;
+  async updateConsultationLocation(data: {
+    latitude?: number;
+    longitude?: number;
+    adresse?: string;
+    indication?: string | null;
+  }): Promise<any> {
+    const response = await apiClient.put(API_ENDPOINTS.DOCTEUR_UPDATE_LOCATION, data);
+    return response.data;
   }
-  if (docteur.specialites && docteur.specialites.length > 0) {
-    return docteur.specialites[0];
+
+  getSpecialite(docteur: Docteur): string {
+    if (docteur.specialite && docteur.specialite !== '' && docteur.specialite !== 'null') {
+      return docteur.specialite;
+    }
+    if (docteur.specialites && docteur.specialites.length > 0) {
+      return docteur.specialites[0];
+    }
+    return 'Médecin généraliste';
   }
-  return 'Médecin généraliste';
-}
 }
 
 export default new DocteurService();

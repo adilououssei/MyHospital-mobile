@@ -3,11 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  ActivityIndicator, Image, Alert,
+  ActivityIndicator, Image, Alert, TextInput, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import * as Location from 'expo-location';
 import { useApp } from '../context/AppContext';
 import ScreenHeader from '../tabs/ScreenHeader';
 import docteurService, { DocteurDetail, Creneau, Disponibilite } from '../services/docteur.service';
@@ -42,6 +43,11 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
   const [creneaux, setCreneaux]                 = useState<Creneau[]>([]);
   const [selectedCreneau, setSelectedCreneau]   = useState<Creneau | null>(null);
   const [loadingCreneaux, setLoadingCreneaux]   = useState(false);
+
+  // 🏠 Géolocalisation pour consultation à domicile
+  const [location, setLocation] = useState<{ latitude: number; longitude: number; address: string } | null>(null);
+  const [gettingLocation, setGettingLocation] = useState(false);
+  const [indicationComplementaire, setIndicationComplementaire] = useState('');
 
   const { isLoading: isCreatingRdv, createRendezVousAndPay } = usePayment(
     () => {
@@ -133,6 +139,40 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
     }
   };
 
+  // 🏠 Géolocalisation — Utiliser la position actuelle
+  const handleGetCurrentLocation = async () => {
+    try {
+      setGettingLocation(true);
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission refusée',
+          'La géolocalisation est nécessaire pour utiliser cette fonctionnalité. Veuillez activer la localisation dans vos paramètres.'
+        );
+        return;
+      }
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      const { latitude, longitude } = loc.coords;
+      // Récupérer l'adresse approximative via reverse geocoding
+      let address = '';
+      try {
+        const geocode = await Location.reverseGeocodeAsync({ latitude, longitude });
+        if (geocode.length > 0) {
+          const g = geocode[0];
+          address = [g.street, g.district, g.city, g.region].filter(Boolean).join(', ');
+        }
+      } catch { /* silencieux */ }
+      setLocation({ latitude, longitude, address });
+    } catch (err: any) {
+      Alert.alert(
+        'Géolocalisation échouée',
+        'Impossible d\'obtenir votre position. Vous pouvez ajouter une indication complémentaire pour aider le médecin.'
+      );
+    } finally {
+      setGettingLocation(false);
+    }
+  };
+
   const doc = doctorDetails ?? initialDoctor;
   const photoUrl = doc?.photo ? `${API_BASE_URL}${doc.photo}` : null;
   const consultationPrice = (() => {
@@ -188,13 +228,24 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
       });
     } else {
       const dateTime = `${selectedDate}T${selectedCreneau.heure}:00`;
-      await createRendezVousAndPay({
+      const rdvPayload: any = {
         docteurId:        doc?.id || initialDoctor?.id,
         date:             dateTime,
         typeConsultation: mappedType,
         modePaiement:     'tmoney',
         description,
-      });
+      };
+      if (mappedType === 'domicile') {
+        if (location) {
+          rdvPayload.latitude = location.latitude;
+          rdvPayload.longitude = location.longitude;
+          rdvPayload.adresseLocalisation = location.address;
+        }
+        if (indicationComplementaire.trim()) {
+          rdvPayload.indicationComplementaire = indicationComplementaire.trim();
+        }
+      }
+      await createRendezVousAndPay(rdvPayload);
     }
   };
 
@@ -262,6 +313,52 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
               <Ionicons name={getConsultationIcon() as any} size={20} color="#0077b6" />
               <Text style={[styles.consultationText, { color: colors.text }]}>{getConsultationLabel()}</Text>
             </View>
+
+            {/* 🏪 Cabinet / Lieu de consultation — Itinéraire */}
+            {(doctorDetails?.consultationLocation?.latitude || doctorDetails?.adresse || initialDoctor?.adresse) && (
+              <View style={[styles.cabinetCard, { backgroundColor: colors.card }]}>
+                <View style={styles.cabinetRow}>
+                  <Ionicons name="location-outline" size={20} color="#0077b6" />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.cabinetLabel, { color: colors.subText }]}>
+                      {doctorDetails?.consultationLocation?.latitude ? t('ddCabinet') : 'Localisation'}
+                    </Text>
+                    {doctorDetails?.consultationLocation?.adresse ? (
+                      <Text style={[styles.cabinetAddress, { color: colors.text }]}>
+                        {doctorDetails.consultationLocation.adresse}
+                      </Text>
+                    ) : (
+                      <Text style={[styles.cabinetAddress, { color: colors.text }]}>
+                        {doctorDetails?.adresse ?? initialDoctor?.adresse}
+                        {doctorDetails?.ville ? `, ${doctorDetails.ville}` : ''}
+                      </Text>
+                    )}
+                    {doctorDetails?.consultationLocation?.indication && (
+                      <Text style={[styles.cabinetIndication, { color: colors.subText }]}>
+                        {doctorDetails.consultationLocation.indication}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={styles.cabinetRouteBtn}
+                  onPress={() => {
+                    const loc = doctorDetails?.consultationLocation;
+                    if (loc?.latitude && loc?.longitude) {
+                      Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${loc.latitude},${loc.longitude}`);
+                    } else {
+                      const addr = encodeURIComponent(
+                        `${doctorDetails?.adresse ?? initialDoctor?.adresse ?? ''} ${doctorDetails?.ville ?? initialDoctor?.ville ?? ''}`
+                      );
+                      Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${addr}`);
+                    }
+                  }}
+                >
+                  <Ionicons name="navigate-outline" size={18} color="#fff" />
+                  <Text style={styles.cabinetRouteText}>{t('aptOpenRoute')}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* À propos */}
             <View style={styles.section}>
@@ -397,6 +494,95 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
               </View>
             )}
 
+            {/* 🏠 Géolocalisation pour consultation à domicile */}
+            {consultationType === 'domicile' && (
+              <View style={styles.section}>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('ddYourPosition')}</Text>
+
+                {/* Bouton Utiliser ma position */}
+                {!location ? (
+                  <TouchableOpacity
+                    style={[styles.locationButton, gettingLocation && { opacity: 0.6 }]}
+                    onPress={handleGetCurrentLocation}
+                    disabled={gettingLocation}
+                  >
+                    {gettingLocation ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Ionicons name="location-outline" size={22} color="#fff" />
+                    )}
+                    <Text style={styles.locationButtonText}>
+                      {gettingLocation ? t('ddGettingLocation') : t('ddUseMyLocation')}
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <View style={[styles.locationCard, { backgroundColor: colors.card }]}>
+                    {/* Mini carte statique OpenStreetMap */}
+                    <Image
+                      source={{
+                        uri: `https://staticmap.openstreetmap.de/staticmap.php?center=${location.latitude},${location.longitude}&zoom=15&size=280x140&markers=${location.latitude},${location.longitude},red-pushpin`,
+                      }}
+                      style={styles.miniMap}
+                      resizeMode="cover"
+                    />
+                    {/* Adresse */}
+                    {location.address ? (
+                      <View style={styles.addressRow}>
+                        <Ionicons name="location" size={16} color="#0077b6" />
+                        <Text style={[styles.addressText, { color: colors.text }]}>{location.address}</Text>
+                      </View>
+                    ) : (
+                      <View style={styles.addressRow}>
+                        <Ionicons name="location" size={16} color="#0077b6" />
+                        <Text style={[styles.addressText, { color: colors.text }]}>
+                          {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                        </Text>
+                      </View>
+                    )}
+                    {/* Bouton modifier */}
+                    <TouchableOpacity
+                      style={styles.changeLocationBtn}
+                      onPress={handleGetCurrentLocation}
+                    >
+                      <Ionicons name="refresh" size={16} color="#0077b6" />
+                      <Text style={styles.changeLocationText}>{t('ddChangeLocation')}</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* Champ indication complémentaire */}
+                <View style={styles.indicationContainer}>
+                  <Text style={[styles.indicationLabel, { color: colors.text }]}>
+                    {t('ddIndicationLabel')} <Text style={{ color: colors.subText, fontSize: 12 }}>({t('ddOptional')})</Text>
+                  </Text>
+                  <TextInput
+                    style={[styles.indicationInput, { backgroundColor: colors.inputBackground, color: colors.text, borderColor: '#ddd' }]}
+                    placeholder={t('ddIndicationPlaceholder')}
+                    placeholderTextColor={colors.subText}
+                    value={indicationComplementaire}
+                    onChangeText={setIndicationComplementaire}
+                    multiline
+                    numberOfLines={2}
+                    textAlignVertical="top"
+                    maxLength={200}
+                  />
+                  <Text style={[styles.indicationCount, { color: colors.subText }]}>
+                    {indicationComplementaire.length}/200
+                  </Text>
+                </View>
+
+                {/* Message si pas de position */}
+                {!location && (
+                  <View style={[styles.noLocationNote, { backgroundColor: '#FFF9E6', borderColor: '#FFE4A0' }]}>
+                    <Ionicons name="information-circle" size={20} color="#FFA500" />
+                    <Text style={styles.noLocationText}>
+                      {t('ddNoLocationMsg')}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+
             {/* Récap prix consultation en ligne */}
             {consultationType === 'en_ligne' && (
               <>
@@ -523,6 +709,31 @@ const styles = StyleSheet.create({
   nextBtn: { backgroundColor: '#0077b6', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 30, gap: 8 },
   nextBtnDisabled: { backgroundColor: '#ccc' },
   nextBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+
+  // 🏠 Géolocalisation
+  locationButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#0077b6', paddingVertical: 14, borderRadius: 12, marginBottom: 15 },
+  locationButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  locationCard: { borderRadius: 12, overflow: 'hidden', marginBottom: 15, borderWidth: 1, borderColor: '#ddd' },
+  miniMap: { width: '100%', height: 140 },
+  addressRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 10 },
+  addressText: { fontSize: 13, flex: 1 },
+  changeLocationBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderTopWidth: 1, borderTopColor: '#eee' },
+  changeLocationText: { fontSize: 13, color: '#0077b6', fontWeight: '600' },
+  indicationContainer: { marginBottom: 15 },
+  indicationLabel: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
+  indicationInput: { borderRadius: 10, padding: 12, fontSize: 14, minHeight: 60, borderWidth: 1 },
+  indicationCount: { fontSize: 11, textAlign: 'right', marginTop: 4 },
+  noLocationNote: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 10, padding: 12, borderWidth: 1 },
+  noLocationText: { flex: 1, fontSize: 12, lineHeight: 18, color: '#856404' },
+
+  // 🏪 Cabinet du docteur
+  cabinetCard: { borderRadius: 12, padding: 15, marginBottom: 20 },
+  cabinetRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 12 },
+  cabinetLabel: { fontSize: 12, marginBottom: 2 },
+  cabinetAddress: { fontSize: 14, fontWeight: '500' },
+  cabinetIndication: { fontSize: 13, fontStyle: 'italic', marginTop: 4 },
+  cabinetRouteBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#0077b6', paddingVertical: 12, borderRadius: 10 },
+  cabinetRouteText: { color: '#fff', fontSize: 14, fontWeight: '600' },
 });
 
 export default DoctorDetailScreen;

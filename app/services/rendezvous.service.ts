@@ -14,6 +14,11 @@ export interface CreateRendezVousRequest {
   modePaiement:     'tmoney' | 'flooz';
   description?:     string;
   paymentPhone?:    string;             // ✅ Numéro Mobile Money (requis pour en_ligne)
+  // 🏠 Géolocalisation pour consultation à domicile
+  latitude?:                 number;
+  longitude?:                number;
+  adresseLocalisation?:      string;
+  indicationComplementaire?: string;
 }
 
 export interface CreateRendezVousResponse {
@@ -56,6 +61,19 @@ export interface RendezVous {
     statut:         'unpaid' | 'paid' | 'failed';
     modePaiement:   string;
     transactionId?: string;
+  } | null;
+  // 🏠 Géolocalisation patient (consultation à domicile)
+  latitude?:                number | null;
+  longitude?:               number | null;
+  adresseLocalisation?:     string | null;
+  indicationComplementaire?: string | null;
+
+  // 🏪 Lieu de consultation du docteur
+  docteurConsultationLocation?: {
+    latitude: number | null;
+    longitude: number | null;
+    adresse: string | null;
+    indication: string | null;
   } | null;
 }
 
@@ -101,6 +119,11 @@ class RendezVousService {
         modePaiement:     data.modePaiement,
         description:      data.description,
         paymentPhone:     data.paymentPhone, // ✅ Numéro Mobile Money pour PayPlus straight
+        // 🏠 Géolocalisation domicile
+        latitude:                 data.latitude,
+        longitude:                data.longitude,
+        adresseLocalisation:      data.adresseLocalisation,
+        indicationComplementaire: data.indicationComplementaire,
       });
 
       console.log('✅ Rendez-vous créé:', response.data);

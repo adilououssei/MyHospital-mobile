@@ -2,13 +2,15 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useApp } from '../context/AppContext';
+import { useApp, useAuth } from '../context/AppContext';
 
 interface BottomNavigationProps {
   currentScreen: string;
-  onNavigate: (screen: string) => void;
+  onNavigate: (screen: string, params?: any) => void;
   unreadCount?: number;
 }
+
+const PROTECTED_SCREENS = ['appointments', 'profile'];
 
 const navItems = [
   { screen: 'home',         icon: 'home',            iconOutline: 'home-outline',            label: 'Accueil' },
@@ -19,7 +21,16 @@ const navItems = [
 
 const BottomNavigation = ({ currentScreen, onNavigate, unreadCount = 0 }: BottomNavigationProps) => {
   const { colors } = useApp();
+  const { isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
+
+  const handleNav = (screen: string) => {
+    if (!isAuthenticated && PROTECTED_SCREENS.includes(screen)) {
+      onNavigate('login', { returnTo: screen });
+      return;
+    }
+    onNavigate(screen);
+  };
 
   return (
     <View style={[styles.bottomNav, {
@@ -34,7 +45,7 @@ const BottomNavigation = ({ currentScreen, onNavigate, unreadCount = 0 }: Bottom
           <TouchableOpacity
             key={item.screen}
             style={styles.navItem}
-            onPress={() => onNavigate(item.screen)}>
+            onPress={() => handleNav(item.screen)}>
             <Ionicons
               name={isActive ? item.icon as any : item.iconOutline as any}
               size={24}

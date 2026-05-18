@@ -12,7 +12,8 @@ import { secureStorage } from '../services/secureStorage';
 import { useAuth, useApp } from '../context/AppContext';
 
 interface LoginScreenProps {
-  onNavigate: (screen: string) => void;
+  onNavigate: (screen: string, params?: any) => void;
+  returnTo?: string;
 }
 
 const LANGUAGES = [
@@ -21,7 +22,7 @@ const LANGUAGES = [
   { code: 'de', flag: '🇩🇪', label: 'Deutsch' },
 ];
 
-const LoginScreen = ({ onNavigate }: LoginScreenProps) => {
+const LoginScreen = ({ onNavigate, returnTo }: LoginScreenProps) => {
   const [email, setEmail]               = useState('');
   const [password, setPassword]         = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -56,7 +57,14 @@ const LoginScreen = ({ onNavigate }: LoginScreenProps) => {
             await secureStorage.setRefreshToken((response as any).refresh_token);
           }
         }
-        await saveUser(response.user);
+        const userData = {
+          ...response.user,
+          roles: response.roles,
+          isDocteur: response.isDocteur,
+          docteurId: response.docteurId,
+          hasConsultationLocation: response.hasConsultationLocation,
+        };
+        await saveUser(userData);
         setShowSuccessModal(true);
       } else {
         setPasswordError(true);
@@ -175,8 +183,8 @@ const LoginScreen = ({ onNavigate }: LoginScreenProps) => {
             <Text style={styles.modalTitle}>{t('loginSuccessTitle')}</Text>
             <Text style={styles.modalDescription}>{t('loginSuccessDesc1')}</Text>
             <Text style={styles.modalDescription}>{t('loginSuccessDesc2')}</Text>
-            <TouchableOpacity style={styles.modalButton} onPress={() => { setShowSuccessModal(false); onNavigate('home'); }}>
-              <Text style={styles.modalButtonText}>{t('loginSuccessBtn')}</Text>
+            <TouchableOpacity style={styles.modalButton} onPress={() => { setShowSuccessModal(false); onNavigate(returnTo || 'home'); }}>
+              <Text style={styles.modalButtonText}>{returnTo ? 'Continuer' : t('loginSuccessBtn')}</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -29,10 +29,14 @@ export interface User {
   email: string;
   nom: string;
   prenom: string;
-  ville?: string;      // ← AJOUTÉ : requis par AppContext
+  ville?: string;
   adresse?: string;
   telephone?: string;
   photo?: string;
+  roles?: string[];
+  isDocteur?: boolean;
+  docteurId?: number;
+  hasConsultationLocation?: boolean;
 }
 
 export interface LoginResponse {
@@ -40,6 +44,10 @@ export interface LoginResponse {
   message: string;
   token?: string;
   user?: User;
+  roles?: string[];
+  isDocteur?: boolean;
+  docteurId?: number;
+  hasConsultationLocation?: boolean;
 }
 
 export interface RegisterResponse {

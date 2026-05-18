@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     View, Text, StyleSheet, ScrollView, TouchableOpacity,
-    Alert, Linking, ActivityIndicator, RefreshControl,
+    Alert, Linking, ActivityIndicator, RefreshControl, Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -36,6 +36,18 @@ interface Appointment {
     // ✅ Paiement
     transactionId?: string | null;
     montantPaiement?: number;
+    // 🏠 Géolocalisation patient (domicile)
+    latitude?: number | null;
+    longitude?: number | null;
+    adresseLocalisation?: string | null;
+    indicationComplementaire?: string | null;
+    // 🏪 Lieu de consultation du docteur
+    docteurConsultationLocation?: {
+        latitude: number | null;
+        longitude: number | null;
+        adresse: string | null;
+        indication: string | null;
+    } | null;
 }
 
 interface AppointmentsScreenProps {
@@ -76,6 +88,11 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
                 jitsiRoom:        rdv.jitsiRoom ?? null,
                 transactionId:    rdv.paiement?.transactionId ?? null,
                 montantPaiement:  rdv.paiement?.montant,
+                latitude:               rdv.latitude ?? null,
+                longitude:              rdv.longitude ?? null,
+                adresseLocalisation:    rdv.adresseLocalisation ?? null,
+                indicationComplementaire: rdv.indicationComplementaire ?? null,
+                docteurConsultationLocation: rdv.docteurConsultationLocation ?? null,
             }));
             setAppointments(mapped);
         } catch {
@@ -327,6 +344,15 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
         Linking.openURL(`https://wa.me/${phone.replace(/\+/g, '').replace(/\s/g, '')}`);
     const handleGetDirections = (coords: { latitude: number; longitude: number }) =>
         Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${coords.latitude},${coords.longitude}`);
+    const handleShareLocation = async (appointment: Appointment) => {
+        const lat = appointment.latitude;
+        const lng = appointment.longitude;
+        if (lat == null || lng == null) return;
+        const googleMapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
+        const phone = appointment.doctorPhone.replace(/\+/g, '').replace(/\s/g, '');
+        const message = `Bonjour Dr. ${appointment.doctorName}, voici ma position pour la consultation à domicile : ${googleMapsLink}`;
+        Linking.openURL(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`);
+    };
     const toggleExpand = (id: string) => setExpandedId(expandedId === id ? null : id);
 
     const handleRescheduleAppointment = (apt: Appointment) => {
@@ -496,6 +522,73 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
                                         </TouchableOpacity>
                                     </View>
 
+                                    {/* 🏠 Localisation partagée avec le docteur */}
+                                    {appointment.consultationType === 'home' && (
+                                        <View style={styles.locationSection}>
+                                            {/* Adresse que le docteur verra */}
+                                            {appointment.adresseLocalisation && (
+                                                <View style={[styles.aptAddressCard, { backgroundColor: colors.inputBackground }]}>
+                                                    <Ionicons name="location" size={18} color="#0077b6" />
+                                                    <View style={{ flex: 1 }}>
+                                                        <Text style={[styles.aptAddressLabel, { color: colors.subText }]}>Position envoyée au docteur</Text>
+                                                        <Text style={[styles.aptAddressText, { color: colors.text }]}>{appointment.adresseLocalisation}</Text>
+                                                    </View>
+                                                </View>
+                                            )}
+                                            {/* Indication complémentaire */}
+                                            {appointment.indicationComplementaire && (
+                                                <View style={[styles.aptIndicationBox, { backgroundColor: colors.inputBackground }]}>
+                                                    <Ionicons name="chatbubble-ellipses-outline" size={16} color={colors.subText} />
+                                                    <Text style={[styles.aptIndicationText, { color: colors.subText }]}>"{appointment.indicationComplementaire}"</Text>
+                                                </View>
+                                            )}
+                                            {/* Partager la position via WhatsApp */}
+                                            {appointment.latitude != null && appointment.longitude != null && (
+                                                <TouchableOpacity
+                                                    style={styles.shareLocationButton}
+                                                    onPress={() => handleShareLocation(appointment)}
+                                                >
+                                                    <Ionicons name="logo-whatsapp" size={20} color="#fff" />
+                                                    <Text style={styles.shareLocationText}>{t('aptShareLocation')}</Text>
+                                                </TouchableOpacity>
+                                            )}
+                                        </View>
+                                    )}
+
+                                    {/* 🏪 Lieu de consultation du docteur */}
+                                    {appointment.docteurConsultationLocation?.latitude && appointment.docteurConsultationLocation?.longitude && (
+                                        <View style={styles.locationSection}>
+                                            <View style={[styles.aptAddressCard, { backgroundColor: colors.inputBackground }]}>
+                                                <Ionicons name="navigate-outline" size={18} color="#198754" />
+                                                <View style={{ flex: 1 }}>
+                                                    <Text style={[styles.aptAddressLabel, { color: colors.subText }]}>Lieu de consultation du docteur</Text>
+                                                    {appointment.docteurConsultationLocation.adresse && (
+                                                        <Text style={[styles.aptAddressText, { color: colors.text }]}>
+                                                            {appointment.docteurConsultationLocation.adresse}
+                                                        </Text>
+                                                    )}
+                                                    {appointment.docteurConsultationLocation.indication && (
+                                                        <Text style={[styles.aptIndicationText, { color: colors.subText }]}>
+                                                            "{appointment.docteurConsultationLocation.indication}"
+                                                        </Text>
+                                                    )}
+                                                </View>
+                                            </View>
+                                            <TouchableOpacity
+                                                style={styles.doctorRouteButton}
+                                                onPress={() => {
+                                                    const { latitude, longitude } = appointment.docteurConsultationLocation!;
+                                                    Linking.openURL(
+                                                        `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`
+                                                    );
+                                                }}
+                                            >
+                                                <Ionicons name="navigate" size={18} color="#fff" />
+                                                <Text style={styles.doctorRouteButtonText}>Ouvrir l'itinéraire</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    )}
+
                                     {/* Montant paiement si consultation en ligne */}
                                     {appointment.consultationType === 'online' && appointment.montantPaiement && (
                                         <View style={[styles.paymentInfo, { backgroundColor: colors.inputBackground }]}>
@@ -644,6 +737,25 @@ const styles = StyleSheet.create({
         borderRadius: 25, backgroundColor: '#9B59B6',
     },
     checkPaymentText: { fontSize: 14, color: '#fff', fontWeight: '600' },
+
+    // 🏠 Localisation pour consultation à domicile
+    locationSection: { marginBottom: 12 },
+    aptAddressCard: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 10, marginBottom: 8 },
+    aptAddressLabel: { fontSize: 11, marginBottom: 2 },
+    aptAddressText: { fontSize: 14, fontWeight: '500' },
+    aptIndicationBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, padding: 10, borderRadius: 8, marginBottom: 8 },
+    aptIndicationText: { fontSize: 12, fontStyle: 'italic', flex: 1 },
+    shareLocationButton: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        gap: 8, paddingVertical: 12, borderRadius: 10, backgroundColor: '#25D366',
+    },
+    shareLocationText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+
+    doctorRouteButton: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        gap: 8, paddingVertical: 12, borderRadius: 10, backgroundColor: '#198754',
+    },
+    doctorRouteButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
 
     emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
     emptyStateText: { fontSize: 16, marginTop: 15 },
