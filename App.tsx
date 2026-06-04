@@ -56,10 +56,10 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [appIsReady, setAppIsReady] = useState(false);
 
-  const [currentScreen, setCurrentScreen] = useState('welcome');
+  const [currentScreen, setCurrentScreen] = useState('home');
   const [screenParams, setScreenParams] = useState<any>({});
   const [unreadCount, setUnreadCount] = useState(2);
-  const [navigationHistory, setNavigationHistory] = useState<string[]>(['welcome']);
+  const [navigationHistory, setNavigationHistory] = useState<string[]>(['home']);
 
   useEffect(() => {
     async function prepare() {
@@ -74,8 +74,6 @@ function AppContent() {
         if (token && savedUser) {
           const userData = JSON.parse(savedUser);
           await authLogin(userData);
-          setCurrentScreen('home');
-          setNavigationHistory(['home']);
         }
         apiClient.setOnSessionExpired(async () => {
           await authLogout();
@@ -101,13 +99,14 @@ function AppContent() {
     'appointments', 'profile', 'bookingType', 'paymentMethod',
     'notifications', 'favorites', 'editProfile', 'changePassword',
     'prescriptions', 'savedPaymentMethods', 'transactionHistory',
+    'doctorProfile',
   ];
 
   const handleNavigation = (screen: string, params?: any) => {
     if (!isAuthenticated && PROTECTED_SCREENS.includes(screen)) {
       setCurrentScreen('login');
       setNavigationHistory(prev => [...prev, 'login']);
-      setScreenParams({ returnTo: screen });
+      setScreenParams({ returnTo: screen, ...params });
       return;
     }
     setCurrentScreen(screen);
@@ -149,7 +148,13 @@ function AppContent() {
       case 'welcome':
         return <WelcomeScreen onNavigate={handleNavigation} />;
       case 'login':
-        return <LoginScreen onNavigate={handleNavigation} returnTo={screenParams.returnTo} />;
+        return (
+          <LoginScreen
+            onNavigate={handleNavigation}
+            returnTo={screenParams.returnTo}
+            forwardParams={screenParams}
+          />
+        );
       case 'signup':
         return <SignUpScreen onNavigate={handleNavigation} />;
       case 'forgotPassword':

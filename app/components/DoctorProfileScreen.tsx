@@ -11,6 +11,8 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useApp } from '../context/AppContext';
 import ScreenHeader from '../tabs/ScreenHeader';
 import docteurService from '../services/docteur.service';
+import evaluationService, { EvaluationDocteur } from '../services/evaluation.service';
+import StarRating from './StarRating';
 import { API_BASE_URL } from '../services/api.config';
 
 interface DoctorProfileScreenProps {
@@ -22,9 +24,12 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
   const { colors } = useApp();
   const [loading, setLoading] = useState(true);
   const [doctorDetail, setDoctorDetail] = useState<any>(null);
+  const [evaluations, setEvaluations] = useState<EvaluationDocteur[]>([]);
+  const [loadingEvals, setLoadingEvals] = useState(false);
 
   useEffect(() => {
     loadDoctorDetails();
+    loadEvaluations();
   }, []);
 
   const loadDoctorDetails = async () => {
@@ -36,6 +41,18 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
       console.error('Erreur chargement détails:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadEvaluations = async () => {
+    try {
+      setLoadingEvals(true);
+      const evals = await evaluationService.getEvaluationsDocteur(doctor.id);
+      setEvaluations(evals);
+    } catch {
+      // silencieux
+    } finally {
+      setLoadingEvals(false);
     }
   };
 
@@ -91,19 +108,13 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
               {specialty}
             </Text>
             
-            <View style={styles.ratingContainerLarge}>
-              {[1, 2, 3, 4, 5].map(i => (
-                <Ionicons
-                  key={i}
-                  name={i <= Math.round(doctor?.rating || 4.5) ? 'star' : 'star-outline'}
-                  size={16}
-                  color="#FFC107"
-                />
-              ))}
-              <Text style={[styles.ratingText, { color: colors.text }]}>
-                {(doctor?.rating || 4.5).toFixed(1)}
-              </Text>
-            </View>
+            <StarRating
+              note={doctor?.note || doctor?.rating || 0}
+              nombreAvis={doctor?.nombreAvis || 0}
+              size={16}
+              showValue
+              showAvisCount
+            />
 
             {/* Boutons de contact */}
             <View style={styles.contactButtons}>
@@ -216,6 +227,35 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
             </View>
           )}
 
+          {/* Avis des patients */}
+          <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
+            <Ionicons name="chatbubbles-outline" size={22} color="#FFC107" />
+            <View style={styles.infoCardContent}>
+              <Text style={[styles.infoCardTitle, { color: colors.text }]}>Avis des patients</Text>
+              {loadingEvals ? (
+                <ActivityIndicator size="small" color="#0077b6" style={{ marginTop: 8 }} />
+              ) : evaluations.length === 0 ? (
+                <Text style={[styles.infoText, { color: colors.subText }]}>Aucun avis pour le moment.</Text>
+              ) : (
+                evaluations.slice(0, 10).map(ev => (
+                  <View key={ev.id} style={styles.evaluationItem}>
+                    <View style={styles.evaluationHeader}>
+                      <StarRating note={ev.note} size={11} showValue={false} />
+                      <Text style={[styles.evaluationDate, { color: colors.subText }]}>
+                        {new Date(ev.createdAt).toLocaleDateString('fr-FR')}
+                      </Text>
+                    </View>
+                    {ev.commentaire && (
+                      <Text style={[styles.evaluationComment, { color: colors.subText }]}>
+                        {ev.commentaire}
+                      </Text>
+                    )}
+                  </View>
+                ))
+              )}
+            </View>
+          </View>
+
           {/* Message pour prendre rendez-vous */}
           <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
             <Ionicons name="calendar-outline" size={22} color="#0077b6" />
@@ -271,6 +311,16 @@ const styles = StyleSheet.create({
   profLabel: { fontWeight: '600' },
   
   infoText: { fontSize: 14, lineHeight: 20 },
+  evaluationItem: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  evaluationHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4,
+  },
+  evaluationDate: { fontSize: 11 },
+  evaluationComment: { fontSize: 13, lineHeight: 18, fontStyle: 'italic' },
 });
 
 export default DoctorProfileScreen;

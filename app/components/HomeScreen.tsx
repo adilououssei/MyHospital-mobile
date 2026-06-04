@@ -14,6 +14,7 @@ import { useApp, useAuth } from '../context/AppContext';
 import BottomNavigation from '../tabs/BottomNavigation';
 import docteurService, { Docteur } from '../services/docteur.service';
 import rendezVousService from '../services/rendezvous.service';
+import StarRating from './StarRating';
 import { API_BASE_URL } from '../services/api.config';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -169,10 +170,15 @@ const NextAppointmentCard = ({
   colors: any;
   t: (k: string) => string;
 }) => {
+  const { isAuthenticated } = useAuth();
   const [nextRdv, setNextRdv] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
     (async () => {
       try {
         const rdvs = await rendezVousService.getMesRendezVous();
@@ -258,7 +264,7 @@ const getDoctorSpecialty = (doctor: Docteur): string => {
 // ─── Composant principal ──────────────────────────────────────────────────────
 const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
   const { colors, t, language, setLanguage } = useApp();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
 
   const [topDoctors, setTopDoctors] = useState<Docteur[]>([]);
@@ -321,6 +327,15 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
               <Ionicons name="chevron-down" size={11} color="#0077b6" />
             </TouchableOpacity>
 
+            {!isAuthenticated ? (
+              <TouchableOpacity
+                style={[styles.loginHeaderBtn]}
+                onPress={() => onNavigate('login')}
+              >
+                <Ionicons name="log-in-outline" size={18} color="#0077b6" />
+                <Text style={styles.loginHeaderText}>Connexion</Text>
+              </TouchableOpacity>
+            ) : (
             <TouchableOpacity
               style={[styles.notifBtn, { backgroundColor: colors.card }]}
               onPress={() => onNavigate('notifications')}
@@ -332,6 +347,7 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
                 </View>
               )}
             </TouchableOpacity>
+            )}
           </View>
         </View>
 
@@ -417,25 +433,27 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
               const specialty = getDoctorSpecialty(doctor);
               
               return (
-                <TouchableOpacity
-                  key={doctor.id}
-                  style={[styles.doctorCard, { backgroundColor: colors.card }]}
-                  onPress={() => onNavigate('doctorProfile', {
-                    doctor: {
-                      id: doctor.id,
-                      name: doctor.nomComplet,
-                      specialty: specialty,
-                      rating: doctor.note || 4.5,
-                      ville: doctor.ville,
-                      photo: doctor.photo,
-                      telephone: doctor.telephone,
-                      email: doctor.email,
-                      adresse: doctor.adresse,
-                      tarifs: doctor.tarifs,
-                    },
-                  })}
-                  activeOpacity={0.85}
-                >
+                  <TouchableOpacity
+                    key={doctor.id}
+                    style={[styles.doctorCard, { backgroundColor: colors.card }]}
+                    onPress={() => onNavigate('doctorProfile', {
+                      doctor: {
+                        id: doctor.id,
+                        name: doctor.nomComplet,
+                        specialty: specialty,
+                        rating: doctor.note || 4.5,
+                        note: doctor.note || 0,
+                        nombreAvis: doctor.nombreAvis || 0,
+                        ville: doctor.ville,
+                        photo: doctor.photo,
+                        telephone: doctor.telephone,
+                        email: doctor.email,
+                        adresse: doctor.adresse,
+                        tarifs: doctor.tarifs,
+                      },
+                    })}
+                    activeOpacity={0.85}
+                  >
                   {/* Badge spécialité */}
                   <View style={styles.doctorBadge}>
                     <Text style={styles.doctorBadgeText} numberOfLines={1}>
@@ -459,18 +477,7 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
                     {doctor.nomComplet}
                   </Text>
 
-                  {/* Rating (étoiles) */}
-                  <View style={styles.ratingRow}>
-                    {[1,2,3,4,5].map(i => (
-                      <Ionicons
-                        key={i}
-                        name={i <= Math.round(doctor.note || 4.5) ? 'star' : 'star-outline'}
-                        size={10}
-                        color="#FFC107"
-                      />
-                    ))}
-                    <Text style={styles.ratingNum}>{(doctor.note || 4.5).toFixed(1)}</Text>
-                  </View>
+                  <StarRating note={doctor.note || 0} nombreAvis={doctor.nombreAvis} size={10} showValue showAvisCount />
 
                   {/* Localisation seulement (prix enlevé) */}
                   <View style={styles.doctorMeta}>
@@ -491,6 +498,8 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
                         name: doctor.nomComplet,
                         specialty: specialty,
                         rating: doctor.note || 4.5,
+                        note: doctor.note || 0,
+                        nombreAvis: doctor.nombreAvis || 0,
                         ville: doctor.ville,
                         photo: doctor.photo,
                         telephone: doctor.telephone,
@@ -561,6 +570,12 @@ const styles = StyleSheet.create({
   greeting: { fontSize: 13, marginBottom: 2 },
   userName: { fontSize: 22, fontWeight: '700', letterSpacing: -0.3 },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 4 },
+  loginHeaderBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    backgroundColor: '#e8f4fd', paddingHorizontal: 12, paddingVertical: 7,
+    borderRadius: 20, borderWidth: 1, borderColor: '#0077b630',
+  },
+  loginHeaderText: { color: '#0077b6', fontSize: 12, fontWeight: '700' },
   langPill: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 10, paddingVertical: 7, borderRadius: 20,

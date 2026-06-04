@@ -14,6 +14,7 @@ import { useAuth, useApp } from '../context/AppContext';
 interface LoginScreenProps {
   onNavigate: (screen: string, params?: any) => void;
   returnTo?: string;
+  forwardParams?: any;
 }
 
 const LANGUAGES = [
@@ -22,7 +23,7 @@ const LANGUAGES = [
   { code: 'de', flag: '🇩🇪', label: 'Deutsch' },
 ];
 
-const LoginScreen = ({ onNavigate, returnTo }: LoginScreenProps) => {
+const LoginScreen = ({ onNavigate, returnTo, forwardParams }: LoginScreenProps) => {
   const [email, setEmail]               = useState('');
   const [password, setPassword]         = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -183,7 +184,17 @@ const LoginScreen = ({ onNavigate, returnTo }: LoginScreenProps) => {
             <Text style={styles.modalTitle}>{t('loginSuccessTitle')}</Text>
             <Text style={styles.modalDescription}>{t('loginSuccessDesc1')}</Text>
             <Text style={styles.modalDescription}>{t('loginSuccessDesc2')}</Text>
-            <TouchableOpacity style={styles.modalButton} onPress={() => { setShowSuccessModal(false); onNavigate(returnTo || 'home'); }}>
+            <TouchableOpacity style={styles.modalButton} onPress={() => {
+              setShowSuccessModal(false);
+              const target = returnTo || 'home';
+              if (forwardParams && returnTo) {
+                const preserved = { ...forwardParams };
+                delete preserved.returnTo;
+                onNavigate(target, preserved);
+              } else {
+                onNavigate(target);
+              }
+            }}>
               <Text style={styles.modalButtonText}>{returnTo ? 'Continuer' : t('loginSuccessBtn')}</Text>
             </TouchableOpacity>
           </View>

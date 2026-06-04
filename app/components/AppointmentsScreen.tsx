@@ -13,6 +13,8 @@ import { useApp, useAuth } from '../context/AppContext';
 import ScreenHeader from '../tabs/ScreenHeader';
 import BottomNavigation from '../tabs/BottomNavigation';
 import rendezVousService from '../services/rendezvous.service';
+import evaluationService from '../services/evaluation.service';
+import EvaluationDocteurModal from './EvaluationDocteurModal';
 
 type ConsultationType = 'online' | 'home' | 'hospital';
 
@@ -65,13 +67,20 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
     const [loading, setLoading]     = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [checkingPayment, setCheckingPayment] = useState<string | null>(null);
+    const [evalModalVisible, setEvalModalVisible] = useState(false);
+    const [selectedRdvForEval, setSelectedRdvForEval] = useState<Appointment | null>(null);
+    const [pendingEvalIds, setPendingEvalIds] = useState<Set<number>>(new Set());
 
     useEffect(() => { loadAppointments(); }, []);
 
     const loadAppointments = async () => {
         try {
             setLoading(true);
-            const rdvs = await rendezVousService.getMesRendezVous();
+            const [rdvs, rdvsAEvaluer] = await Promise.all([
+                rendezVousService.getMesRendezVous(),
+                evaluationService.getRendezVousEnAttente().catch(() => []),
+            ]);
+            setPendingEvalIds(new Set(rdvsAEvaluer.map((r: any) => r.id)));
             const mapped: Appointment[] = rdvs.map(rdv => ({
                 id:               rdv.id.toString(),
                 doctorId:         rdv.docteurId,
@@ -322,8 +331,8 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
             </View>
         );
 
-        // 🗑️ Passé ou refusé
-        if (appointment.status === 'past' || appointment.status === 'rejected') return (
+        // 🗑️ Refusé (supprimer seulement)
+        if (appointment.status === 'rejected') return (
             <View style={styles.appointmentActions}>
                 <TouchableOpacity
                     style={styles.deleteButton}
@@ -334,6 +343,34 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
                 </TouchableOpacity>
             </View>
         );
+
+        // ⭐ Passé → Évaluer (si pas déjà fait) + Supprimer
+        if (appointment.status === 'past') {
+            const needsEval = pendingEvalIds.has(parseInt(appointment.id));
+            return (
+                <View style={styles.appointmentActions}>
+                    {needsEval && (
+                        <TouchableOpacity
+                            style={styles.evaluateButton}
+                            onPress={() => {
+                                setSelectedRdvForEval(appointment);
+                                setEvalModalVisible(true);
+                            }}
+                        >
+                            <Ionicons name="star-outline" size={18} color="#fff" />
+                            <Text style={styles.evaluateButtonText}>Évaluer</Text>
+                        </TouchableOpacity>
+                    )}
+                    <TouchableOpacity
+                        style={[styles.deleteButton, needsEval ? styles.deleteButtonCompact : null]}
+                        onPress={() => handleDeleteAppointment(appointment.id)}
+                    >
+                        <Ionicons name="trash-outline" size={18} color="#FF6B6B" />
+                        <Text style={styles.deleteButtonText}>{t('aptDelete')}</Text>
+                    </TouchableOpacity>
+                </View>
+            );
+        }
 
         return null;
     };
@@ -621,6 +658,20 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
                 <Ionicons name="add" size={32} color="#fff" />
             </TouchableOpacity>
 
+            {selectedRdvForEval && (
+                <EvaluationDocteurModal
+                    visible={evalModalVisible}
+                    onClose={() => { setEvalModalVisible(false); setSelectedRdvForEval(null); }}
+                    rendezVousId={parseInt(selectedRdvForEval.id)}
+                    docteurPrenom={selectedRdvForEval.doctorName.replace('Dr. ', '').split(' ').slice(0, 1).join('')}
+                    docteurNom={selectedRdvForEval.doctorName.replace('Dr. ', '').split(' ').slice(1).join(' ')}
+                    onSuccess={() => {
+                        setEvalModalVisible(false);
+                        setSelectedRdvForEval(null);
+                        loadAppointments();
+                    }}
+                />
+            )}
             <BottomNavigation currentScreen="appointments" onNavigate={onNavigate} unreadCount={unreadCount} />
         </SafeAreaView>
     );
@@ -728,7 +779,14 @@ const styles = StyleSheet.create({
         justifyContent: 'center', gap: 8, paddingVertical: 12,
         borderRadius: 25, backgroundColor: '#FFE5E5',
     },
+    deleteButtonCompact: { flex: 0.7 },
     deleteButtonText: { fontSize: 14, color: '#FF6B6B', fontWeight: '600' },
+    evaluateButton: {
+        flex: 1, flexDirection: 'row', alignItems: 'center',
+        justifyContent: 'center', gap: 6, paddingVertical: 12,
+        borderRadius: 25, backgroundColor: '#FFB800',
+    },
+    evaluateButtonText: { fontSize: 14, color: '#fff', fontWeight: '700' },
 
     // ✅ Bouton vérifier paiement
     checkPaymentButton: {
