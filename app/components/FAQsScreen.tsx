@@ -60,25 +60,25 @@ const FAQsScreen = ({ onNavigate }: FAQsScreenProps) => {
     });
 
     const getCategoryColor = (cat: string) => {
-        const map: Record<string, string> = { account: '#0077b6', appointments: '#00C48C', payment: '#FFA500', technical: '#9B59B6' };
-        return map[cat] || '#0077b6';
+        const map: Record<string, string> = { account: '#1a56db', appointments: '#00C48C', payment: '#FFA500', technical: '#9B59B6' };
+        return map[cat] || '#1a56db';
     };
 
     return (
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
             <ScreenHeader title={t('faqTitle')} onBack={() => onNavigate('profile')} />
 
             <ScrollView showsVerticalScrollIndicator={false}>
                 {/* Recherche */}
                 <View style={styles.searchContainer}>
-                    <View style={[styles.searchBar, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                        <Ionicons name="search-outline" size={20} color={colors.subText} />
+                    <View style={styles.searchBar}>
+                        <Ionicons name="search-outline" size={20} color="#6b7280" />
                         <TextInput style={[styles.searchInput, { color: colors.text }]}
-                            placeholder={t('faqSearchPlaceholder')} placeholderTextColor={colors.subText}
+                            placeholder={t('faqSearchPlaceholder')} placeholderTextColor="#9ca3af"
                             value={searchQuery} onChangeText={setSearchQuery} />
                         {searchQuery !== '' && (
                             <TouchableOpacity onPress={() => setSearchQuery('')}>
-                                <Ionicons name="close-circle" size={20} color={colors.subText} />
+                                <Ionicons name="close-circle" size={20} color="#6b7280" />
                             </TouchableOpacity>
                         )}
                     </View>
@@ -89,10 +89,10 @@ const FAQsScreen = ({ onNavigate }: FAQsScreenProps) => {
                     style={styles.categoriesContainer} contentContainerStyle={styles.categoriesContent}>
                     {categories.map(cat => (
                         <TouchableOpacity key={cat.id}
-                            style={[styles.categoryChip, { backgroundColor: colors.card, borderColor: colors.border }, activeCategory === cat.id && styles.categoryChipActive]}
+                            style={[styles.categoryChip, activeCategory === cat.id && styles.categoryChipActive]}
                             onPress={() => setActiveCategory(cat.id)}>
-                            <Ionicons name={cat.icon as any} size={18} color={activeCategory === cat.id ? '#0077b6' : colors.subText} />
-                            <Text style={[styles.categoryChipText, { color: colors.subText }, activeCategory === cat.id && styles.categoryChipTextActive]}>
+                            <Ionicons name={cat.icon as any} size={18} color={activeCategory === cat.id ? '#1a56db' : '#6b7280'} />
+                            <Text style={[styles.categoryChipText, { color: '#6b7280' }, activeCategory === cat.id && styles.categoryChipTextActive]}>
                                 {cat.label}
                             </Text>
                         </TouchableOpacity>
@@ -101,7 +101,7 @@ const FAQsScreen = ({ onNavigate }: FAQsScreenProps) => {
 
                 {/* Bannière */}
                 <View style={styles.infoBanner}>
-                    <Ionicons name="help-circle" size={24} color="#0077b6" />
+                    <Ionicons name="help-circle" size={24} color="#1a56db" />
                     <View style={styles.infoBannerTextContainer}>
                         <Text style={[styles.infoBannerTitle, { color: colors.text }]}>{t('faqBannerTitle')}</Text>
                         <Text style={[styles.infoBannerText, { color: colors.subText }]}>{t('faqBannerText')}</Text>
@@ -112,26 +112,26 @@ const FAQsScreen = ({ onNavigate }: FAQsScreenProps) => {
                 <View style={styles.faqsContainer}>
                     {filteredFaqs.length > 0 ? filteredFaqs.map(faq => (
                         <TouchableOpacity key={faq.id}
-                            style={[styles.faqCard, { backgroundColor: colors.card }, expandedId === faq.id && styles.faqCardExpanded]}
+                            style={[styles.faqCard, expandedId === faq.id && styles.faqCardExpanded]}
                             onPress={() => setExpandedId(expandedId === faq.id ? null : faq.id)} activeOpacity={0.7}>
                             <View style={styles.faqHeader}>
                                 <View style={styles.faqHeaderLeft}>
                                     <View style={[styles.categoryIndicator, { backgroundColor: getCategoryColor(faq.category) + '20' }]}>
                                         <View style={[styles.categoryDot, { backgroundColor: getCategoryColor(faq.category) }]} />
                                     </View>
-                                    <Text style={[styles.faqQuestion, { color: colors.text }]}>{faq.question}</Text>
+                                    <Text style={[styles.faqQuestion, { color: '#111827' }]}>{faq.question}</Text>
                                 </View>
-                                <Ionicons name={expandedId === faq.id ? 'chevron-up' : 'chevron-down'} size={24} color={colors.subText} />
+                                <Ionicons name={expandedId === faq.id ? 'chevron-up' : 'chevron-down'} size={24} color="#6b7280" />
                             </View>
                             {expandedId === faq.id && (
                                 <View style={[styles.faqAnswer, { borderTopColor: colors.border }]}>
-                                    <Text style={[styles.faqAnswerText, { color: colors.subText }]}>{faq.answer}</Text>
+                                    <Text style={[styles.faqAnswerText, { color: '#6b7280' }]}>{faq.answer}</Text>
                                 </View>
                             )}
                         </TouchableOpacity>
                     )) : (
                         <View style={styles.emptyState}>
-                            <Ionicons name="search-outline" size={60} color="#ccc" />
+                            <Ionicons name="search-outline" size={60} color="#9ca3af" />
                             <Text style={[styles.emptyStateText, { color: colors.subText }]}>{t('faqEmpty')}</Text>
                             <Text style={[styles.emptyStateSubText, { color: colors.subText }]}>{t('faqEmptySub')}</Text>
                         </View>
@@ -140,15 +140,15 @@ const FAQsScreen = ({ onNavigate }: FAQsScreenProps) => {
 
                 {/* Support */}
                 <View style={styles.supportSection}>
-                    <Text style={[styles.supportTitle, { color: colors.text }]}>{t('faqSupportTitle')}</Text>
-                    <Text style={[styles.supportSubtitle, { color: colors.subText }]}>{t('faqSupportSub')}</Text>
+                    <Text style={[styles.supportTitle, { color: '#111827' }]}>{t('faqSupportTitle')}</Text>
+                    <Text style={[styles.supportSubtitle, { color: '#6b7280' }]}>{t('faqSupportSub')}</Text>
                     <View style={styles.supportButtons}>
                         <TouchableOpacity style={styles.supportButton}>
-                            <Ionicons name="mail-outline" size={24} color="#0077b6" />
+                            <Ionicons name="mail-outline" size={24} color="#1a56db" />
                             <Text style={styles.supportButtonText}>{t('email')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.supportButton}>
-                            <Ionicons name="call-outline" size={24} color="#0077b6" />
+                            <Ionicons name="call-outline" size={24} color="#1a56db" />
                             <Text style={styles.supportButtonText}>{t('faqPhone')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.supportButton}>
@@ -164,22 +164,28 @@ const FAQsScreen = ({ onNavigate }: FAQsScreenProps) => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
+    container: { flex: 1, backgroundColor: '#f0f4f8' },
     searchContainer: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 15 },
-    searchBar: { flexDirection: 'row', alignItems: 'center', borderRadius: 25, paddingHorizontal: 15, paddingVertical: 12, borderWidth: 1 },
+    searchBar: {
+        flexDirection: 'row', alignItems: 'center',
+        borderRadius: 14, paddingHorizontal: 15, paddingVertical: 12,
+        borderWidth: 1.5, borderColor: '#e5e7eb',
+        backgroundColor: 'rgba(255,255,255,0.88)',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
+    },
     searchInput: { flex: 1, marginLeft: 10, fontSize: 14 },
     categoriesContainer: { paddingLeft: 20, marginBottom: 20 },
     categoriesContent: { paddingRight: 20, gap: 10 },
-    categoryChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, borderWidth: 1, gap: 6 },
-    categoryChipActive: { backgroundColor: '#E3F2FD', borderColor: '#0077b6' },
+    categoryChip: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 9, borderWidth: 1, borderColor: '#e5e7eb', backgroundColor: '#fff', gap: 6 },
+    categoryChipActive: { backgroundColor: '#eff6ff', borderColor: '#1a56db' },
     categoryChipText: { fontSize: 14, fontWeight: '500' },
-    categoryChipTextActive: { color: '#0077b6' },
-    infoBanner: { flexDirection: 'row', backgroundColor: '#E3F2FD', marginHorizontal: 20, borderRadius: 12, padding: 15, marginBottom: 20, alignItems: 'center', gap: 12 },
+    categoryChipTextActive: { color: '#1a56db' },
+    infoBanner: { flexDirection: 'row', backgroundColor: '#fff', marginHorizontal: 20, borderRadius: 16, padding: 15, marginBottom: 20, alignItems: 'center', gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
     infoBannerTextContainer: { flex: 1 },
     infoBannerTitle: { fontSize: 15, fontWeight: '600', marginBottom: 4 },
     infoBannerText: { fontSize: 13, lineHeight: 18 },
     faqsContainer: { paddingHorizontal: 20 },
-    faqCard: { borderRadius: 12, padding: 15, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+    faqCard: { backgroundColor: '#fff', borderRadius: 16, padding: 15, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
     faqCardExpanded: { shadowOpacity: 0.15, elevation: 5 },
     faqHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     faqHeaderLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 },
@@ -195,8 +201,8 @@ const styles = StyleSheet.create({
     supportTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 8, textAlign: 'center' },
     supportSubtitle: { fontSize: 14, marginBottom: 20, textAlign: 'center' },
     supportButtons: { flexDirection: 'row', gap: 15, width: '100%' },
-    supportButton: { flex: 1, alignItems: 'center', backgroundColor: '#F5F5F5', paddingVertical: 15, borderRadius: 12, gap: 8 },
-    supportButtonText: { fontSize: 12, fontWeight: '600', color: '#333' },
+    supportButton: { flex: 1, alignItems: 'center', backgroundColor: '#fff', paddingVertical: 15, borderRadius: 16, gap: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
+    supportButtonText: { fontSize: 12, fontWeight: '600', color: '#374151' },
 });
 
 export default FAQsScreen;

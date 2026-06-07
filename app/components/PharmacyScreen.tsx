@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import { useApp } from '../context/AppContext';
 import BottomNavigation from '../tabs/BottomNavigation';
 import ScreenHeader from '../tabs/ScreenHeader';
@@ -85,7 +86,7 @@ const PharmacyAvatar = React.memo(({
     return (
       <Image
         source={{ uri: imageUrl }}
-        style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: '#E8F4FD' }}
+        style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: '#eff6ff' }}
         onError={() => setImgError(true)}
         resizeMode="cover"
       />
@@ -121,51 +122,51 @@ const PharmacyCard = React.memo(({
   onItinerary: () => void;
 }) => (
   <View
-    style={[styles.pharmacyCard, { backgroundColor: colors.card }]}
+    style={styles.pharmacyCard}
     onLayout={(e) => onLayout(e.nativeEvent.layout.y)}>
 
     {/* En-tête accordéon */}
     <TouchableOpacity style={styles.pharmacyHeader} onPress={onToggleExpand} activeOpacity={0.7}>
       <PharmacyAvatar
         initials={pharmacy.initials || ''}
-        color={pharmacy.avatarColor || '#0077b6'}
+        color={pharmacy.avatarColor || '#1a56db'}
         imageUrl={pharmacy.imageUrl}
         size={52}
       />
 
       <View style={styles.pharmacyHeaderInfo}>
-        <Text style={[styles.pharmacyName, { color: colors.text }]} numberOfLines={2}>
+        <Text style={styles.pharmacyName} numberOfLines={2}>
           {pharmacy.name}
         </Text>
 
         <View style={styles.metaRow}>
           {pharmacy.zone ? (
             <View style={styles.metaBadge}>
-              <Ionicons name="location-outline" size={11} color="#0077b6" />
+              <Ionicons name="location-outline" size={11} color="#1a56db" />
               <Text style={styles.metaZone} numberOfLines={1}>{pharmacy.zone}</Text>
             </View>
           ) : null}
           {pharmacy.region ? (
             <View style={[styles.metaBadge, styles.metaBadgeRegion]}>
-              <Ionicons name="map-outline" size={11} color="#9C27B0" />
+              <Ionicons name="map-outline" size={11} color="#7c3aed" />
               <Text style={styles.metaRegion} numberOfLines={1}>{pharmacy.region}</Text>
             </View>
           ) : null}
           {pharmacy.distanceKm !== null ? (
             <View style={[styles.metaBadge, styles.metaBadgeGreen]}>
-              <Ionicons name="navigate-outline" size={11} color="#27ae60" />
+              <Ionicons name="navigate-outline" size={11} color="#059669" />
               <Text style={styles.metaDist}>{formatDistance(pharmacy.distanceKm)}</Text>
             </View>
           ) : locationStatus === 'granted' ? (
-            <View style={[styles.metaBadge, { backgroundColor: '#FFF3E0' }]}>
-              <Ionicons name="navigate-outline" size={11} color="#FF9800" />
-              <Text style={[styles.metaDist, { color: '#FF9800' }]}>GPS indisponible</Text>
+            <View style={[styles.metaBadge, { backgroundColor: '#fffbeb' }]}>
+              <Ionicons name="navigate-outline" size={11} color="#f59e0b" />
+              <Text style={[styles.metaDist, { color: '#f59e0b' }]}>GPS indisponible</Text>
             </View>
           ) : null}
         </View>
 
         {pharmacy.address ? (
-          <Text style={[styles.addressShort, { color: colors.subText }]} numberOfLines={1}>
+          <Text style={styles.addressShort} numberOfLines={1}>
             {pharmacy.address}
           </Text>
         ) : null}
@@ -176,7 +177,7 @@ const PharmacyCard = React.memo(({
           <Ionicons
             name={pharmacy.isFavorite ? 'heart' : 'heart-outline'}
             size={20}
-            color={pharmacy.isFavorite ? '#e74c3c' : colors.subText}
+            color={pharmacy.isFavorite ? '#dc2626' : colors.subText}
           />
         </TouchableOpacity>
         <Ionicons
@@ -190,7 +191,7 @@ const PharmacyCard = React.memo(({
 
     {/* Détails dépliés */}
     {isExpanded && (
-      <View style={[styles.pharmacyDetails, { borderTopColor: colors.border }]}>
+      <View style={styles.pharmacyDetails}>
 
         {pharmacy.imageUrl ? (
           <Image
@@ -202,7 +203,7 @@ const PharmacyCard = React.memo(({
           <View style={styles.pharmacyImagePlaceholder}>
             <PharmacyAvatar
               initials={pharmacy.initials || ''}
-              color={pharmacy.avatarColor || '#0077b6'}
+              color={pharmacy.avatarColor || '#1a56db'}
               imageUrl={null}
               size={80}
             />
@@ -211,42 +212,42 @@ const PharmacyCard = React.memo(({
         )}
 
         <View style={styles.detailRow}>
-          <Ionicons name="location" size={17} color="#0077b6" />
-          <Text style={[styles.detailText, { color: colors.subText }]}>
+          <Ionicons name="location" size={17} color="#1a56db" />
+          <Text style={styles.detailText}>
             {[pharmacy.address, pharmacy.city].filter(Boolean).join(', ')}
           </Text>
         </View>
 
         {pharmacy.region ? (
           <View style={styles.detailRow}>
-            <Ionicons name="map" size={17} color="#9C27B0" />
-            <Text style={[styles.detailText, { color: colors.subText }]}>Région {pharmacy.region}</Text>
+            <Ionicons name="map" size={17} color="#7c3aed" />
+            <Text style={styles.detailText}>Région {pharmacy.region}</Text>
           </View>
         ) : null}
 
         {pharmacy.phone ? (
           <TouchableOpacity style={styles.detailRow} onPress={() => Linking.openURL(`tel:${pharmacy.phone}`)}>
-            <Ionicons name="call" size={17} color="#0077b6" />
-            <Text style={[styles.detailTextLink, { color: '#0077b6' }]}>{pharmacy.phone}</Text>
+            <Ionicons name="call" size={17} color="#1a56db" />
+            <Text style={styles.detailTextLink}>{pharmacy.phone}</Text>
           </TouchableOpacity>
         ) : (
           <View style={styles.detailRow}>
             <Ionicons name="call-outline" size={17} color={colors.subText} />
-            <Text style={[styles.detailText, { color: colors.subText }]}>Numéro non disponible</Text>
+            <Text style={styles.detailText}>Numéro non disponible</Text>
           </View>
         )}
 
         {pharmacy.email ? (
           <TouchableOpacity style={styles.detailRow} onPress={() => Linking.openURL(`mailto:${pharmacy.email}`)}>
-            <Ionicons name="mail" size={17} color="#0077b6" />
-            <Text style={[styles.detailTextLink, { color: '#0077b6' }]}>{pharmacy.email}</Text>
+            <Ionicons name="mail" size={17} color="#1a56db" />
+            <Text style={styles.detailTextLink}>{pharmacy.email}</Text>
           </TouchableOpacity>
         ) : null}
 
         {pharmacy.gardeFrom && pharmacy.gardeTo && (
           <View style={styles.detailRow}>
-            <Ionicons name="calendar-outline" size={17} color="#0077b6" />
-            <Text style={[styles.detailText, { color: colors.subText }]}>
+            <Ionicons name="calendar-outline" size={17} color="#1a56db" />
+            <Text style={styles.detailText}>
               Garde du {pharmacy.gardeFrom} au {pharmacy.gardeTo}
             </Text>
           </View>
@@ -254,10 +255,10 @@ const PharmacyCard = React.memo(({
 
         {pharmacy.horaires?.length > 0 && (
           <View style={styles.detailRow}>
-            <Ionicons name="time-outline" size={17} color="#0077b6" />
+            <Ionicons name="time-outline" size={17} color="#1a56db" />
             <View style={{ flex: 1 }}>
               {pharmacy.horaires.map((h: PharmacyHoraire, i: number) => (
-                <Text key={i} style={[styles.detailText, { color: colors.subText }]}>
+                <Text key={i} style={styles.detailText}>
                   {h.jour} : {h.ouverture} – {h.fermeture}
                 </Text>
               ))}
@@ -267,8 +268,8 @@ const PharmacyCard = React.memo(({
 
         {pharmacy.distanceKm !== null && (
           <View style={styles.detailRow}>
-            <Ionicons name="navigate" size={17} color="#27ae60" />
-            <Text style={[styles.detailText, { color: '#27ae60' }]}>
+            <Ionicons name="navigate" size={17} color="#059669" />
+            <Text style={[styles.detailText, { color: '#059669' }]}>
               À {formatDistance(pharmacy.distanceKm)} de votre position
             </Text>
           </View>
@@ -290,12 +291,12 @@ const PharmacyCard = React.memo(({
         <View style={styles.pharmacyActions}>
           {pharmacy.isOnDuty ? (
             <View style={styles.dutyBadge}>
-              <Ionicons name="checkmark-circle" size={14} color="#0077b6" />
+              <Ionicons name="checkmark-circle" size={14} color="#1a56db" />
               <Text style={styles.dutyBadgeText}>De garde</Text>
             </View>
           ) : (
             <View style={[styles.dutyBadge, styles.notDutyBadge]}>
-              <Ionicons name="time-outline" size={14} color="#607D8B" />
+              <Ionicons name="time-outline" size={14} color="#6b7280" />
               <Text style={styles.notDutyBadgeText}>Hors garde</Text>
             </View>
           )}
@@ -337,20 +338,21 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
   const [userLocation, setUserLocation]         = useState<UserLocation | null>(null);
   const [locationStatus, setLocationStatus]     = useState<'pending' | 'granted' | 'denied'>('pending');
   const [geocodingProgress, setGeocodingProgress] = useState<'idle' | 'loading' | 'done'>('idle');
+  const [recalcKey, setRecalcKey] = useState(0);
   const geocodedCache = useRef<Record<string, { latitude: number; longitude: number }>>({});
   const geocodingRef  = useRef(false); // verrou pour éviter les doubles runs
 
   // ── Localisation ────────────────────────────────────────────────────────────
-  const requestLocation = useCallback(() => {
-    if (!navigator.geolocation) { setLocationStatus('denied'); return; }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocationStatus('granted');
-        setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
-      },
-      () => setLocationStatus('denied'),
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
-    );
+  const requestLocation = useCallback(async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') { setLocationStatus('denied'); return; }
+      const pos = await Location.getCurrentPositionAsync({});
+      setLocationStatus('granted');
+      setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+    } catch {
+      setLocationStatus('denied');
+    }
   }, []);
 
   useEffect(() => { requestLocation(); }, [requestLocation]);
@@ -367,13 +369,14 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
   const sortByDistance = useCallback((arr: Pharmacy[]): Pharmacy[] =>
     [...arr].sort((a, b) => (a.distanceKm ?? 9999) - (b.distanceKm ?? 9999)), []);
 
-  // Recalcul distances si position change après chargement
+  // Recalcul distances dès que la position OU les données sont disponibles
   useEffect(() => {
     if (!userLocation) return;
+    if (onCallPharmacies.length === 0 && allPharmaciesData.length === 0) return;
     const recalc = (arr: Pharmacy[]) => sortByDistance(withDistances(arr, userLocation));
     setOnCallPharmacies((p) => recalc(p));
     setAllPharmaciesData((p) => recalc(p));
-  }, [userLocation]);
+  }, [userLocation, onCallPharmacies.length, allPharmaciesData.length, recalcKey]);
 
   // ── Favoris ─────────────────────────────────────────────────────────────────
   const loadFavorites = async (): Promise<string[]> => {
@@ -436,7 +439,7 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
   ) => {
     if (geocodingRef.current) return;
     const toGeocode = list.filter((p) => !p.coordinates.latitude && p.address);
-    if (!toGeocode.length) { setGeocodingProgress('done'); return; }
+    if (!toGeocode.length) { setGeocodingProgress('done'); setRecalcKey((k) => k + 1); return; }
 
     geocodingRef.current = true;
     setGeocodingProgress('loading');
@@ -449,10 +452,7 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
       setter((prev) => {
         const updated = prev.map((p) => {
           if (p.id !== pharmacy.id) return p;
-          const distanceKm = loc
-            ? haversineDistance(loc.latitude, loc.longitude, coords.latitude, coords.longitude)
-            : null;
-          return { ...p, coordinates: coords, distanceKm };
+          return { ...p, coordinates: coords, distanceKm: null };
         });
         return sortByDistance(updated);
       });
@@ -460,6 +460,7 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
 
     geocodingRef.current = false;
     setGeocodingProgress('done');
+    setRecalcKey((k) => k + 1);
   }, [geocodeAddress, sortByDistance]);
 
   // ── ÉTAPE 1 : Charger uniquement les pharmacies de garde (rapide, bloquant) ─
@@ -472,7 +473,7 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
         getOnCallPharmacies(),
         loadFavorites(),
       ]);
-      const formatted = formatList(onCallData, favorites, new Set(), userLocation, true);
+      const formatted = formatList(onCallData, favorites, new Set(), null, true);
       setOnCallPharmacies(formatted);
       return { onCallData, favorites };
     } catch (err: any) {
@@ -481,7 +482,7 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
     } finally {
       setLoadingOnCall(false);
     }
-  }, [userLocation, formatList]);
+  }, [formatList]);
 
   // ── ÉTAPE 2 : Charger toutes les pharmacies en arrière-plan (silencieux) ────
   const fetchAllBackground = useCallback(async (
@@ -493,7 +494,7 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
       const { pharmacies: allData, regions: availableRegions } = await getAllPharmacies();
       setRegions(availableRegions);
       const onDutySlugs = new Set(onCallData.map((p) => p.slug));
-      const formatted   = formatList(allData, favorites, onDutySlugs, userLocation);
+      const formatted   = formatList(allData, favorites, onDutySlugs, null);
       setAllPharmaciesData(formatted);
 
       // Enrichit aussi la liste on-call avec images/région récupérés du catalogue complet
@@ -511,7 +512,7 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
     } catch { /* silencieux — la liste on-call reste affichée */ }
     finally { setLoadingAll(false); }
     return null;
-  }, [userLocation, formatList]);
+  }, [formatList]);
 
   // ── Initialisation ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -523,14 +524,14 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
       runGeocoding(
         onCallData.map((p) => ({ ...p, isFavorite: false, distanceKm: null })),
         setOnCallPharmacies,
-        userLocation,
+        null,
       );
 
       // Charge la liste complète en arrière-plan avec un léger délai
       setTimeout(() => {
         fetchAllBackground(onCallData, favorites).then((allList) => {
           if (allList) {
-            setTimeout(() => runGeocoding(allList, setAllPharmaciesData, userLocation), 3000);
+            setTimeout(() => runGeocoding(allList, setAllPharmaciesData, null), 3000);
           }
         });
       }, 800);
@@ -584,11 +585,11 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
 
   // ── Écran de chargement (seulement pour le premier chargement on-call) ───────
   if (loadingOnCall) return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
       <ScreenHeader title="Pharmacies" onBack={() => onNavigate('home')}
-        showNotification unreadCount={4} onNotificationPress={() => onNavigate('messages')} />
+        showNotification onNotificationPress={() => onNavigate('messages')} />
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#0077b6" />
+        <ActivityIndicator size="large" color="#1a56db" />
         <Text style={[styles.loadingText, { color: colors.subText }]}>
           Chargement des pharmacies de garde...
         </Text>
@@ -598,9 +599,9 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
   );
 
   if (error) return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
       <ScreenHeader title="Pharmacies" onBack={() => onNavigate('home')}
-        showNotification unreadCount={4} onNotificationPress={() => onNavigate('messages')} />
+        showNotification onNotificationPress={() => onNavigate('messages')} />
       <View style={styles.centerContainer}>
         <Ionicons name="wifi-outline" size={60} color={colors.subText} />
         <Text style={[styles.errorTitle, { color: colors.text }]}>Connexion impossible</Text>
@@ -615,9 +616,9 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
 
   // ── Rendu ────────────────────────────────────────────────────────────────────
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
       <ScreenHeader title="Pharmacies" onBack={() => onNavigate('home')}
-        showNotification unreadCount={4} onNotificationPress={() => onNavigate('messages')} />
+        showNotification onNotificationPress={() => onNavigate('messages')} />
 
       <ScrollView ref={scrollViewRef} showsVerticalScrollIndicator={false} removeClippedSubviews>
 
@@ -631,15 +632,15 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
               <Ionicons
                 name={mode === 'on-call' ? 'moon-outline' : 'medical-outline'}
                 size={14}
-                color={viewMode === mode ? '#fff' : '#0077b6'}
+                color={viewMode === mode ? '#fff' : '#1a56db'}
               />
               <Text style={[styles.modeBtnText, viewMode === mode && styles.modeBtnTextActive]}>
                 {mode === 'on-call' ? 'De garde' : 'Toutes'}
               </Text>
               <View style={[styles.modeBadge, viewMode === mode && styles.modeBadgeActive]}>
                 {mode === 'all' && loadingAll
-                  ? <ActivityIndicator size="small" color="#0077b6" style={{ width: 18 }} />
-                  : <Text style={[styles.modeBadgeText, viewMode === mode && { color: '#0077b6' }]}>
+                  ? <ActivityIndicator size="small" color="#1a56db" style={{ width: 18 }} />
+                  : <Text style={[styles.modeBadgeText, viewMode === mode && { color: '#1a56db' }]}>
                       {mode === 'on-call' ? onCallPharmacies.length : allPharmaciesData.length}
                     </Text>
                 }
@@ -657,21 +658,21 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
         )}
         {locationStatus === 'granted' && (
           <View style={styles.locationGranted}>
-            <Ionicons name="location" size={13} color="#0077b6" />
+            <Ionicons name="location" size={13} color="#1a56db" />
             <Text style={styles.locationGrantedText}>
               {geocodingProgress === 'loading'
                 ? 'Calcul des distances...'
                 : 'Triées par distance depuis votre position'}
             </Text>
             {geocodingProgress === 'loading' && (
-              <ActivityIndicator size="small" color="#0077b6" style={{ marginLeft: 6 }} />
+              <ActivityIndicator size="small" color="#1a56db" style={{ marginLeft: 6 }} />
             )}
           </View>
         )}
 
         {/* Barre de recherche */}
         <View style={styles.searchContainer}>
-          <View style={[styles.searchBar, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.searchBar}>
             <Ionicons name="search-outline" size={20} color={colors.subText} />
             <TextInput
               style={[styles.searchInput, { color: colors.text }]}
@@ -688,9 +689,9 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
             )}
           </View>
           <TouchableOpacity
-            style={[styles.filterButton, { backgroundColor: colors.card, borderColor: colors.border }]}
+            style={styles.filterButton}
             onPress={handleRefresh}>
-            <Ionicons name="refresh-outline" size={20} color="#0077b6" />
+            <Ionicons name="refresh-outline" size={20} color="#1a56db" />
           </TouchableOpacity>
         </View>
 
@@ -706,11 +707,10 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
               key={f.key}
               style={[
                 styles.filterChip,
-                { backgroundColor: colors.card, borderColor: colors.border },
                 activeFilter === f.key && styles.filterChipActive,
               ]}
               onPress={() => setActiveFilter(f.key)}>
-              <Ionicons name={f.icon as any} size={13} color={activeFilter === f.key ? '#0077b6' : colors.subText} />
+              <Ionicons name={f.icon as any} size={13} color={activeFilter === f.key ? '#1a56db' : colors.subText} />
               <Text style={[styles.filterChipText, { color: colors.subText }, activeFilter === f.key && styles.filterChipTextActive]}>
                 {f.label}
               </Text>
@@ -728,11 +728,10 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
                 key={r || '__all__'}
                 style={[
                   styles.regionChip,
-                  { backgroundColor: colors.card, borderColor: colors.border },
                   selectedRegion === r && styles.regionChipActive,
                 ]}
                 onPress={() => setSelectedRegion(r)}>
-                <Ionicons name="map-outline" size={12} color={selectedRegion === r ? '#9C27B0' : colors.subText} />
+                <Ionicons name="map-outline" size={12} color={selectedRegion === r ? '#7c3aed' : colors.subText} />
                 <Text style={[styles.regionChipText, { color: colors.subText }, selectedRegion === r && styles.regionChipTextActive]}>
                   {r || 'Tout le Togo'}
                 </Text>
@@ -752,11 +751,11 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
               snapToInterval={CARD_WIDTH + CARD_MARGIN * 2} decelerationRate="fast"
               contentContainerStyle={styles.carouselContent}>
               {favoritePharmacies.map((p, index) => (
-                <View key={p.id} style={[styles.carouselCard, { backgroundColor: colors.card }, index === 0 && styles.carouselCardFirst]}>
+                <View key={p.id} style={[styles.carouselCard, index === 0 && styles.carouselCardFirst]}>
                   <View style={styles.carouselTop}>
-                    <PharmacyAvatar initials={p.initials || ''} color={p.avatarColor || '#0077b6'} imageUrl={p.imageUrl} size={44} />
+                    <PharmacyAvatar initials={p.initials || ''} color={p.avatarColor || '#1a56db'} imageUrl={p.imageUrl} size={44} />
                     <TouchableOpacity onPress={() => toggleFavorite(p.id)} style={styles.heartBtn}>
-                      <Ionicons name="heart" size={18} color="#e74c3c" />
+                      <Ionicons name="heart" size={18} color="#dc2626" />
                     </TouchableOpacity>
                   </View>
                   <Text style={[styles.carouselName, { color: colors.text }]} numberOfLines={2}>{p.name}</Text>
@@ -815,100 +814,100 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container:       { flex: 1 },
+  container:       { flex: 1, backgroundColor: '#f0f4f8' },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, gap: 15 },
   loadingText:     { fontSize: 14, textAlign: 'center', marginTop: 12 },
   errorTitle:      { fontSize: 18, fontWeight: '600', textAlign: 'center' },
   errorSubtitle:   { fontSize: 13, textAlign: 'center' },
-  retryButton:     { backgroundColor: '#0077b6', paddingHorizontal: 30, paddingVertical: 12, borderRadius: 25, marginTop: 10 },
+  retryButton:     { backgroundColor: '#1a56db', paddingHorizontal: 30, paddingVertical: 12, borderRadius: 20, marginTop: 10 },
   retryButtonText: { color: '#fff', fontWeight: '600' },
 
-  modeToggle:        { flexDirection: 'row', marginHorizontal: 20, marginTop: 14, backgroundColor: '#E3F2FD', borderRadius: 25, padding: 3, gap: 3 },
+  modeToggle:        { flexDirection: 'row', marginHorizontal: 20, marginTop: 14, backgroundColor: '#eff6ff', borderRadius: 25, padding: 3, gap: 3 },
   modeBtn:           { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 22 },
-  modeBtnActive:     { backgroundColor: '#0077b6' },
-  modeBtnText:       { fontSize: 13, fontWeight: '600', color: '#0077b6' },
+  modeBtnActive:     { backgroundColor: '#1a56db' },
+  modeBtnText:       { fontSize: 13, fontWeight: '600', color: '#1a56db' },
   modeBtnTextActive: { color: '#fff' },
   modeBadge:         { backgroundColor: '#fff', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 10, minWidth: 22, alignItems: 'center' },
-  modeBadgeActive:   { backgroundColor: '#E3F2FD' },
-  modeBadgeText:     { fontSize: 10, fontWeight: '700', color: '#0077b6' },
+  modeBadgeActive:   { backgroundColor: '#eff6ff' },
+  modeBadgeText:     { fontSize: 10, fontWeight: '700', color: '#1a56db' },
 
-  locationBanner:      { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#e67e22', marginHorizontal: 20, marginTop: 12, paddingHorizontal: 14, paddingVertical: 11, borderRadius: 12 },
+  locationBanner:      { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#dc2626', marginHorizontal: 20, marginTop: 12, paddingHorizontal: 14, paddingVertical: 11, borderRadius: 12 },
   locationBannerText:  { color: '#fff', fontSize: 13, flex: 1 },
   locationGranted:     { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 20, paddingTop: 10 },
-  locationGrantedText: { fontSize: 12, color: '#0077b6' },
+  locationGrantedText: { fontSize: 12, color: '#1a56db' },
 
   searchContainer: { flexDirection: 'row', paddingHorizontal: 20, paddingTop: 14, paddingBottom: 10, gap: 10 },
-  searchBar:       { flex: 1, flexDirection: 'row', alignItems: 'center', borderRadius: 25, paddingHorizontal: 14, paddingVertical: 11, borderWidth: 1, gap: 8 },
+  searchBar:       { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 11, gap: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 3 },
   searchInput:     { flex: 1, fontSize: 14 },
-  filterButton:    { width: 46, height: 46, borderRadius: 23, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
+  filterButton:    { width: 46, height: 46, borderRadius: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 3 },
 
   filtersContainer:     { paddingLeft: 20, marginBottom: 10 },
   filtersContent:       { paddingRight: 20, gap: 8 },
-  filterChip:           { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
-  filterChipActive:     { backgroundColor: '#E3F2FD', borderColor: '#0077b6' },
+  filterChip:           { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#e5e7eb', backgroundColor: '#fff' },
+  filterChipActive:     { backgroundColor: '#eff6ff', borderColor: '#1a56db' },
   filterChipText:       { fontSize: 13, fontWeight: '500' },
-  filterChipTextActive: { color: '#0077b6' },
+  filterChipTextActive: { color: '#1a56db' },
 
-  regionChip:           { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1 },
-  regionChipActive:     { backgroundColor: '#F3E5F5', borderColor: '#9C27B0' },
+  regionChip:           { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: '#e5e7eb', backgroundColor: '#fff' },
+  regionChipActive:     { backgroundColor: '#f5f3ff', borderColor: '#7c3aed' },
   regionChipText:       { fontSize: 12, fontWeight: '500' },
-  regionChipTextActive: { color: '#9C27B0' },
+  regionChipTextActive: { color: '#7c3aed' },
 
   section:          { marginBottom: 20 },
   sectionHeader:    { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, marginBottom: 12, gap: 8 },
   sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, marginBottom: 14, gap: 10 },
-  sectionTitle:     { fontSize: 17, fontWeight: 'bold' },
+  sectionTitle:     { fontSize: 17, fontWeight: '700' },
   sectionTitle1:    { fontSize: 17, fontWeight: 'bold', flex: 1 },
-  sectionCount:     { fontSize: 12, backgroundColor: '#E3F2FD', color: '#0077b6', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 10, overflow: 'hidden' },
+  sectionCount:     { fontSize: 12, backgroundColor: '#eff6ff', color: '#1a56db', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 10, overflow: 'hidden' },
 
   carouselContent:   { paddingRight: 20 },
-  carouselCard:      { width: CARD_WIDTH, marginLeft: CARD_MARGIN, marginRight: CARD_MARGIN, borderRadius: 16, padding: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 3 },
+  carouselCard:      { width: CARD_WIDTH, marginLeft: CARD_MARGIN, marginRight: CARD_MARGIN, backgroundColor: '#fff', borderRadius: 16, padding: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 3 },
   carouselCardFirst: { marginLeft: 20 },
   carouselTop:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 },
   heartBtn:          { padding: 4 },
   carouselName:      { fontSize: 14, fontWeight: '700', lineHeight: 20, marginBottom: 4 },
-  carouselZone:      { fontSize: 11, color: '#0077b6', marginBottom: 1 },
-  carouselRegion:    { fontSize: 11, color: '#9C27B0', marginBottom: 2 },
-  carouselDistance:  { fontSize: 11, color: '#27ae60', marginBottom: 10 },
-  detailsButton:     { backgroundColor: '#0077b6', paddingVertical: 9, borderRadius: 20, alignItems: 'center' },
+  carouselZone:      { fontSize: 11, color: '#1a56db', marginBottom: 1 },
+  carouselRegion:    { fontSize: 11, color: '#7c3aed', marginBottom: 2 },
+  carouselDistance:  { fontSize: 11, color: '#059669', marginBottom: 10 },
+  detailsButton:     { backgroundColor: '#1a56db', paddingVertical: 9, borderRadius: 20, alignItems: 'center' },
   detailsButtonText: { color: '#fff', fontSize: 12, fontWeight: '600' },
 
   avatarFallback: { justifyContent: 'center', alignItems: 'center' },
 
-  pharmacyCard:    { marginHorizontal: 20, marginBottom: 10, borderRadius: 14, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 3, elevation: 2 },
+  pharmacyCard:    { marginHorizontal: 20, marginBottom: 10, backgroundColor: '#fff', borderRadius: 16, overflow: 'hidden', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   pharmacyHeader:  { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12 },
   pharmacyHeaderInfo: { flex: 1 },
-  pharmacyName:    { fontSize: 15, fontWeight: '700', lineHeight: 21, marginBottom: 5 },
+  pharmacyName:    { fontSize: 15, fontWeight: '700', lineHeight: 21, marginBottom: 5, color: '#111827' },
 
   metaRow:         { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 3 },
-  metaBadge:       { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#EBF5FB', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8 },
-  metaBadgeGreen:  { backgroundColor: '#EAFAF1' },
-  metaBadgeRegion: { backgroundColor: '#F3E5F5' },
-  metaZone:        { fontSize: 11, color: '#0077b6', fontWeight: '500' },
-  metaDist:        { fontSize: 11, color: '#27ae60', fontWeight: '500' },
-  metaRegion:      { fontSize: 11, color: '#9C27B0', fontWeight: '500' },
-  addressShort:    { fontSize: 12, lineHeight: 17 },
+  metaBadge:       { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#eff6ff', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8 },
+  metaBadgeGreen:  { backgroundColor: '#ecfdf5' },
+  metaBadgeRegion: { backgroundColor: '#f5f3ff' },
+  metaZone:        { fontSize: 11, color: '#1a56db', fontWeight: '500' },
+  metaDist:        { fontSize: 11, color: '#059669', fontWeight: '500' },
+  metaRegion:      { fontSize: 11, color: '#7c3aed', fontWeight: '500' },
+  addressShort:    { fontSize: 12, lineHeight: 17, color: '#6b7280' },
   headerActions:   { alignItems: 'center', gap: 4, paddingLeft: 6 },
 
-  pharmacyDetails:          { paddingHorizontal: 16, paddingBottom: 16, borderTopWidth: 1, paddingTop: 14, gap: 10 },
+  pharmacyDetails:          { paddingHorizontal: 16, paddingBottom: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6', paddingTop: 14, gap: 10 },
   pharmacyImage:            { width: '100%', height: 160, borderRadius: 10 },
-  pharmacyImagePlaceholder: { width: '100%', height: 110, backgroundColor: '#E8F4FD', justifyContent: 'center', alignItems: 'center', borderRadius: 10 },
-  pharmacyImageLabel:       { fontSize: 12, color: '#0077b6', fontWeight: '600', marginTop: 4 },
+  pharmacyImagePlaceholder: { width: '100%', height: 110, backgroundColor: '#eff6ff', justifyContent: 'center', alignItems: 'center', borderRadius: 10 },
+  pharmacyImageLabel:       { fontSize: 12, color: '#1a56db', fontWeight: '600', marginTop: 4 },
   detailRow:                { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  detailText:               { fontSize: 14, flex: 1, lineHeight: 20 },
-  detailTextLink:           { fontSize: 14, flex: 1, lineHeight: 20, textDecorationLine: 'underline' },
+  detailText:               { fontSize: 14, flex: 1, lineHeight: 20, color: '#6b7280' },
+  detailTextLink:           { fontSize: 14, flex: 1, lineHeight: 20, textDecorationLine: 'underline', color: '#1a56db' },
 
   insurancesTitle:  { fontSize: 12, marginBottom: 6 },
   insurancesTags:   { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  insuranceTag:     { backgroundColor: '#E3F2FD', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
-  insuranceTagText: { fontSize: 11, color: '#0077b6' },
+  insuranceTag:     { backgroundColor: '#eff6ff', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
+  insuranceTagText: { fontSize: 11, color: '#1a56db' },
 
   pharmacyActions:     { flexDirection: 'row', gap: 10, marginTop: 4 },
-  dutyBadge:           { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#E3F2FD', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20 },
-  dutyBadgeText:       { color: '#0077b6', fontSize: 13, fontWeight: '600' },
-  notDutyBadge:        { backgroundColor: '#ECEFF1' },
-  notDutyBadgeText:    { color: '#607D8B', fontSize: 13, fontWeight: '600' },
-  itineraryButton:     { flex: 1, backgroundColor: '#0077b6', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 20, gap: 8 },
+  dutyBadge:           { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#eff6ff', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20 },
+  dutyBadgeText:       { color: '#1a56db', fontSize: 13, fontWeight: '600' },
+  notDutyBadge:        { backgroundColor: '#f3f4f6' },
+  notDutyBadgeText:    { color: '#6b7280', fontSize: 13, fontWeight: '600' },
+  itineraryButton:     { flex: 1, backgroundColor: '#1a56db', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 20, gap: 8 },
   itineraryButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
 
   emptyContainer: { alignItems: 'center', paddingVertical: 50, gap: 12 },

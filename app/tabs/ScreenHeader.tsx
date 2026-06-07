@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '../context/AppContext';
+import { useNotifications } from '../context/NotificationContext';
 
 interface ScreenHeaderProps {
   title: string;
@@ -10,6 +11,7 @@ interface ScreenHeaderProps {
   rightIcon?: string;
   onRightPress?: () => void;
   showNotification?: boolean;
+  /** If omitted, reads from NotificationContext */
   unreadCount?: number;
   onNotificationPress?: () => void;
 }
@@ -20,34 +22,35 @@ const ScreenHeader = ({
   rightIcon,
   onRightPress,
   showNotification,
-  unreadCount = 0,
+  unreadCount: explicitCount,
   onNotificationPress
 }: ScreenHeaderProps) => {
-  const { colors } = useApp();
+  const { unreadCount: ctxCount } = useNotifications();
+  const unreadCount = explicitCount ?? ctxCount;
   const insets = useSafeAreaInsets();
 
   return (
     <View style={[styles.header, {
-      backgroundColor: colors.card,
-      borderBottomColor: colors.border,
+      backgroundColor: '#fff',
+      borderBottomColor: '#f3f4f6',
       paddingTop: insets.top + 15,
     }]}>
       {/* Left Button (Back or Empty) */}
       {onBack ? (
         <TouchableOpacity style={styles.button} onPress={onBack}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="arrow-back" size={24} color="#374151" />
         </TouchableOpacity>
       ) : (
         <View style={styles.placeholder} />
       )}
 
       {/* Title */}
-      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+      <Text style={[styles.title, { color: '#111827' }]}>{title}</Text>
 
       {/* Right Button (Notification, Custom Icon, or Empty) */}
       {showNotification ? (
         <TouchableOpacity style={styles.button} onPress={onNotificationPress}>
-          <Ionicons name="notifications-outline" size={24} color={colors.text} />
+          <Ionicons name="notifications-outline" size={24} color="#374151" />
           {unreadCount > 0 && (
             <View style={styles.notificationBadge}>
               <Text style={styles.notificationBadgeText}>
@@ -58,7 +61,7 @@ const ScreenHeader = ({
         </TouchableOpacity>
       ) : rightIcon ? (
         <TouchableOpacity style={styles.button} onPress={onRightPress}>
-          <Ionicons name={rightIcon as any} size={24} color={colors.text} />
+          <Ionicons name={rightIcon as any} size={24} color="#374151" />
         </TouchableOpacity>
       ) : (
         <View style={styles.placeholder} />

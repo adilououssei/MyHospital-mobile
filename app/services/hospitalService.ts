@@ -27,6 +27,7 @@ export interface Hospital {
   emergency: boolean;
   specialties: string[];
   description: string;
+  insurances: string[];
   initials: string;
   avatarColor: string;
   imageUrl: string | null;  // URL externe (depuis enrichissement)

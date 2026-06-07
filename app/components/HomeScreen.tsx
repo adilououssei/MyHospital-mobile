@@ -1,4 +1,4 @@
-// app/components/HomeScreen.tsx - Version corrigée (sans prix et voir plus vers annuaire)
+// app/components/HomeScreen.tsx - Redesign fidèle à la maquette
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useApp, useAuth } from '../context/AppContext';
+import { useNotifications } from '../context/NotificationContext';
 import BottomNavigation from '../tabs/BottomNavigation';
 import docteurService, { Docteur } from '../services/docteur.service';
 import rendezVousService from '../services/rendezvous.service';
@@ -21,248 +22,113 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface HomeScreenProps {
   onNavigate: (screen: string, params?: any) => void;
-  unreadCount?: number;
 }
 
-const LANGUAGES = [
-  { code: 'fr', flag: '🇫🇷', label: 'FR' },
-  { code: 'en', flag: '🇬🇧', label: 'EN' },
-  { code: 'de', flag: '🇩🇪', label: 'DE' },
-];
-
-// ─── Slides du carousel ───────────────────────────────────────────────────────
-const BANNER_SLIDES = [
-  {
-    id: '1',
-    title: 'Protection précoce pour votre famille',
-    subtitle: 'Consultez les meilleurs spécialistes depuis chez vous',
-    btnLabel: 'En savoir plus',
-    screen: 'healthInfo',
-    gradient: ['#0077b6', '#023e8a'] as [string, string],
-    icon: 'shield-checkmark',
-    image: require('../../assets/doctor21.png'),
-  },
-  {
-    id: '2',
-    title: 'Pharmacies de garde 24h/7j',
-    subtitle: 'Trouvez rapidement une pharmacie ouverte près de vous',
-    btnLabel: 'Voir les pharmacies',
-    screen: 'pharmacy',
-    gradient: ['#0096c7', '#0077b6'] as [string, string],
-    icon: 'medkit',
-    image: null,
-  },
-  {
-    id: '3',
-    title: 'Urgence médicale ?',
-    subtitle: 'Accès rapide aux services d\'urgence et ambulances',
-    btnLabel: 'Appeler maintenant',
-    screen: 'emergency',
-    gradient: ['#e63946', '#c1121f'] as [string, string],
-    icon: 'pulse',
-    image: null,
-  },
-];
-
-// ─── Composant Carousel ───────────────────────────────────────────────────────
-const BannerCarousel = ({ onNavigate }: { onNavigate: (s: string) => void }) => {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const flatRef = useRef<FlatList>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    timerRef.current = setInterval(() => {
-      setActiveIndex(prev => {
-        const next = (prev + 1) % BANNER_SLIDES.length;
-        flatRef.current?.scrollToIndex({ index: next, animated: true });
-        return next;
-      });
-    }, 4000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, []);
-
-  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const idx = Math.round(e.nativeEvent.contentOffset.x / (SCREEN_WIDTH - 40));
-    if (idx !== activeIndex) setActiveIndex(idx);
-  };
-
-  return (
-    <View style={styles.carouselWrapper}>
-      <FlatList
-        ref={flatRef}
-        data={BANNER_SLIDES}
-        keyExtractor={item => item.id}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        snapToInterval={SCREEN_WIDTH - 40}
-        decelerationRate="fast"
-        onScroll={onScroll}
-        scrollEventThrottle={16}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            activeOpacity={0.9}
-            onPress={() => onNavigate(item.screen)}
-            style={styles.slide}
-          >
-            <LinearGradient
-              colors={item.gradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.slideGradient}
-            >
-              <View style={styles.slideBubble1} />
-              <View style={styles.slideBubble2} />
-
-              <View style={styles.slideContent}>
-                <View style={[styles.slideLeft, item.image ? styles.slideLeftWithImage : null]}>
-                  <View style={styles.slideBadge}>
-                    <Ionicons name={item.icon as any} size={14} color="#fff" />
-                    <Text style={styles.slideBadgeText}>MyHospital</Text>
-                  </View>
-                  <Text style={styles.slideTitle}>{item.title}</Text>
-                  <Text style={styles.slideSubtitle}>{item.subtitle}</Text>
-                  <View style={styles.slideBtn}>
-                    <Text style={styles.slideBtnText}>{item.btnLabel}</Text>
-                    <Ionicons name="arrow-forward" size={12} color="#0077b6" />
-                  </View>
-                </View>
-
-                {!item.image && (
-                  <View style={styles.slideIconBox}>
-                    <Ionicons name={item.icon as any} size={52} color="rgba(255,255,255,0.25)" />
-                  </View>
-                )}
-              </View>
-
-              {item.image && (
-                <Image source={item.image} style={styles.slideImage} resizeMode="cover" />
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
-        )}
-      />
-
-      <View style={styles.dotsRow}>
-        {BANNER_SLIDES.map((_, i) => (
-          <TouchableOpacity
-            key={i}
-            onPress={() => {
-              flatRef.current?.scrollToIndex({ index: i, animated: true });
-              setActiveIndex(i);
-            }}
-          >
-            <View style={[styles.dot, i === activeIndex && styles.dotActive]} />
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
-  );
-};
-
-// ─── Composant Carte Prochain RDV ─────────────────────────────────────────────
-const NextAppointmentCard = ({
-  onNavigate,
-  colors,
-  t,
-}: {
-  onNavigate: (s: string) => void;
-  colors: any;
-  t: (k: string) => string;
-}) => {
-  const { isAuthenticated } = useAuth();
-  const [nextRdv, setNextRdv] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setLoading(false);
-      return;
-    }
-    (async () => {
-      try {
-        const rdvs = await rendezVousService.getMesRendezVous();
-        const now = new Date();
-        const upcoming = rdvs
-          .filter(r => ['pending', 'accepted', 'confirmed'].includes(r.statut))
-          .filter(r => new Date(r.dateRendezVous) > now)
-          .sort((a, b) => new Date(a.dateRendezVous).getTime() - new Date(b.dateRendezVous).getTime());
-        if (upcoming.length > 0) setNextRdv(upcoming[0]);
-      } catch { /* silencieux */ }
-      finally { setLoading(false); }
-    })();
-  }, []);
-
-  if (loading) return null;
-  if (!nextRdv) return null;
-
-  const rdvDate = new Date(nextRdv.dateRendezVous);
-  const day = rdvDate.getDate().toString().padStart(2, '0');
-  const month = rdvDate.toLocaleDateString('fr-FR', { month: 'short' });
-  const time = `${rdvDate.getHours().toString().padStart(2, '0')}:${rdvDate.getMinutes().toString().padStart(2, '0')}`;
-
-  const typeIcon = nextRdv.typeConsultation === 'en_ligne'
-    ? 'videocam'
-    : nextRdv.typeConsultation === 'domicile'
-    ? 'home'
-    : 'business';
-
-  const typeLabel = nextRdv.typeConsultation === 'en_ligne'
-    ? 'En ligne'
-    : nextRdv.typeConsultation === 'domicile'
-    ? 'À domicile'
-    : 'À l\'hôpital';
-
-  return (
-    <TouchableOpacity
-      style={styles.rdvCardWrapper}
-      activeOpacity={0.85}
-      onPress={() => onNavigate('appointments')}
+// ─── Hero Banner (slide unique selon maquette) ────────────────────────────────
+const HeroBanner = ({ onNavigate }: { onNavigate: (s: string) => void }) => (
+  <TouchableOpacity
+    activeOpacity={0.93}
+    onPress={() => onNavigate('appointments')}
+    style={styles.heroWrapper}
+  >
+    <LinearGradient
+      colors={['#1a56db', '#1e40af']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.heroGradient}
     >
-      <LinearGradient
-        colors={['#e8f4fd', '#dceefb']}
-        style={styles.rdvCard}
-      >
-        <View style={styles.rdvAccent} />
-        <View style={styles.rdvDateBox}>
-          <Text style={styles.rdvDay}>{day}</Text>
-          <Text style={styles.rdvMonth}>{month.toUpperCase()}</Text>
-        </View>
-        <View style={styles.rdvDivider} />
-        <View style={styles.rdvInfo}>
-          <View style={styles.rdvLabelRow}>
-            <Ionicons name="calendar" size={12} color="#0077b6" />
-            <Text style={styles.rdvLabel}>Prochain rendez-vous</Text>
-          </View>
-          <Text style={styles.rdvDoctor} numberOfLines={1}>
-            Dr. {nextRdv.docteurPrenom} {nextRdv.docteurNom}
-          </Text>
-          <View style={styles.rdvMetaRow}>
-            <View style={styles.rdvMeta}>
-              <Ionicons name="time-outline" size={12} color="#666" />
-              <Text style={styles.rdvMetaText}>{time}</Text>
-            </View>
-            <View style={styles.rdvMeta}>
-              <Ionicons name={typeIcon as any} size={12} color="#666" />
-              <Text style={styles.rdvMetaText}>{typeLabel}</Text>
-            </View>
-          </View>
-        </View>
-        <View style={styles.rdvArrow}>
-          <Ionicons name="chevron-forward" size={20} color="#0077b6" />
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
-  );
-};
+      {/* Décoration réseau/connexions */}
+      <View style={styles.heroDot1} />
+      <View style={styles.heroDot2} />
+      <View style={styles.heroLine1} />
+      <View style={styles.heroLine2} />
 
-// ─── Fonction pour obtenir la spécialité du docteur ──────────────────────────
-const getDoctorSpecialty = (doctor: Docteur): string => {
-  return docteurService.getSpecialite(doctor);
-};
+      {/* Contenu gauche */}
+      <View style={styles.heroLeft}>
+        <Text style={styles.heroTitle}>Votre santé{'\n'}à portée de main</Text>
+        <Text style={styles.heroSubtitle}>
+          Prenez rendez-vous et consultez les meilleurs spécialistes.
+        </Text>
+        <TouchableOpacity style={styles.heroBtn} onPress={() => onNavigate('appointments')}>
+          <Ionicons name="calendar-outline" size={16} color="#1a56db" />
+          <Text style={styles.heroBtnText}>Réserver maintenant</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Logo décoratif droite */}
+      <View style={styles.heroLogoBox}>
+        {/* Orbite */}
+        <View style={styles.heroOrbit}>
+          <View style={styles.heroOrbitDot1} />
+          <View style={styles.heroOrbitDot2} />
+        </View>
+        <Image source={require('../../assets/icone_blanche.png')} style={styles.heroLogo} />
+      </View>
+    </LinearGradient>
+  </TouchableOpacity>
+);
+
+// ─── Accès rapides ────────────────────────────────────────────────────────────
+const QUICK_ACCESS = [
+  { icon: 'user-md',   lib: 'fa5',      label: 'Docteur',    screen: 'doctorsDirectory', color: '#1a56db', bg: '#eff6ff' },
+  { icon: 'medkit',    lib: 'ionicons',  label: 'Pharmacie',  screen: 'pharmacy',          color: '#059669', bg: '#ecfdf5' },
+  { icon: 'business',  lib: 'ionicons',  label: 'Hôpital',    screen: 'hospital',          color: '#1a56db', bg: '#eff6ff' },
+  { icon: 'ambulance', lib: 'fa5',      label: 'Urgence',    screen: 'emergency',         color: '#dc2626', bg: '#fef2f2' },
+];
+
+const QuickAccessSection = ({ onNavigate, colors }: { onNavigate: (s: string) => void; colors: any }) => (
+  <View style={[styles.qaCard, { backgroundColor: colors.card }]}>
+    <Text style={[styles.qaTitle, { color: colors.text }]}>Accès rapides</Text>
+    <View style={styles.qaRow}>
+      {QUICK_ACCESS.map(item => (
+        <TouchableOpacity
+          key={item.label}
+          style={styles.qaItem}
+          onPress={() => onNavigate(item.screen)}
+          activeOpacity={0.75}
+        >
+          <View style={[styles.qaIconBox, { backgroundColor: item.bg }]}>
+            {item.lib === 'fa5'
+              ? <FontAwesome5 name={item.icon as any} size={26} color={item.color} />
+              : <Ionicons name={item.icon as any} size={26} color={item.color} />
+            }
+          </View>
+          <Text style={[styles.qaLabel, { color: colors.text }]}>{item.label}</Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  </View>
+);
+
+// ─── Carte Prochain RDV (bannière bas de page dans la maquette) ───────────────
+const ManageAppointmentsBanner = ({ onNavigate, colors }: { onNavigate: (s: string) => void; colors: any }) => (
+  <TouchableOpacity
+    style={[styles.rdvBanner, { backgroundColor: colors.card }]}
+    activeOpacity={0.85}
+    onPress={() => onNavigate('appointments')}
+  >
+    <View style={[styles.rdvBannerIconBox, { backgroundColor: '#eff6ff' }]}>
+      <Ionicons name="calendar" size={28} color="#1a56db" />
+    </View>
+    <View style={styles.rdvBannerText}>
+      <Text style={[styles.rdvBannerTitle, { color: colors.text }]}>Gérez vos rendez-vous</Text>
+      <Text style={[styles.rdvBannerSub, { color: colors.subText }]}>
+        Consultez, modifiez ou annulez{'\n'}vos rendez-vous en toute simplicité.
+      </Text>
+    </View>
+    <TouchableOpacity style={styles.rdvBannerBtn} onPress={() => onNavigate('appointments')}>
+      <Text style={styles.rdvBannerBtnText}>Voir mes RDV</Text>
+      <Ionicons name="chevron-forward" size={14} color="#fff" />
+    </TouchableOpacity>
+  </TouchableOpacity>
+);
+
+// ─── Composant Carte Docteur (liste horizontale) ──────────────────────────────
+const getDoctorSpecialty = (doctor: Docteur): string => docteurService.getSpecialite(doctor);
 
 // ─── Composant principal ──────────────────────────────────────────────────────
-const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
+const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
+  const { unreadCount } = useNotifications();
   const { colors, t, language, setLanguage } = useApp();
   const { user, isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
@@ -270,10 +136,8 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
   const [topDoctors, setTopDoctors] = useState<Docteur[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
   const [errorDocs, setErrorDocs] = useState<string | null>(null);
-  const [showLangModal, setShowLangModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const currentLang = LANGUAGES.find(l => l.code === language) ?? LANGUAGES[0];
   const firstName = user?.prenom ?? '';
 
   useEffect(() => { loadTopDoctors(); }, []);
@@ -283,141 +147,114 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
       setLoadingDocs(true);
       setErrorDocs(null);
       const doctors = await docteurService.getDocteurs();
-      const sorted = [...doctors].sort((a, b) => (b.note || 0) - (a.note || 0)).slice(0, 5);
+      const sorted = [...doctors].sort((a, b) => (b.note || 0) - (a.note || 0)).slice(0, 6);
       setTopDoctors(sorted);
     } catch (err) {
-      console.error('Erreur:', err);
       setErrorDocs(t('cannotLoadDoctors'));
     } finally {
       setLoadingDocs(false);
     }
   };
 
-  const SERVICES = [
-    { icon: 'user-md',   lib: 'fa5',     label: t('doctor'),   screen: 'doctorsDirectory', color: '#0077b6', bg: '#e8f4fd' },
-    { icon: 'medkit',    lib: 'ionicons', label: t('pharmacy'), screen: 'pharmacy',    color: '#0096c7', bg: '#e0f4fb' },
-    { icon: 'business',  lib: 'ionicons', label: t('hospital'), screen: 'hospital',    color: '#023e8a', bg: '#dde8f8' },
-    { icon: 'ambulance', lib: 'fa5',     label: t('ambulance'),screen: 'emergency',   color: '#e63946', bg: '#fdecea' },
-  ];
+  const greetingHour = new Date().getHours();
+  const greeting = greetingHour < 12 ? 'Bonjour' : greetingHour < 18 ? 'Bon après-midi' : 'Bonsoir';
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: '#f0f4f8' }]} edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 80 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 90 }]}
       >
-
-        {/* Header */}
+        {/* ── Header ─────────────────────────────────────────────────────── */}
         <View style={styles.header}>
-          <View>
-            <Text style={[styles.greeting, { color: colors.subText }]}>
-              {new Date().getHours() < 12 ? 'Bonjour' : new Date().getHours() < 18 ? 'Bon après-midi' : 'Bonsoir'} 👋
-            </Text>
-            <Text style={[styles.userName, { color: colors.text }]}>
-              {firstName ? firstName : 'Bienvenue !'}
-            </Text>
+          {/* Logo */}
+          <View style={styles.logoRow}>
+            <Image source={require('../../assets/MyHospitalMyHospital.png')} style={styles.logoImg} />
+            
           </View>
 
-          <View style={styles.headerRight}>
+          {/* Droite : cloche + avatar */}
+          <View style={styles.headerActions}>
             <TouchableOpacity
-              style={[styles.langPill, { backgroundColor: colors.card }]}
-              onPress={() => setShowLangModal(true)}
-            >
-              <Text style={styles.langFlag}>{currentLang.flag}</Text>
-              <Ionicons name="chevron-down" size={11} color="#0077b6" />
-            </TouchableOpacity>
-
-            {!isAuthenticated ? (
-              <TouchableOpacity
-                style={[styles.loginHeaderBtn]}
-                onPress={() => onNavigate('login')}
-              >
-                <Ionicons name="log-in-outline" size={18} color="#0077b6" />
-                <Text style={styles.loginHeaderText}>Connexion</Text>
-              </TouchableOpacity>
-            ) : (
-            <TouchableOpacity
-              style={[styles.notifBtn, { backgroundColor: colors.card }]}
+              style={styles.notifBtn}
               onPress={() => onNavigate('notifications')}
             >
-              <Ionicons name="notifications-outline" size={22} color={colors.text} />
+              <Ionicons name="notifications-outline" size={22} color="#374151" />
               {unreadCount > 0 && (
                 <View style={styles.notifBadge}>
                   <Text style={styles.notifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
                 </View>
               )}
             </TouchableOpacity>
-            )}
+            <TouchableOpacity onPress={() => onNavigate('profile')}>
+              <View style={styles.avatarBox}>
+                {user?.photo
+                  ? <Image source={{ uri: `${API_BASE_URL}${user.photo}` }} style={styles.avatarImg} />
+                  : <Ionicons name="person" size={22} color="#6b7280" />
+                }
+              </View>
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Barre de recherche */}
+        {/* ── Salutation ──────────────────────────────────────────────────── */}
+        <View style={styles.greetRow}>
+          <Text style={styles.greetEmoji}>👋</Text>
+          <Text style={styles.greetText}>
+            {greeting} <Text style={styles.greetName}>{firstName || 'Bienvenue'}</Text>
+          </Text>
+        </View>
+        <Text style={styles.greetSub}>Comment puis-je vous aider aujourd'hui ?</Text>
+
+        {/* ── Barre de recherche ──────────────────────────────────────────── */}
         <View style={[styles.searchBar, { backgroundColor: colors.card }]}>
-          <Ionicons name="search-outline" size={20} color="#0077b6" />
+          <Ionicons name="search-outline" size={20} color="#9ca3af" />
           <TextInput
             style={[styles.searchInput, { color: colors.text }]}
-            placeholder={t('searchPlaceholder')}
-            placeholderTextColor={colors.subText}
+            placeholder="Rechercher médecin, pharmacie, hôpital..."
+            placeholderTextColor="#9ca3af"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
-          <TouchableOpacity style={styles.searchFilter}>
-            <Ionicons name="options-outline" size={20} color="#0077b6" />
+          <TouchableOpacity style={styles.filterBtn}>
+            <Ionicons name="options-outline" size={20} color="#6b7280" />
           </TouchableOpacity>
         </View>
 
-        {/* Prochain RDV */}
-        <NextAppointmentCard onNavigate={onNavigate} colors={colors} t={t} />
+        {/* ── Localisation ─────────────────────────────────────────────────── */}
+        <TouchableOpacity style={styles.locationRow}>
+          <Ionicons name="location-sharp" size={14} color="#1a56db" />
+          <Text style={styles.locationText}>Lomé, Togo</Text>
+          <Ionicons name="chevron-down" size={14} color="#6b7280" />
+        </TouchableOpacity>
 
-        {/* Services */}
-        <View style={styles.servicesGrid}>
-          {SERVICES.map(s => (
-            <TouchableOpacity
-              key={s.label}
-              style={[styles.serviceCard, { backgroundColor: colors.card }]}
-              onPress={() => onNavigate(s.screen)}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.serviceIconBox, { backgroundColor: s.bg }]}>
-                {s.lib === 'fa5'
-                  ? <FontAwesome5 name={s.icon as any} size={24} color={s.color} />
-                  : <Ionicons name={s.icon as any} size={24} color={s.color} />
-                }
-              </View>
-              <Text style={[styles.serviceLabel, { color: colors.text }]} numberOfLines={1}>
-                {s.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {/* ── Hero Banner ─────────────────────────────────────────────────── */}
+        <HeroBanner onNavigate={onNavigate} />
 
-        {/* Carousel bannières */}
-        <BannerCarousel onNavigate={onNavigate} />
+        {/* ── Accès rapides ────────────────────────────────────────────────── */}
+        <QuickAccessSection onNavigate={onNavigate} colors={colors} />
 
-        {/* Meilleurs docteurs */}
+        {/* ── Médecins recommandés ─────────────────────────────────────────── */}
         <View style={styles.sectionHeader}>
           <View>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('bestDoctors')}</Text>
-            <Text style={[styles.sectionSubtitle, { color: colors.subText }]}>Recommandés pour vous</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Médecins recommandés</Text>
           </View>
           <TouchableOpacity
             style={styles.seeAllBtn}
-            onPress={() => onNavigate('doctorsDirectory')}  // ← Changé vers annuaire
+            onPress={() => onNavigate('doctorsDirectory')}
           >
-            <Text style={styles.seeAllText}>{t('seeAll')}</Text>
-            <Ionicons name="arrow-forward" size={14} color="#0077b6" />
+            <Text style={styles.seeAllText}>Voir tout</Text>
+            <Ionicons name="chevron-forward" size={14} color="#1a56db" />
           </TouchableOpacity>
         </View>
 
-        {/* Doctors list - Sans prix */}
         {loadingDocs ? (
-          <View style={styles.docsLoading}>
-            <ActivityIndicator size="small" color="#0077b6" />
-            <Text style={[styles.docsLoadingText, { color: colors.subText }]}>{t('loadingDoctors')}</Text>
+          <View style={styles.loaderBox}>
+            <ActivityIndicator size="small" color="#1a56db" />
           </View>
         ) : errorDocs ? (
-          <View style={styles.docsError}>
-            <Text style={[{ color: colors.subText, fontSize: 13, textAlign: 'center' }]}>{errorDocs}</Text>
+          <View style={styles.errorBox}>
+            <Text style={{ color: colors.subText, fontSize: 13, textAlign: 'center' }}>{errorDocs}</Text>
             <TouchableOpacity onPress={loadTopDoctors} style={styles.retryBtn}>
               <Text style={styles.retryText}>{t('retryButton')}</Text>
             </TouchableOpacity>
@@ -426,90 +263,73 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.doctorsScroll}
+            contentContainerStyle={styles.doctorsList}
           >
             {topDoctors.map(doctor => {
               const photoUrl = doctor.photo ? `${API_BASE_URL}${doctor.photo}` : null;
               const specialty = getDoctorSpecialty(doctor);
-              
-              return (
-                  <TouchableOpacity
-                    key={doctor.id}
-                    style={[styles.doctorCard, { backgroundColor: colors.card }]}
-                    onPress={() => onNavigate('doctorProfile', {
-                      doctor: {
-                        id: doctor.id,
-                        name: doctor.nomComplet,
-                        specialty: specialty,
-                        rating: doctor.note || 4.5,
-                        note: doctor.note || 0,
-                        nombreAvis: doctor.nombreAvis || 0,
-                        ville: doctor.ville,
-                        photo: doctor.photo,
-                        telephone: doctor.telephone,
-                        email: doctor.email,
-                        adresse: doctor.adresse,
-                        tarifs: doctor.tarifs,
-                      },
-                    })}
-                    activeOpacity={0.85}
-                  >
-                  {/* Badge spécialité */}
-                  <View style={styles.doctorBadge}>
-                    <Text style={styles.doctorBadgeText} numberOfLines={1}>
-                      {specialty}
-                    </Text>
-                  </View>
+              const docParams = {
+                doctor: {
+                  id: doctor.id,
+                  name: doctor.nomComplet,
+                  specialty,
+                  rating: doctor.note || 4.5,
+                  note: doctor.note || 0,
+                  nombreAvis: doctor.nombreAvis || 0,
+                  ville: doctor.ville,
+                  photo: doctor.photo,
+                  telephone: doctor.telephone,
+                  email: doctor.email,
+                  adresse: doctor.adresse,
+                  tarifs: doctor.tarifs,
+                },
+              };
 
-                  {/* Photo */}
-                  <View style={styles.doctorAvatarWrap}>
+              return (
+                <TouchableOpacity
+                  key={doctor.id}
+                  style={[styles.docCard, { backgroundColor: colors.card }]}
+                  onPress={() => onNavigate('doctorProfile', docParams)}
+                  activeOpacity={0.85}
+                >
+                  {/* Photo + badge disponibilité */}
+                  <View style={styles.docAvatarWrap}>
                     {photoUrl
-                      ? <Image source={{ uri: photoUrl }} style={styles.doctorAvatar} />
+                      ? <Image source={{ uri: photoUrl }} style={styles.docAvatar} />
                       : (
-                        <View style={[styles.doctorAvatarFallback]}>
-                          <FontAwesome5 name="user-md" size={34} color="#0077b6" />
+                        <View style={styles.docAvatarFallback}>
+                          <FontAwesome5 name="user-md" size={30} color="#1a56db" />
                         </View>
                       )
                     }
+                    <View style={styles.docOnlineDot} />
                   </View>
 
-                  <Text style={[styles.doctorName, { color: colors.text }]} numberOfLines={2}>
+                  {/* Infos */}
+                  <Text style={[styles.docName, { color: colors.text }]} numberOfLines={2}>
                     {doctor.nomComplet}
                   </Text>
+                  <Text style={[styles.docSpecialty, { color: colors.subText }]} numberOfLines={1}>
+                    {specialty}
+                  </Text>
 
+                  {/* Note */}
                   <StarRating note={doctor.note || 0} nombreAvis={doctor.nombreAvis} size={10} showValue showAvisCount />
 
-                  {/* Localisation seulement (prix enlevé) */}
-                  <View style={styles.doctorMeta}>
-                    <View style={styles.doctorMetaRow}>
-                      <Ionicons name="location-outline" size={11} color="#0077b6" />
-                      <Text style={[styles.doctorCity, { color: colors.subText }]} numberOfLines={1}>
-                        {doctor.ville || 'Adresse non précisée'}
-                      </Text>
-                    </View>
+                  {/* Distance/ville */}
+                  <View style={styles.docMetaRow}>
+                    <Ionicons name="location-outline" size={11} color="#1a56db" />
+                    <Text style={[styles.docCity, { color: colors.subText }]} numberOfLines={1}>
+                      {doctor.ville || 'Non précisé'}
+                    </Text>
                   </View>
 
-                  {/* Bouton Voir détails (pas Consulter) */}
+                  {/* CTA */}
                   <TouchableOpacity
-                    style={styles.doctorBookBtn}
-                    onPress={() => onNavigate('doctorProfile', {
-                      doctor: {
-                        id: doctor.id,
-                        name: doctor.nomComplet,
-                        specialty: specialty,
-                        rating: doctor.note || 4.5,
-                        note: doctor.note || 0,
-                        nombreAvis: doctor.nombreAvis || 0,
-                        ville: doctor.ville,
-                        photo: doctor.photo,
-                        telephone: doctor.telephone,
-                        email: doctor.email,
-                        adresse: doctor.adresse,
-                        tarifs: doctor.tarifs,
-                      },
-                    })}
+                    style={styles.docCta}
+                    onPress={() => onNavigate('doctorProfile', docParams)}
                   >
-                    <Text style={styles.doctorBookBtnText}>Voir détails</Text>
+                    <Text style={styles.docCtaText}>Prendre RDV</Text>
                   </TouchableOpacity>
                 </TouchableOpacity>
               );
@@ -517,268 +337,239 @@ const HomeScreen = ({ onNavigate, unreadCount = 0 }: HomeScreenProps) => {
           </ScrollView>
         )}
 
-        <View style={{ height: 20 }} />
+        {/* ── Bannière Gérer RDV ───────────────────────────────────────────── */}
+        <ManageAppointmentsBanner onNavigate={onNavigate} colors={colors} />
+
+        <View style={{ height: 16 }} />
       </ScrollView>
 
-      <BottomNavigation currentScreen="home" onNavigate={onNavigate} unreadCount={unreadCount} />
-
-      {/* Modal langue */}
-      <Modal
-        visible={showLangModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowLangModal(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowLangModal(false)}
-        >
-          <View style={[styles.modalSheet, { backgroundColor: colors.card }]}>
-            <View style={styles.modalHandle} />
-            <Text style={[styles.modalTitle, { color: colors.text }]}>🌐 {t('language')}</Text>
-            {LANGUAGES.map(lang => (
-              <TouchableOpacity
-                key={lang.code}
-                style={[styles.langItem, language === lang.code && styles.langItemActive]}
-                onPress={async () => { await setLanguage(lang.code); setShowLangModal(false); }}
-              >
-                <Text style={styles.langItemFlag}>{lang.flag}</Text>
-                <Text style={[styles.langItemText, { color: colors.text }, language === lang.code && styles.langItemTextActive]}>
-                  {lang.label}
-                </Text>
-                {language === lang.code && <Ionicons name="checkmark-circle" size={20} color="#0077b6" />}
-              </TouchableOpacity>
-            ))}
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      <BottomNavigation currentScreen="home" onNavigate={onNavigate} />
     </SafeAreaView>
   );
 };
 
-// Styles (inchangés, garder les mêmes)
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: {},
 
+  // Header
   header: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'flex-start', paddingHorizontal: 20,
-    paddingTop: 12, paddingBottom: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 4,
   },
-  greeting: { fontSize: 13, marginBottom: 2 },
-  userName: { fontSize: 22, fontWeight: '700', letterSpacing: -0.3 },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 4 },
-  loginHeaderBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: '#e8f4fd', paddingHorizontal: 12, paddingVertical: 7,
-    borderRadius: 20, borderWidth: 1, borderColor: '#0077b630',
+  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  logoIconBox: {
+    width: 36, height: 36, borderRadius: 10,
+    backgroundColor: '#1a56db',
+    justifyContent: 'center', alignItems: 'center',
   },
-  loginHeaderText: { color: '#0077b6', fontSize: 12, fontWeight: '700' },
-  langPill: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: 10, paddingVertical: 7, borderRadius: 20,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06, shadowRadius: 3, elevation: 2,
-  },
-  langFlag: { fontSize: 17 },
+  logoIconText: { fontSize: 20, color: '#fff' },
+  logoImg: { width: 130, height: 44, resizeMode: 'contain' },
+  logoText: { fontSize: 22, fontWeight: '800', letterSpacing: -0.5 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   notifBtn: {
     width: 40, height: 40, borderRadius: 20,
-    justifyContent: 'center', alignItems: 'center', position: 'relative',
+    backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center',
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06, shadowRadius: 3, elevation: 2,
+    shadowOpacity: 0.07, shadowRadius: 4, elevation: 2,
   },
   notifBadge: {
     position: 'absolute', top: 6, right: 6,
-    backgroundColor: '#FF6B6B', borderRadius: 8,
+    backgroundColor: '#ef4444', borderRadius: 8,
     minWidth: 16, height: 16, justifyContent: 'center', alignItems: 'center',
     borderWidth: 1.5, borderColor: '#fff',
   },
   notifBadgeText: { color: '#fff', fontSize: 9, fontWeight: '700' },
+  avatarBox: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#e5e7eb', justifyContent: 'center', alignItems: 'center',
+    overflow: 'hidden',
+  },
+  avatarImg: { width: 40, height: 40, borderRadius: 20 },
 
+  // Salutation
+  greetRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 20, marginTop: 16, marginBottom: 2,
+  },
+  greetEmoji: { fontSize: 22 },
+  greetText: { fontSize: 20, fontWeight: '700', color: '#111827' },
+  greetName: { fontWeight: '900', color: '#111827' },
+  greetSub: { fontSize: 13, color: '#6b7280', paddingHorizontal: 20, marginBottom: 14 },
+
+  // Search
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
-    marginHorizontal: 20, paddingHorizontal: 16, paddingVertical: 13,
-    borderRadius: 16, marginBottom: 16,
+    marginHorizontal: 20, paddingHorizontal: 14, paddingVertical: 12,
+    borderRadius: 14, marginBottom: 10, gap: 10,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07, shadowRadius: 6, elevation: 3,
-    gap: 10,
+    shadowOpacity: 0.06, shadowRadius: 6, elevation: 3,
   },
   searchInput: { flex: 1, fontSize: 14 },
-  searchFilter: {
-    width: 36, height: 36, borderRadius: 10,
-    backgroundColor: '#e8f4fd', justifyContent: 'center', alignItems: 'center',
+  filterBtn: {
+    width: 34, height: 34, borderRadius: 9,
+    backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center',
   },
 
-  rdvCardWrapper: { marginHorizontal: 20, marginBottom: 20 },
-  rdvCard: {
-    flexDirection: 'row', alignItems: 'center',
-    borderRadius: 16, overflow: 'hidden',
-    shadowColor: '#0077b6', shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12, shadowRadius: 8, elevation: 4,
+  // Location
+  locationRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 20, marginBottom: 18,
   },
-  rdvAccent: { width: 5, height: '100%', backgroundColor: '#0077b6', position: 'absolute', left: 0 },
-  rdvDateBox: {
-    paddingLeft: 22, paddingRight: 12, paddingVertical: 16,
-    alignItems: 'center',
-  },
-  rdvDay: { fontSize: 28, fontWeight: '800', color: '#0077b6', lineHeight: 30 },
-  rdvMonth: { fontSize: 11, fontWeight: '700', color: '#0077b6', letterSpacing: 1 },
-  rdvDivider: { width: 1, height: 44, backgroundColor: '#b8d8ee', marginRight: 12 },
-  rdvInfo: { flex: 1, paddingVertical: 14 },
-  rdvLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 3 },
-  rdvLabel: { fontSize: 11, color: '#0077b6', fontWeight: '600', letterSpacing: 0.3 },
-  rdvDoctor: { fontSize: 15, fontWeight: '700', color: '#1a1a2e', marginBottom: 5 },
-  rdvMetaRow: { flexDirection: 'row', gap: 14 },
-  rdvMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  rdvMetaText: { fontSize: 12, color: '#555' },
-  rdvArrow: { paddingHorizontal: 14 },
+  locationText: { fontSize: 13, fontWeight: '600', color: '#374151' },
 
-  servicesGrid: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    paddingHorizontal: 20, marginBottom: 20, gap: 10,
-  },
-  serviceCard: {
-    flex: 1, alignItems: 'center', paddingVertical: 14, borderRadius: 16,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06, shadowRadius: 5, elevation: 2,
-  },
-  serviceIconBox: {
-    width: 50, height: 50, borderRadius: 14,
-    justifyContent: 'center', alignItems: 'center', marginBottom: 8,
-  },
-  serviceLabel: { fontSize: 11, fontWeight: '600', textAlign: 'center' },
-
-  carouselWrapper: { marginBottom: 24 },
-  slide: {
-    width: SCREEN_WIDTH - 40,
-    marginHorizontal: 20,
+  // Hero Banner
+  heroWrapper: {
+    marginHorizontal: 16, marginBottom: 16,
     borderRadius: 20, overflow: 'hidden',
-    shadowColor: '#0077b6', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2, shadowRadius: 10, elevation: 6,
+    shadowColor: '#1a56db', shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25, shadowRadius: 14, elevation: 8,
   },
-  slideGradient: { borderRadius: 20, padding: 20, height: 190, overflow: 'hidden' },
-  slideBubble1: {
-    position: 'absolute', right: -30, top: -30,
-    width: 130, height: 130, borderRadius: 65,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+  heroGradient: {
+    flexDirection: 'row', alignItems: 'center',
+    padding: 24, minHeight: 180, borderRadius: 20, overflow: 'hidden',
   },
-  slideBubble2: {
-    position: 'absolute', right: 40, bottom: -40,
-    width: 100, height: 100, borderRadius: 50,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+  heroDot1: {
+    position: 'absolute', width: 8, height: 8, borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.4)', top: 30, right: 120,
   },
-  slideContent: { flexDirection: 'row', alignItems: 'center' },
-  slideLeft: { flex: 1 },
-  slideLeftWithImage: { paddingRight: 125 },
-  slideBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10,
-    paddingVertical: 4, borderRadius: 20, alignSelf: 'flex-start', marginBottom: 10,
+  heroDot2: {
+    position: 'absolute', width: 6, height: 6, borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.3)', bottom: 40, right: 60,
   },
-  slideBadgeText: { color: '#fff', fontSize: 11, fontWeight: '600' },
-  slideTitle: { fontSize: 16, fontWeight: '800', color: '#fff', lineHeight: 22, marginBottom: 4 },
-  slideSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.8)', lineHeight: 17, marginBottom: 8 },
-  slideBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: '#fff', paddingHorizontal: 14, paddingVertical: 8,
-    borderRadius: 20, alignSelf: 'flex-start',
+  heroLine1: {
+    position: 'absolute', width: 70, height: 1,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    top: 33, right: 55, transform: [{ rotate: '30deg' }],
   },
-  slideBtnText: { color: '#0077b6', fontSize: 12, fontWeight: '700' },
-  slideImage: { position: 'absolute', right: 0, bottom: -20, width: 110, height: 150 },
-  slideIconBox: {
-    width: 90, height: 90, justifyContent: 'center',
-    alignItems: 'center', marginLeft: 10,
+  heroLine2: {
+    position: 'absolute', width: 50, height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    bottom: 42, right: 90, transform: [{ rotate: '-20deg' }],
   },
-  dotsRow: {
-    flexDirection: 'row', justifyContent: 'center',
-    gap: 6, marginTop: 12,
+  heroLeft: { flex: 1, paddingRight: 10 },
+  heroTitle: { fontSize: 20, fontWeight: '800', color: '#fff', lineHeight: 28, marginBottom: 8 },
+  heroSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.8)', lineHeight: 18, marginBottom: 16 },
+  heroBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: '#fff', paddingHorizontal: 16, paddingVertical: 10,
+    borderRadius: 24, alignSelf: 'flex-start',
   },
-  dot: {
-    width: 6, height: 6, borderRadius: 3,
-    backgroundColor: '#c5dff4',
+  heroBtnText: { color: '#1a56db', fontWeight: '700', fontSize: 13 },
+  heroLogoBox: { width: 110, alignItems: 'center', justifyContent: 'center' },
+  heroOrbit: {
+    width: 90, height: 90, borderRadius: 45,
+    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.25)',
+    position: 'absolute', justifyContent: 'center', alignItems: 'center',
   },
-  dotActive: {
-    width: 20, height: 6, borderRadius: 3,
-    backgroundColor: '#0077b6',
+  heroOrbitDot1: {
+    position: 'absolute', top: -4, left: 20,
+    width: 8, height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.5)',
   },
+  heroOrbitDot2: {
+    position: 'absolute', bottom: -4, right: 16,
+    width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.4)',
+  },
+  heroLogoInner: {
+    width: 60, height: 60, borderRadius: 30,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  heroLogo: {
+    width: 70,
+    height: 70,
+    resizeMode: 'contain',
+  },
+  heroLogoText: { fontSize: 34, color: '#fff' },
 
+  // Quick access
+  qaCard: {
+    marginHorizontal: 16, borderRadius: 18, padding: 18,
+    marginBottom: 20,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
+  },
+  qaTitle: { fontSize: 16, fontWeight: '700', marginBottom: 16 },
+  qaRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  qaItem: { alignItems: 'center', gap: 8 },
+  qaIconBox: {
+    width: 62, height: 62, borderRadius: 18,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  qaLabel: { fontSize: 12, fontWeight: '600', textAlign: 'center' },
+
+  // Section header
   sectionHeader: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'flex-end', paddingHorizontal: 20, marginBottom: 14,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: 20, marginBottom: 14,
   },
-  sectionTitle: { fontSize: 18, fontWeight: '700', letterSpacing: -0.2 },
-  sectionSubtitle: { fontSize: 12, marginTop: 2 },
-  seeAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  seeAllText: { color: '#0077b6', fontSize: 13, fontWeight: '600' },
+  sectionTitle: { fontSize: 17, fontWeight: '700' },
+  seeAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  seeAllText: { color: '#1a56db', fontSize: 13, fontWeight: '600' },
 
-  doctorsScroll: { paddingLeft: 20, paddingRight: 10, gap: 12 },
-  doctorCard: {
-    width: 155, borderRadius: 18, padding: 14,
+  // Doctor cards
+  doctorsList: { paddingLeft: 16, paddingRight: 8, gap: 12 },
+  docCard: {
+    width: 160, borderRadius: 16, padding: 14,
     shadowColor: '#000', shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.08, shadowRadius: 8, elevation: 4,
+    shadowOpacity: 0.07, shadowRadius: 8, elevation: 3,
+    marginBottom: 4,
   },
-  doctorBadge: {
-    backgroundColor: '#e8f4fd', paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: 8, alignSelf: 'flex-start', marginBottom: 10,
+  docAvatarWrap: { alignItems: 'center', marginBottom: 10, position: 'relative' },
+  docAvatar: { width: 68, height: 68, borderRadius: 34 },
+  docAvatarFallback: {
+    width: 68, height: 68, borderRadius: 34,
+    backgroundColor: '#eff6ff', justifyContent: 'center', alignItems: 'center',
   },
-  doctorBadgeText: { color: '#0077b6', fontSize: 10, fontWeight: '600' },
-  doctorAvatarWrap: { alignItems: 'center', marginBottom: 10 },
-  doctorAvatar: { width: 72, height: 72, borderRadius: 36 },
-  doctorAvatarFallback: {
-    width: 72, height: 72, borderRadius: 36,
-    backgroundColor: '#e8f4fd', justifyContent: 'center', alignItems: 'center',
+  docOnlineDot: {
+    position: 'absolute', bottom: 2, right: 42,
+    width: 12, height: 12, borderRadius: 6,
+    backgroundColor: '#10b981', borderWidth: 2, borderColor: '#fff',
   },
-  doctorName: { fontSize: 13, fontWeight: '700', marginBottom: 6, lineHeight: 18 },
-  ratingRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 2, marginBottom: 8,
+  docName: { fontSize: 13, fontWeight: '700', lineHeight: 17, marginBottom: 2 },
+  docSpecialty: { fontSize: 11, marginBottom: 6 },
+  docMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 5, marginBottom: 10 },
+  docCity: { fontSize: 11, flex: 1 },
+  docCta: {
+    backgroundColor: '#1a56db', paddingVertical: 8, borderRadius: 10, alignItems: 'center',
   },
-  ratingNum: { fontSize: 11, color: '#888', marginLeft: 3, fontWeight: '600' },
-  doctorMeta: {
-    flexDirection: 'row', justifyContent: 'flex-start',
-    alignItems: 'center', marginBottom: 10,
-  },
-  doctorMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  doctorCity: { fontSize: 11, flex: 1, color: '#666' },
-  doctorBookBtn: {
-    backgroundColor: '#0077b6', paddingVertical: 8, borderRadius: 10,
-    alignItems: 'center',
-  },
-  doctorBookBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  docCtaText: { color: '#fff', fontSize: 12, fontWeight: '700' },
 
-  docsLoading: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    paddingVertical: 30, paddingHorizontal: 20, gap: 10,
+  // RDV Banner
+  rdvBanner: {
+    marginHorizontal: 16, marginTop: 6, marginBottom: 4,
+    borderRadius: 16, padding: 16,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
   },
-  docsLoadingText: { fontSize: 14 },
-  docsError: { alignItems: 'center', paddingHorizontal: 20, paddingVertical: 20 },
+  rdvBannerIconBox: {
+    width: 52, height: 52, borderRadius: 14,
+    justifyContent: 'center', alignItems: 'center',
+    flexShrink: 0,
+  },
+  rdvBannerText: { flex: 1 },
+  rdvBannerTitle: { fontSize: 14, fontWeight: '700', marginBottom: 3 },
+  rdvBannerSub: { fontSize: 11, lineHeight: 15 },
+  rdvBannerBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: '#1a56db', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20,
+  },
+  rdvBannerBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+
+  // Loader / Error
+  loaderBox: { paddingVertical: 30, alignItems: 'center' },
+  errorBox: { alignItems: 'center', paddingHorizontal: 20, paddingVertical: 20 },
   retryBtn: {
-    marginTop: 12, backgroundColor: '#0077b6',
+    marginTop: 12, backgroundColor: '#1a56db',
     paddingHorizontal: 24, paddingVertical: 10, borderRadius: 20,
   },
   retryText: { color: '#fff', fontSize: 13, fontWeight: '600' },
-
-  modalOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end',
-  },
-  modalSheet: {
-    borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 20, paddingBottom: 40,
-  },
-  modalHandle: {
-    width: 40, height: 4, borderRadius: 2,
-    backgroundColor: '#ddd', alignSelf: 'center', marginBottom: 16,
-  },
-  modalTitle: { fontSize: 16, fontWeight: '700', marginBottom: 16, textAlign: 'center' },
-  langItem: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 13, paddingHorizontal: 14, borderRadius: 12, marginBottom: 4, gap: 14,
-  },
-  langItemActive: { backgroundColor: '#e8f4fd' },
-  langItemFlag: { fontSize: 26 },
-  langItemText: { flex: 1, fontSize: 15 },
-  langItemTextActive: { color: '#0077b6', fontWeight: '700' },
 });
 
 export default HomeScreen;

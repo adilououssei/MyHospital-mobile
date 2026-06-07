@@ -306,6 +306,7 @@ const translations = {
     hsDistanceFrom: 'À',
     hsDistanceFromPos: 'de votre position',
     hsSpecialties: 'Spécialités :',
+    hsInsurances: 'Assurances acceptées :',
     loginTitle: 'Connexion',
     loginWelcome: 'Bon retour !',
     loginSubtitle: 'Connectez-vous pour accéder à votre compte',
@@ -522,6 +523,7 @@ const translations = {
     hsRegAll: 'All', hsRegMaritime: 'Maritime', hsRegPlateaux: 'Plateaux', hsRegCentrale: 'Central', hsRegKara: 'Kara',
     hsRegSavanes: 'Savanes', hsNoPhone: 'No phone number', hsOpen247: 'Open 24/7', hsNoHours: 'Opening hours not available',
     hsDistanceFrom: '', hsDistanceFromPos: 'from your position', hsSpecialties: 'Specialties:',
+    hsInsurances: 'Accepted insurances:',
     loginTitle: 'Login', loginWelcome: 'Welcome back!', loginSubtitle: 'Sign in to access your account',
     loginEmailPlaceholder: 'Enter your email', loginPasswordPlaceholder: 'Enter your password',
     loginForgotPassword: 'Forgot password?', loginBtn: 'Sign in', loginNoAccount: 'Don\'t have an account? ',
@@ -709,6 +711,7 @@ const translations = {
     hsRegAll: 'Alle', hsRegMaritime: 'Maritime', hsRegPlateaux: 'Plateaux', hsRegCentrale: 'Centrale', hsRegKara: 'Kara',
     hsRegSavanes: 'Savanes', hsNoPhone: 'Keine Telefonnummer', hsOpen247: '24/7 geöffnet', hsNoHours: 'Öffnungszeiten nicht verfügbar',
     hsDistanceFrom: '', hsDistanceFromPos: 'von Ihrem Standort', hsSpecialties: 'Fachrichtungen:',
+    hsInsurances: 'Akzeptierte Versicherungen:',
     loginTitle: 'Anmeldung', loginWelcome: 'Willkommen zurück!', loginSubtitle: 'Melden Sie sich an, um auf Ihr Konto zuzugreifen',
     loginEmailPlaceholder: 'Geben Sie Ihre E-Mail ein', loginPasswordPlaceholder: 'Geben Sie Ihr Passwort ein',
     loginForgotPassword: 'Passwort vergessen?', loginBtn: 'Anmelden', loginNoAccount: 'Noch kein Konto? ',
@@ -813,6 +816,7 @@ const translations = {
 // 🏷️ TYPES
 // ─────────────────────────────────────────────────────────────
 interface User {
+  photo: any;
   ville?: string | null;
   id: number;
   email: string;

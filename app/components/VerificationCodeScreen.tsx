@@ -13,8 +13,8 @@ import authService from '../services/authService';
 interface VerificationCodeScreenProps {
     onNavigate: (screen: string, params?: any) => void;
     route?: { params?: { email: string } };
-    contact?: string;  // Ajout de la prop contact
-    type?: string;     // Ajout de la prop type
+    contact?: string;
+    type?: string;
 }
 
 const VerificationCodeScreen = ({ onNavigate, route, contact, type }: VerificationCodeScreenProps) => {
@@ -22,12 +22,10 @@ const VerificationCodeScreen = ({ onNavigate, route, contact, type }: Verificati
     const [code, setCode] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
-    
-    // Priorité à contact si fourni, sinon route.params.email
+
     const email = contact || route?.params?.email || '';
 
     const handleCodeChange = (text: string) => {
-        // Limiter à 6 chiffres
         const cleanText = text.replace(/[^0-9]/g, '').slice(0, 6);
         setCode(cleanText);
         setErrorMessage('');
@@ -54,13 +52,10 @@ const VerificationCodeScreen = ({ onNavigate, route, contact, type }: Verificati
         }
     };
 
-    // Afficher les chiffres avec des espaces pour une meilleure lisibilité
     const displayCode = code.split('').join(' ');
 
-    // Texte d'affichage du contact (email ou téléphone)
     const getContactDisplay = () => {
         if (type === 'phone' && email) {
-            // Masquer partiellement le numéro de téléphone
             if (email.length > 6) {
                 const start = email.slice(0, 4);
                 const end = email.slice(-2);
@@ -69,10 +64,9 @@ const VerificationCodeScreen = ({ onNavigate, route, contact, type }: Verificati
             return email;
         }
         if (email && email.includes('@')) {
-            // Masquer partiellement l'email
             const [localPart, domain] = email.split('@');
-            const maskedLocal = localPart.length > 3 
-                ? localPart.slice(0, 3) + '***' 
+            const maskedLocal = localPart.length > 3
+                ? localPart.slice(0, 3) + '***'
                 : localPart.slice(0, 1) + '***';
             return `${maskedLocal}@${domain}`;
         }
@@ -85,7 +79,7 @@ const VerificationCodeScreen = ({ onNavigate, route, contact, type }: Verificati
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <View style={styles.header}>
                         <TouchableOpacity style={styles.backButton} onPress={() => onNavigate('forgotPassword')}>
-                            <Ionicons name="chevron-back" size={24} color="#000" />
+                            <Ionicons name="chevron-back" size={24} color="#111827" />
                         </TouchableOpacity>
                     </View>
 
@@ -103,7 +97,7 @@ const VerificationCodeScreen = ({ onNavigate, route, contact, type }: Verificati
                                 keyboardType="number-pad"
                                 maxLength={11}
                                 placeholder="● ● ● ● ● ●"
-                                placeholderTextColor="#ccc"
+                                placeholderTextColor="#9ca3af"
                                 textAlign="center"
                                 editable={!isLoading}
                                 autoFocus
@@ -112,7 +106,7 @@ const VerificationCodeScreen = ({ onNavigate, route, contact, type }: Verificati
 
                         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             style={[styles.verifyButton, isLoading && styles.verifyButtonDisabled]}
                             onPress={handleVerify}
                             disabled={isLoading}>
@@ -125,7 +119,7 @@ const VerificationCodeScreen = ({ onNavigate, route, contact, type }: Verificati
                             )}
                         </TouchableOpacity>
 
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             style={styles.resendLink}
                             onPress={() => onNavigate('forgotPassword')}>
                             <Text style={styles.resendLinkText}>
@@ -140,30 +134,47 @@ const VerificationCodeScreen = ({ onNavigate, route, contact, type }: Verificati
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#fff' },
+    container: { flex: 1, backgroundColor: '#f0f4f8' },
     header: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 20 },
     backButton: { padding: 5 },
     content: { paddingHorizontal: 30, paddingTop: 20 },
-    title: { fontSize: 28, fontWeight: 'bold', color: '#000', marginBottom: 12 },
-    subtitle: { fontSize: 14, color: '#999', marginBottom: 40, lineHeight: 20 },
+    title: { fontSize: 28, fontWeight: 'bold', color: '#111827', marginBottom: 12 },
+    subtitle: { fontSize: 14, color: '#6b7280', marginBottom: 40, lineHeight: 20 },
     codeContainer: { marginBottom: 20 },
     codeInput: {
         height: 60,
-        backgroundColor: '#F5F5F5',
-        borderRadius: 12,
+        backgroundColor: 'rgba(255,255,255,0.88)',
+        borderRadius: 14,
+        borderWidth: 1.5,
+        borderColor: '#e5e7eb',
         fontSize: 24,
         fontWeight: '600',
         color: '#000',
         letterSpacing: 8,
-        textAlign: 'center'
+        textAlign: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+        elevation: 2,
     },
     codeInputError: { borderWidth: 2, borderColor: '#FF6B6B' },
     errorText: { color: '#FF6B6B', fontSize: 12, textAlign: 'center', marginBottom: 20 },
-    verifyButton: { backgroundColor: '#0077b6', paddingVertical: 16, borderRadius: 30, alignItems: 'center' },
+    verifyButton: {
+        backgroundColor: '#1a3fad',
+        paddingVertical: 16,
+        borderRadius: 14,
+        alignItems: 'center',
+        shadowColor: '#1a56db',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 5,
+    },
     verifyButtonDisabled: { backgroundColor: '#B0B0B0' },
     verifyButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
     resendLink: { alignItems: 'center', marginTop: 20 },
-    resendLinkText: { color: '#0077b6', fontSize: 14, fontWeight: '500' }
+    resendLinkText: { color: '#1a56db', fontSize: 14, fontWeight: '500' }
 });
 
 export default VerificationCodeScreen;

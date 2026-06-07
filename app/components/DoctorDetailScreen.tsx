@@ -1,5 +1,3 @@
-// app/components/DoctorDetailScreen.tsx
-
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
@@ -44,7 +42,6 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
   const [selectedCreneau, setSelectedCreneau]   = useState<Creneau | null>(null);
   const [loadingCreneaux, setLoadingCreneaux]   = useState(false);
 
-  // 🏠 Géolocalisation pour consultation à domicile
   const [location, setLocation] = useState<{ latitude: number; longitude: number; address: string } | null>(null);
   const [gettingLocation, setGettingLocation] = useState(false);
   const [indicationComplementaire, setIndicationComplementaire] = useState('');
@@ -139,7 +136,6 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
     }
   };
 
-  // 🏠 Géolocalisation — Utiliser la position actuelle
   const handleGetCurrentLocation = async () => {
     try {
       setGettingLocation(true);
@@ -153,7 +149,6 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
       }
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
       const { latitude, longitude } = loc.coords;
-      // Récupérer l'adresse approximative via reverse geocoding
       let address = '';
       try {
         const geocode = await Location.reverseGeocodeAsync({ latitude, longitude });
@@ -250,12 +245,12 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
   };
 
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
       <ScreenHeader title={t('ddTitle')} onBack={() => onNavigate('doctorsList')} rightIcon="ellipsis-vertical" />
 
       {loadingDetails ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#0077b6" />
+          <ActivityIndicator size="large" color="#1a56db" />
           <Text style={[styles.centeredText, { color: colors.subText }]}>{t('ddLoading')}</Text>
         </View>
       ) : errorDetails ? (
@@ -270,11 +265,10 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
 
-            {/* Steps */}
             <View style={styles.stepRow}>
               {[1, 2, 3].map((s, i) => (
                 <React.Fragment key={s}>
-                  {i > 0 && <View style={[styles.stepLine, { backgroundColor: '#0077b6' }]} />}
+                  {i > 0 && <View style={[styles.stepLine, { backgroundColor: '#1a56db' }]} />}
                   <View style={styles.stepCircle}>
                     {s < 3 ? <Ionicons name="checkmark" size={18} color="#fff" /> : <Text style={styles.stepNum}>3</Text>}
                   </View>
@@ -282,11 +276,10 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
               ))}
             </View>
 
-            {/* Carte docteur */}
             <View style={[styles.card, { backgroundColor: colors.card }]}>
               {photoUrl
                 ? <Image source={{ uri: photoUrl }} style={styles.avatar} />
-                : <View style={[styles.avatarPlaceholder, { backgroundColor: '#E3F2FD' }]}><FontAwesome5 name="user-md" size={46} color="#0077b6" /></View>
+                : <View style={[styles.avatarPlaceholder, { backgroundColor: '#eff6ff' }]}><FontAwesome5 name="user-md" size={46} color="#1a56db" /></View>
               }
               <View style={styles.cardInfo}>
                 <Text style={[styles.docName, { color: colors.text }]} numberOfLines={2}>
@@ -308,17 +301,15 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
               </View>
             </View>
 
-            {/* Badge type consultation */}
             <View style={[styles.consultationBadge, { backgroundColor: colors.inputBackground }]}>
-              <Ionicons name={getConsultationIcon() as any} size={20} color="#0077b6" />
+              <Ionicons name={getConsultationIcon() as any} size={20} color="#1a56db" />
               <Text style={[styles.consultationText, { color: colors.text }]}>{getConsultationLabel()}</Text>
             </View>
 
-            {/* 🏪 Cabinet / Lieu de consultation — Itinéraire */}
             {(doctorDetails?.consultationLocation?.latitude || doctorDetails?.adresse || initialDoctor?.adresse) && (
               <View style={[styles.cabinetCard, { backgroundColor: colors.card }]}>
                 <View style={styles.cabinetRow}>
-                  <Ionicons name="location-outline" size={20} color="#0077b6" />
+                  <Ionicons name="location-outline" size={20} color="#1a56db" />
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.cabinetLabel, { color: colors.subText }]}>
                       {doctorDetails?.consultationLocation?.latitude ? t('ddCabinet') : 'Localisation'}
@@ -360,7 +351,6 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
               </View>
             )}
 
-            {/* À propos */}
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('ddAbout')}</Text>
               <Text style={[styles.aboutText, { color: colors.subText }]}>
@@ -370,25 +360,25 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
                 <View style={styles.detailsGrid}>
                   {doctorDetails.anneesExperience > 0 && (
                     <View style={styles.detailRow}>
-                      <Ionicons name="briefcase-outline" size={18} color="#0077b6" />
+                      <Ionicons name="briefcase-outline" size={18} color="#1a56db" />
                       <Text style={[styles.detailText, { color: colors.subText }]}>{doctorDetails.anneesExperience} {t('ddExperience')}</Text>
                     </View>
                   )}
                   {doctorDetails.nombrePatients > 0 && (
                     <View style={styles.detailRow}>
-                      <Ionicons name="people-outline" size={18} color="#0077b6" />
+                      <Ionicons name="people-outline" size={18} color="#1a56db" />
                       <Text style={[styles.detailText, { color: colors.subText }]}>{doctorDetails.nombrePatients}+ {t('ddPatients')}</Text>
                     </View>
                   )}
                   {doctorDetails.languesParlees && (
                     <View style={styles.detailRow}>
-                      <Ionicons name="language-outline" size={18} color="#0077b6" />
+                      <Ionicons name="language-outline" size={18} color="#1a56db" />
                       <Text style={[styles.detailText, { color: colors.subText }]}>{doctorDetails.languesParlees}</Text>
                     </View>
                   )}
                   {doctorDetails.numeroOrdre && (
                     <View style={styles.detailRow}>
-                      <Ionicons name="card-outline" size={18} color="#0077b6" />
+                      <Ionicons name="card-outline" size={18} color="#1a56db" />
                       <Text style={[styles.detailText, { color: colors.subText }]}>N° Ordre : {doctorDetails.numeroOrdre}</Text>
                     </View>
                   )}
@@ -402,28 +392,27 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
               )}
             </View>
 
-            {/* Tarifs */}
             {doctorDetails && (
               <View style={styles.section}>
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('ddPrices')}</Text>
                 <View style={[styles.tarifGrid, { backgroundColor: colors.card }]}>
                   {doctorDetails.tarifs.hopital != null && (
                     <View style={styles.tarifItem}>
-                      <Ionicons name="business-outline" size={20} color="#0077b6" />
+                      <Ionicons name="business-outline" size={20} color="#1a56db" />
                       <Text style={[styles.tarifLabel, { color: colors.subText }]}>{t('ddConsultHospital')}</Text>
                       <Text style={styles.tarifPrice}>{doctorDetails.tarifs.hopital.toLocaleString()} FCFA</Text>
                     </View>
                   )}
                   {doctorDetails.tarifs.domicile != null && (
                     <View style={styles.tarifItem}>
-                      <Ionicons name="home-outline" size={20} color="#0077b6" />
+                      <Ionicons name="home-outline" size={20} color="#1a56db" />
                       <Text style={[styles.tarifLabel, { color: colors.subText }]}>{t('ddConsultHome')}</Text>
                       <Text style={styles.tarifPrice}>{doctorDetails.tarifs.domicile.toLocaleString()} FCFA</Text>
                     </View>
                   )}
                   {doctorDetails.tarifs.enLigne != null && (
                     <View style={styles.tarifItem}>
-                      <Ionicons name="videocam-outline" size={20} color="#0077b6" />
+                      <Ionicons name="videocam-outline" size={20} color="#1a56db" />
                       <Text style={[styles.tarifLabel, { color: colors.subText }]}>{t('ddConsultOnline')}</Text>
                       <Text style={styles.tarifPrice}>{doctorDetails.tarifs.enLigne.toLocaleString()} FCFA</Text>
                     </View>
@@ -432,12 +421,11 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
               </View>
             )}
 
-            {/* Dates */}
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('ddAvailableDates')}</Text>
               {loadingDispos ? (
                 <View style={styles.datesLoading}>
-                  <ActivityIndicator size="small" color="#0077b6" />
+                  <ActivityIndicator size="small" color="#1a56db" />
                   <Text style={[styles.datesLoadingText, { color: colors.subText }]}>{t('ddLoadingDates')}</Text>
                 </View>
               ) : datesDisponibles.length === 0 ? (
@@ -462,13 +450,12 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
               )}
             </View>
 
-            {/* Créneaux */}
             {selectedDate && (
               <View style={styles.section}>
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('ddAvailableSlots')}</Text>
                 {loadingCreneaux ? (
                   <View style={[styles.creneauxEmpty, { backgroundColor: colors.card }]}>
-                    <ActivityIndicator size="small" color="#0077b6" />
+                    <ActivityIndicator size="small" color="#1a56db" />
                     <Text style={[styles.creneauxEmptyText, { color: colors.subText, marginTop: 10 }]}>{t('ddLoading')}</Text>
                   </View>
                 ) : creneaux.length === 0 ? (
@@ -482,9 +469,9 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
                       const active = selectedCreneau?.id === c.id;
                       return (
                         <TouchableOpacity key={c.id} disabled={!c.disponible}
-                          style={[styles.creneauBtn, { backgroundColor: !c.disponible ? colors.inputBackground : colors.card, borderColor: !c.disponible ? '#ccc' : colors.subText, opacity: c.disponible ? 1 : 0.45 }, active && styles.creneauBtnActive]}
+                          style={[styles.creneauBtn, { backgroundColor: !c.disponible ? colors.inputBackground : colors.card, borderColor: !c.disponible ? '#9ca3af' : colors.subText, opacity: c.disponible ? 1 : 0.45 }, active && styles.creneauBtnActive]}
                           onPress={() => setSelectedCreneau(c)}>
-                          <Text style={[styles.creneauText, { color: !c.disponible ? '#aaa' : colors.subText }, active && styles.creneauTextActive]}>{c.heure}</Text>
+                          <Text style={[styles.creneauText, { color: !c.disponible ? '#9ca3af' : colors.subText }, active && styles.creneauTextActive]}>{c.heure}</Text>
                           {!c.disponible && <Text style={styles.creneauPris}>{t('ddOccupied')}</Text>}
                         </TouchableOpacity>
                       );
@@ -494,12 +481,10 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
               </View>
             )}
 
-            {/* 🏠 Géolocalisation pour consultation à domicile */}
             {consultationType === 'domicile' && (
               <View style={styles.section}>
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('ddYourPosition')}</Text>
 
-                {/* Bouton Utiliser ma position */}
                 {!location ? (
                   <TouchableOpacity
                     style={[styles.locationButton, gettingLocation && { opacity: 0.6 }]}
@@ -517,7 +502,6 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
                   </TouchableOpacity>
                 ) : (
                   <View style={[styles.locationCard, { backgroundColor: colors.card }]}>
-                    {/* Mini carte statique OpenStreetMap */}
                     <Image
                       source={{
                         uri: `https://staticmap.openstreetmap.de/staticmap.php?center=${location.latitude},${location.longitude}&zoom=15&size=280x140&markers=${location.latitude},${location.longitude},red-pushpin`,
@@ -525,38 +509,35 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
                       style={styles.miniMap}
                       resizeMode="cover"
                     />
-                    {/* Adresse */}
                     {location.address ? (
                       <View style={styles.addressRow}>
-                        <Ionicons name="location" size={16} color="#0077b6" />
+                        <Ionicons name="location" size={16} color="#1a56db" />
                         <Text style={[styles.addressText, { color: colors.text }]}>{location.address}</Text>
                       </View>
                     ) : (
                       <View style={styles.addressRow}>
-                        <Ionicons name="location" size={16} color="#0077b6" />
+                        <Ionicons name="location" size={16} color="#1a56db" />
                         <Text style={[styles.addressText, { color: colors.text }]}>
                           {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
                         </Text>
                       </View>
                     )}
-                    {/* Bouton modifier */}
                     <TouchableOpacity
                       style={styles.changeLocationBtn}
                       onPress={handleGetCurrentLocation}
                     >
-                      <Ionicons name="refresh" size={16} color="#0077b6" />
+                      <Ionicons name="refresh" size={16} color="#1a56db" />
                       <Text style={styles.changeLocationText}>{t('ddChangeLocation')}</Text>
                     </TouchableOpacity>
                   </View>
                 )}
 
-                {/* Champ indication complémentaire */}
                 <View style={styles.indicationContainer}>
                   <Text style={[styles.indicationLabel, { color: colors.text }]}>
                     {t('ddIndicationLabel')} <Text style={{ color: colors.subText, fontSize: 12 }}>({t('ddOptional')})</Text>
                   </Text>
                   <TextInput
-                    style={[styles.indicationInput, { backgroundColor: colors.inputBackground, color: colors.text, borderColor: '#ddd' }]}
+                    style={[styles.indicationInput, { backgroundColor: colors.inputBackground, color: colors.text, borderColor: '#e5e7eb' }]}
                     placeholder={t('ddIndicationPlaceholder')}
                     placeholderTextColor={colors.subText}
                     value={indicationComplementaire}
@@ -571,7 +552,6 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
                   </Text>
                 </View>
 
-                {/* Message si pas de position */}
                 {!location && (
                   <View style={[styles.noLocationNote, { backgroundColor: '#FFF9E6', borderColor: '#FFE4A0' }]}>
                     <Ionicons name="information-circle" size={20} color="#FFA500" />
@@ -583,7 +563,6 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
               </View>
             )}
 
-            {/* Récap prix consultation en ligne */}
             {consultationType === 'en_ligne' && (
               <>
                 <View style={[styles.pricingCard, { backgroundColor: colors.card }]}>
@@ -596,7 +575,7 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
                     <Text style={[styles.pricingLabel, { color: colors.subText }]}>{t('ddConfirmFee')}</Text>
                     <Text style={[styles.pricingVal, { color: colors.text }]}>{CONFIRMATION_FEE.toLocaleString()} FCFA</Text>
                   </View>
-                  <View style={[styles.divider, { backgroundColor: '#E0E0E0' }]} />
+                  <View style={[styles.divider, { backgroundColor: '#e5e7eb' }]} />
                   <View style={styles.pricingRow}>
                     <Text style={[styles.totalLabel, { color: colors.text }]}>{t('ddTotal')}</Text>
                     <Text style={styles.totalVal}>{(consultationPrice + CONFIRMATION_FEE).toLocaleString()} FCFA</Text>
@@ -612,10 +591,9 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
               </>
             )}
 
-            {/* Note domicile/hôpital */}
             {consultationType !== 'en_ligne' && (
               <View style={styles.noteCard}>
-                <Ionicons name="information-circle" size={22} color="#0077b6" />
+                <Ionicons name="information-circle" size={22} color="#1a56db" />
                 <Text style={[styles.noteText, { color: colors.subText }]}>
                   <Text style={[styles.noteBold, { color: colors.text }]}>{t('ddPayOnSite')} </Text>
                   {t('ddPayOnSiteMsg')}
@@ -643,17 +621,17 @@ const DoctorDetailScreen = ({ onNavigate, doctor: initialDoctor, consultationTyp
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#f0f4f8' },
   content: { padding: 20, paddingBottom: 110 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
   centeredText: { marginTop: 15, fontSize: 14, textAlign: 'center' },
-  retryButton: { marginTop: 20, backgroundColor: '#0077b6', paddingHorizontal: 30, paddingVertical: 12, borderRadius: 25 },
+  retryButton: { marginTop: 20, backgroundColor: '#1a3fad', paddingHorizontal: 30, paddingVertical: 12, borderRadius: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   retryText: { color: '#fff', fontSize: 14, fontWeight: '600' },
   stepRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 25 },
-  stepCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#0077b6', justifyContent: 'center', alignItems: 'center' },
+  stepCircle: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#1a56db', justifyContent: 'center', alignItems: 'center' },
   stepLine: { width: 40, height: 2, marginHorizontal: 5 },
   stepNum: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  card: { flexDirection: 'row', borderRadius: 15, padding: 15, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+  card: { flexDirection: 'row', borderRadius: 16, padding: 15, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   avatar: { width: 90, height: 90, borderRadius: 45, marginRight: 15 },
   avatarPlaceholder: { width: 90, height: 90, borderRadius: 45, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
   cardInfo: { flex: 1, justifyContent: 'center' },
@@ -664,7 +642,7 @@ const styles = StyleSheet.create({
   consultationBadge: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 15, paddingVertical: 12, borderRadius: 10, marginBottom: 20 },
   consultationText: { fontSize: 15, fontWeight: '600' },
   section: { marginBottom: 25 },
-  sectionTitle: { fontSize: 17, fontWeight: '600', marginBottom: 12 },
+  sectionTitle: { fontSize: 17, fontWeight: '700', marginBottom: 12 },
   aboutText: { fontSize: 14, lineHeight: 22 },
   detailsGrid: { marginTop: 12, gap: 8 },
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -672,53 +650,52 @@ const styles = StyleSheet.create({
   diplomesBox: { marginTop: 15, paddingTop: 15, borderTopWidth: 1 },
   diplomesTitle: { fontSize: 15, fontWeight: '600', marginBottom: 6 },
   diplomesText: { fontSize: 13, lineHeight: 20 },
-  tarifGrid: { flexDirection: 'row', borderRadius: 12, padding: 15, gap: 10 },
+  tarifGrid: { flexDirection: 'row', borderRadius: 16, padding: 15, gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   tarifItem: { flex: 1, alignItems: 'center', gap: 4 },
   tarifLabel: { fontSize: 12 },
-  tarifPrice: { fontSize: 13, fontWeight: '700', color: '#0077b6' },
+  tarifPrice: { fontSize: 13, fontWeight: '700', color: '#1a56db' },
   datesLoading: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 20 },
   datesLoadingText: { fontSize: 14 },
-  datesEmpty: { borderRadius: 12, padding: 30, alignItems: 'center', gap: 10 },
+  datesEmpty: { borderRadius: 16, padding: 30, alignItems: 'center', gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   datesEmptyText: { fontSize: 14, textAlign: 'center' },
-  dateCard: { borderRadius: 12, padding: 12, marginRight: 10, alignItems: 'center', minWidth: 58, borderWidth: 2 },
-  dateCardActive: { backgroundColor: '#0077b6', borderColor: '#0077b6' },
+  dateCard: { borderRadius: 16, padding: 12, marginRight: 10, alignItems: 'center', minWidth: 58, borderWidth: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  dateCardActive: { backgroundColor: '#1a56db', borderColor: '#1a56db' },
   dateLabel: { fontSize: 12, marginBottom: 4 },
   dateLabelActive: { color: '#fff' },
   dateNum: { fontSize: 20, fontWeight: '600' },
   dateNumActive: { color: '#fff' },
-  creneauxEmpty: { borderRadius: 12, padding: 30, alignItems: 'center', gap: 10 },
+  creneauxEmpty: { borderRadius: 16, padding: 30, alignItems: 'center', gap: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   creneauxEmptyText: { fontSize: 14, textAlign: 'center' },
   creneauxGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   creneauBtn: { paddingVertical: 10, paddingHorizontal: 18, borderRadius: 20, borderWidth: 1, alignItems: 'center' },
-  creneauBtnActive: { backgroundColor: '#0077b6', borderColor: '#0077b6' },
+  creneauBtnActive: { backgroundColor: '#1a56db', borderColor: '#1a56db' },
   creneauText: { fontSize: 14, fontWeight: '500' },
   creneauTextActive: { color: '#fff', fontWeight: '600' },
-  creneauPris: { fontSize: 9, color: '#aaa', marginTop: 1 },
-  pricingCard: { borderRadius: 15, padding: 20, marginBottom: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+  creneauPris: { fontSize: 9, color: '#9ca3af', marginTop: 1 },
+  pricingCard: { borderRadius: 16, padding: 20, marginBottom: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   pricingTitle: { fontSize: 16, fontWeight: '600', marginBottom: 15 },
   pricingRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
   pricingLabel: { fontSize: 14 },
   pricingVal: { fontSize: 14, fontWeight: '500' },
   divider: { height: 1, marginVertical: 10 },
   totalLabel: { fontSize: 16, fontWeight: '600' },
-  totalVal: { fontSize: 18, fontWeight: '700', color: '#0077b6' },
+  totalVal: { fontSize: 18, fontWeight: '700', color: '#1a56db' },
   noteCard: { flexDirection: 'row', backgroundColor: '#FFF9E6', borderRadius: 12, padding: 15, gap: 10, marginBottom: 20, borderWidth: 1, borderColor: '#FFE4A0' },
   noteText: { flex: 1, fontSize: 13, lineHeight: 20 },
   noteBold: { fontWeight: '700' },
   footer: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, borderTopWidth: 1 },
-  nextBtn: { backgroundColor: '#0077b6', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 30, gap: 8 },
-  nextBtnDisabled: { backgroundColor: '#ccc' },
+  nextBtn: { backgroundColor: '#1a3fad', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 14, gap: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  nextBtnDisabled: { backgroundColor: '#9ca3af' },
   nextBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 
-  // 🏠 Géolocalisation
-  locationButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#0077b6', paddingVertical: 14, borderRadius: 12, marginBottom: 15 },
+  locationButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#1a3fad', paddingVertical: 14, borderRadius: 14, marginBottom: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   locationButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  locationCard: { borderRadius: 12, overflow: 'hidden', marginBottom: 15, borderWidth: 1, borderColor: '#ddd' },
+  locationCard: { borderRadius: 16, overflow: 'hidden', marginBottom: 15, borderWidth: 1, borderColor: '#e5e7eb', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   miniMap: { width: '100%', height: 140 },
   addressRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 10 },
   addressText: { fontSize: 13, flex: 1 },
-  changeLocationBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderTopWidth: 1, borderTopColor: '#eee' },
-  changeLocationText: { fontSize: 13, color: '#0077b6', fontWeight: '600' },
+  changeLocationBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderTopWidth: 1, borderTopColor: '#e5e7eb' },
+  changeLocationText: { fontSize: 13, color: '#1a56db', fontWeight: '600' },
   indicationContainer: { marginBottom: 15 },
   indicationLabel: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
   indicationInput: { borderRadius: 10, padding: 12, fontSize: 14, minHeight: 60, borderWidth: 1 },
@@ -726,13 +703,12 @@ const styles = StyleSheet.create({
   noLocationNote: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 10, padding: 12, borderWidth: 1 },
   noLocationText: { flex: 1, fontSize: 12, lineHeight: 18, color: '#856404' },
 
-  // 🏪 Cabinet du docteur
-  cabinetCard: { borderRadius: 12, padding: 15, marginBottom: 20 },
+  cabinetCard: { borderRadius: 16, padding: 15, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   cabinetRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 12 },
   cabinetLabel: { fontSize: 12, marginBottom: 2 },
   cabinetAddress: { fontSize: 14, fontWeight: '500' },
   cabinetIndication: { fontSize: 13, fontStyle: 'italic', marginTop: 4 },
-  cabinetRouteBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#0077b6', paddingVertical: 12, borderRadius: 10 },
+  cabinetRouteBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#1a3fad', paddingVertical: 12, borderRadius: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   cabinetRouteText: { color: '#fff', fontSize: 14, fontWeight: '600' },
 });
 

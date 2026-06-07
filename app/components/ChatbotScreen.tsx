@@ -10,7 +10,6 @@ import { useApp, useAuth } from '../context/AppContext';
 import BottomNavigation from '../tabs/BottomNavigation';
 import apiClient from '../services/api.config';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -21,7 +20,6 @@ interface Message {
 
 interface Props { onNavigate: (screen: string) => void; }
 
-// ─── Suggestions rapides ──────────────────────────────────────────────────────
 const QUICK_SUGGESTIONS = [
   { label: '💊 Pharmacie de garde proche', text: 'Où trouver une pharmacie de garde près de moi ?' },
   { label: '👨‍⚕️ Prendre un rendez-vous',   text: 'Comment prendre un rendez-vous avec un médecin ?' },
@@ -31,8 +29,6 @@ const QUICK_SUGGESTIONS = [
   { label: '🤰 Maternité',                  text: 'Je suis enceinte, quels médecins sont disponibles ?' },
 ];
 
-
-// ─── Bulle de message ─────────────────────────────────────────────────────────
 const MessageBubble = ({ msg, colors, t }: { msg: Message; colors: any; t: (key: string) => string }) => {
   const isUser = msg.role === 'user';
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -55,12 +51,12 @@ const MessageBubble = ({ msg, colors, t }: { msg: Message; colors: any; t: (key:
       <View style={[
         styles.bubble,
         isUser
-          ? [styles.bubbleUser, { backgroundColor: '#0077b6' }]
+          ? [styles.bubbleUser, { backgroundColor: '#1a56db' }]
           : [styles.bubbleBot, { backgroundColor: colors.card, borderColor: colors.border }],
       ]}>
         {msg.loading ? (
           <View style={styles.typingIndicator}>
-            <ActivityIndicator size="small" color="#0077b6" />
+            <ActivityIndicator size="small" color="#1a56db" />
             <Text style={[styles.typingText, { color: colors.subText }]}>{t('chatbotThinking')}</Text>
           </View>
         ) : (
@@ -76,7 +72,6 @@ const MessageBubble = ({ msg, colors, t }: { msg: Message; colors: any; t: (key:
   );
 };
 
-// ─── Composant principal ──────────────────────────────────────────────────────
 const ChatbotScreen = ({ onNavigate }: Props) => {
   const { colors, t } = useApp();
   const { user }   = useAuth();
@@ -183,11 +178,10 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
 
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      style={styles.container}
       edges={['bottom', 'left', 'right']}
     >
-      {/* ── Header ── */}
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border, paddingTop: insets.top + 12 }]}>
+      <View style={[styles.header, { borderBottomColor: colors.border, paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={() => onNavigate('home')} style={{ padding: 4 }}>
           <Ionicons name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
@@ -205,7 +199,6 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
         </TouchableOpacity>
       </View>
 
-      {/* ── Disclaimer ── */}
       <View style={styles.disclaimer}>
         <Ionicons name="information-circle-outline" size={13} color="#e67e22" />
         <Text style={styles.disclaimerText}>
@@ -213,17 +206,11 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
         </Text>
       </View>
 
-      {/*
-        ✅ FIX : paddingBottom = BOTTOM_NAV_HEIGHT
-           → La zone de saisie reste visible AU-DESSUS de la BottomNavigation absolue.
-           Sur iOS, keyboardVerticalOffset compense header + disclaimer (~115px).
-      */}
       <KeyboardAvoidingView
         style={[styles.keyboardView, { paddingBottom: insets.bottom + 64 }]}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 115 : 0}
       >
-        {/* ── Messages ── */}
         <FlatList
           ref={flatListRef}
           data={messages}
@@ -243,10 +230,10 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
                   {QUICK_SUGGESTIONS.map((s, i) => (
                     <TouchableOpacity
                       key={i}
-                      style={[styles.suggestionChip, { backgroundColor: colors.card, borderColor: colors.border }]}
+                      style={styles.suggestionChip}
                       onPress={() => sendMessage(s.text)}
                     >
-                      <Text style={[styles.suggestionText, { color: colors.text }]}>{s.label}</Text>
+                      <Text style={styles.suggestionText}>{s.label}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -255,14 +242,9 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
           }
         />
 
-        {/* ── Zone de saisie ── */}
-        <View style={[styles.inputArea, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
+        <View style={styles.inputArea}>
           <TextInput
-            style={[styles.textInput, {
-              backgroundColor: colors.background,
-              color: colors.text,
-              borderColor: colors.border,
-            }]}
+            style={styles.textInput}
             placeholder={t('searchPlaceholder')}
             placeholderTextColor={colors.subText}
             value={inputText}
@@ -285,19 +267,15 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
         </View>
       </KeyboardAvoidingView>
 
-      {/* ✅ BottomNavigation EN DEHORS du KeyboardAvoidingView — reste fixe */}
       <BottomNavigation currentScreen="chatbot" onNavigate={onNavigate} />
 
     </SafeAreaView>
   );
 };
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container:    { flex: 1 },
+  container:    { flex: 1, backgroundColor: '#f0f4f8' },
 
-  // ✅ FIX PRINCIPAL : paddingBottom = hauteur de BottomNavigation
-  // → empêche l'inputArea de se cacher derrière la barre de navigation absolue
   keyboardView: {
     flex: 1,
   },
@@ -306,19 +284,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 14, paddingBottom: 12,
     borderBottomWidth: 1, gap: 10,
+    backgroundColor: '#fff',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
   },
   headerCenter:   { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   headerAvatar:   {
     width: 38, height: 38, borderRadius: 19,
-    backgroundColor: '#0077b6',
+    backgroundColor: '#1a56db',
     justifyContent: 'center', alignItems: 'center',
   },
-  headerTitle:    { fontSize: 16, fontWeight: '700' },
+  headerTitle:    { fontSize: 17, fontWeight: '700' },
   headerSubtitle: { fontSize: 11, color: '#27ae60', fontWeight: '500' },
 
   disclaimer: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#FFF3E0',
+    backgroundColor: '#fffbeb',
     paddingHorizontal: 14, paddingVertical: 7,
   },
   disclaimerText: { fontSize: 11, color: '#e67e22', flex: 1, lineHeight: 15 },
@@ -331,15 +312,15 @@ const styles = StyleSheet.create({
 
   botAvatar: {
     width: 30, height: 30, borderRadius: 15,
-    backgroundColor: '#0077b6',
+    backgroundColor: '#1a56db',
     justifyContent: 'center', alignItems: 'center',
     marginBottom: 2,
   },
 
   bubble: {
-    maxWidth: '80%', borderRadius: 18, padding: 12,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06, shadowRadius: 3, elevation: 1,
+    maxWidth: '80%', borderRadius: 16, padding: 12,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
   },
   bubbleUser:    { borderBottomRightRadius: 4 },
   bubbleBot:     { borderBottomLeftRadius: 4, borderWidth: 1 },
@@ -352,25 +333,36 @@ const styles = StyleSheet.create({
   suggestions:      { marginTop: 8, marginBottom: 4 },
   suggestionsLabel: { fontSize: 12, marginBottom: 8, fontWeight: '500' },
   suggestionsGrid:  { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  suggestionChip:   { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 16, borderWidth: 1 },
-  suggestionText:   { fontSize: 12, fontWeight: '500' },
+  suggestionChip:   {
+    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8,
+    backgroundColor: '#eff6ff', borderWidth: 1, borderColor: '#e5e7eb',
+  },
+  suggestionText:   { fontSize: 12, fontWeight: '500', color: '#1a56db' },
 
   inputArea: {
     flexDirection: 'row', alignItems: 'flex-end', gap: 10,
     paddingHorizontal: 14, paddingVertical: 10,
-    borderTopWidth: 1,
+    borderTopWidth: 1, borderTopColor: '#e5e7eb',
+    backgroundColor: '#fff',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
   },
   textInput: {
-    flex: 1, borderRadius: 22, borderWidth: 1,
+    flex: 1, borderRadius: 14, borderWidth: 1.5, borderColor: '#e5e7eb',
+    backgroundColor: 'rgba(255,255,255,0.88)',
     paddingHorizontal: 16, paddingVertical: 10,
     fontSize: 14, maxHeight: 100, minHeight: 44, lineHeight: 20,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04, shadowRadius: 4, elevation: 2,
   },
   sendBtn:         {
-    width: 44, height: 44, borderRadius: 22,
-    backgroundColor: '#0077b6',
+    width: 44, height: 44, borderRadius: 14,
+    backgroundColor: '#1a3fad',
     justifyContent: 'center', alignItems: 'center',
+    shadowColor: '#1a56db', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 8, elevation: 5,
   },
-  sendBtnDisabled: { backgroundColor: '#b0bec5' },
+  sendBtnDisabled: { backgroundColor: '#9ca3af' },
 });
 
 export default ChatbotScreen;

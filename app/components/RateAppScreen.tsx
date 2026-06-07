@@ -26,7 +26,6 @@ const RateAppScreen = ({ onNavigate }: RateAppScreenProps) => {
     const [comment, setComment] = useState('');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-    // Gérer le bouton retour Android
     useEffect(() => {
         const backHandler = BackHandler.addEventListener(
             'hardwareBackPress',
@@ -69,8 +68,7 @@ const RateAppScreen = ({ onNavigate }: RateAppScreenProps) => {
     };
 
     return (
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
-            {/* Header avec composant réutilisable */}
+        <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
             <ScreenHeader
                 title="Noter l'application"
                 onBack={() => onNavigate('settings')}
@@ -78,15 +76,13 @@ const RateAppScreen = ({ onNavigate }: RateAppScreenProps) => {
 
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.content}>
-                    {/* App Icon */}
                     <View style={styles.appIconContainer}>
                         <View style={styles.appIcon}>
-                            <Ionicons name="medical" size={60} color="#0077b6" />
+                            <Ionicons name="medical" size={60} color="#1a56db" />
                         </View>
                         <Text style={[styles.appName, { color: colors.text }]}>MyHospital</Text>
                     </View>
 
-                    {/* Title */}
                     <Text style={[styles.title, { color: colors.text }]}>
                         Que pensez-vous de MyHospital ?
                     </Text>
@@ -94,7 +90,6 @@ const RateAppScreen = ({ onNavigate }: RateAppScreenProps) => {
                         Votre avis nous aide à améliorer l'application
                     </Text>
 
-                    {/* Rating Stars */}
                     <View style={styles.starsContainer}>
                         {[1, 2, 3, 4, 5].map((star) => (
                             <TouchableOpacity
@@ -113,7 +108,6 @@ const RateAppScreen = ({ onNavigate }: RateAppScreenProps) => {
                         ))}
                     </View>
 
-                    {/* Rating Label */}
                     {(rating > 0 || hoveredRating > 0) && (
                         <View style={styles.ratingLabelContainer}>
                             <Text style={styles.ratingEmoji}>
@@ -125,7 +119,6 @@ const RateAppScreen = ({ onNavigate }: RateAppScreenProps) => {
                         </View>
                     )}
 
-                    {/* Comment Section */}
                     <View style={styles.commentSection}>
                         <Text style={[styles.commentTitle, { color: colors.text }]}>
                             Partagez votre expérience (optionnel)
@@ -151,7 +144,6 @@ const RateAppScreen = ({ onNavigate }: RateAppScreenProps) => {
                         </Text>
                     </View>
 
-                    {/* Benefits */}
                     <View style={styles.benefitsContainer}>
                         <Text style={[styles.benefitsTitle, { color: colors.text }]}>
                             Pourquoi noter l'application ?
@@ -178,7 +170,6 @@ const RateAppScreen = ({ onNavigate }: RateAppScreenProps) => {
                 </View>
             </ScrollView>
 
-            {/* Submit Button */}
             <View style={[styles.footer, {
                 backgroundColor: colors.card,
                 borderTopColor: colors.border
@@ -195,7 +186,6 @@ const RateAppScreen = ({ onNavigate }: RateAppScreenProps) => {
                 </TouchableOpacity>
             </View>
 
-            {/* Success Modal */}
             <Modal
                 visible={showSuccessModal}
                 transparent
@@ -231,6 +221,7 @@ const RateAppScreen = ({ onNavigate }: RateAppScreenProps) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#f0f4f8',
     },
     content: {
         padding: 20,
@@ -244,7 +235,7 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 25,
-        backgroundColor: '#E3F2FD',
+        backgroundColor: '#eff6ff',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 15,
@@ -289,8 +280,8 @@ const styles = StyleSheet.create({
         marginBottom: 30,
     },
     commentTitle: {
-        fontSize: 16,
-        fontWeight: '600',
+        fontSize: 17,
+        fontWeight: '700',
         marginBottom: 12,
     },
     commentInputContainer: {
@@ -309,13 +300,18 @@ const styles = StyleSheet.create({
         textAlign: 'right',
     },
     benefitsContainer: {
-        backgroundColor: '#F8F9FA',
-        borderRadius: 12,
+        backgroundColor: '#fff',
+        borderRadius: 16,
         padding: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 3,
     },
     benefitsTitle: {
-        fontSize: 16,
-        fontWeight: '600',
+        fontSize: 17,
+        fontWeight: '700',
         marginBottom: 15,
     },
     benefitItem: {
@@ -334,10 +330,15 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
     },
     submitButton: {
-        backgroundColor: '#0077b6',
+        backgroundColor: '#1a3fad',
         paddingVertical: 16,
-        borderRadius: 30,
+        borderRadius: 14,
         alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 3,
     },
     submitButtonDisabled: {
         backgroundColor: '#B0B0B0',
@@ -376,12 +377,17 @@ const styles = StyleSheet.create({
         marginBottom: 25,
     },
     modalButton: {
-        backgroundColor: '#0077b6',
+        backgroundColor: '#1a3fad',
         paddingVertical: 15,
         paddingHorizontal: 60,
-        borderRadius: 25,
+        borderRadius: 14,
         width: '100%',
         alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 3,
     },
     modalButtonText: {
         color: '#fff',

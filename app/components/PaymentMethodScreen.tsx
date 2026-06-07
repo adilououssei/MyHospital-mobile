@@ -210,16 +210,16 @@ const PaymentMethodScreen = ({
   const doctorRating      = doctor?.note ?? doctor?.rating ?? null;
 
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
       <ScreenHeader title="Paiement" onBack={() => onNavigate('doctorDetail')} />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
 
           {/* ── Carte docteur ── */}
-          <View style={[styles.doctorCard, { backgroundColor: colors.card }]}>
+          <View style={styles.doctorCard}>
             <View style={styles.avatarBox}>
-              <FontAwesome5 name="user-md" size={36} color="#0077b6" />
+              <FontAwesome5 name="user-md" size={36} color="#1a56db" />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.doctorName, { color: colors.text }]}>{doctorDisplayName}</Text>
@@ -236,7 +236,7 @@ const PaymentMethodScreen = ({
           </View>
 
           {/* ── Récapitulatif ── */}
-          <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <View style={styles.card}>
             <Text style={[styles.cardTitle, { color: colors.text }]}>Récapitulatif</Text>
             <View style={styles.row}>
               <Text style={[styles.rowLabel, { color: colors.subText }]}>Date</Text>
@@ -271,7 +271,7 @@ const PaymentMethodScreen = ({
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
             <View style={styles.row}>
               <Text style={[styles.totalLabel, { color: colors.text }]}>Total</Text>
-              <Text style={[styles.totalValue, { color: '#0077b6' }]}>
+              <Text style={[styles.totalValue, { color: '#1a56db' }]}>
                 {totalAmount.toLocaleString()} FCFA
               </Text>
             </View>
@@ -287,7 +287,7 @@ const PaymentMethodScreen = ({
                 key={method.id}
                 style={[
                   styles.methodCard,
-                  { backgroundColor: colors.card, borderColor: colors.border },
+                  { borderColor: colors.border },
                   selectedMethod === method.id && styles.methodCardActive,
                 ]}
                 onPress={() => setSelectedMethod(method.id)}
@@ -304,7 +304,7 @@ const PaymentMethodScreen = ({
                 <Ionicons
                   name={selectedMethod === method.id ? 'radio-button-on' : 'radio-button-off'}
                   size={22}
-                  color={selectedMethod === method.id ? '#0077b6' : '#ccc'}
+                  color={selectedMethod === method.id ? '#1a56db' : '#9ca3af'}
                 />
               </TouchableOpacity>
             ))}
@@ -323,7 +323,7 @@ const PaymentMethodScreen = ({
       </ScrollView>
 
       {/* ── Footer ── */}
-      <View style={[styles.footer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
+      <View style={[styles.footer, { borderTopColor: colors.border }]}>
         <View>
           <Text style={[styles.footerLabel, { color: colors.subText }]}>Total à payer</Text>
           <Text style={[styles.footerTotal, { color: colors.text }]}>
@@ -355,8 +355,8 @@ const PaymentMethodScreen = ({
           <View style={[styles.modalSheet, { backgroundColor: colors.card }]}>
             <View style={[styles.handle, { backgroundColor: colors.border }]} />
 
-            <View style={[styles.networkBadge, { backgroundColor: (selectedMethodData?.color ?? '#0077b6') + '15' }]}>
-              <Ionicons name="phone-portrait" size={30} color={selectedMethodData?.color ?? '#0077b6'} />
+            <View style={[styles.networkBadge, { backgroundColor: (selectedMethodData?.color ?? '#1a56db') + '15' }]}>
+              <Ionicons name="phone-portrait" size={30} color={selectedMethodData?.color ?? '#1a56db'} />
             </View>
 
             <Text style={[styles.modalTitle, { color: colors.text }]}>
@@ -373,7 +373,7 @@ const PaymentMethodScreen = ({
                 borderColor: paymentPhone.length > 0
                   ? (isPhoneValid() ? '#2ecc71' : '#e63946')
                   : colors.border,
-                backgroundColor: (colors as any).inputBackground ?? colors.background,
+                backgroundColor: 'rgba(255,255,255,0.88)',
               },
             ]}>
               <Text style={[styles.prefix, { color: colors.subText }]}>+228</Text>
@@ -398,10 +398,10 @@ const PaymentMethodScreen = ({
             </View>
 
             {/* Montant */}
-            <View style={[styles.amountBadge, { backgroundColor: '#E3F2FD' }]}>
+            <View style={[styles.amountBadge, { backgroundColor: '#eff6ff' }]}>
               <Text style={styles.amountText}>
                 Montant :{' '}
-                <Text style={{ fontWeight: '700', color: '#0077b6' }}>
+                <Text style={{ fontWeight: '700', color: '#1a56db' }}>
                   {totalAmount.toLocaleString()} FCFA
                 </Text>
               </Text>
@@ -443,14 +443,14 @@ const PaymentMethodScreen = ({
 
             {paymentStatus === 'waiting' && (
               <>
-                <ActivityIndicator size="large" color="#0077b6" style={{ marginBottom: 14 }} />
+                <ActivityIndicator size="large" color="#1a56db" style={{ marginBottom: 14 }} />
                 <Text style={[styles.waitingTitle, { color: colors.text }]}>
                   Validez sur votre téléphone
                 </Text>
 
                 {/* Instructions USSD */}
-                <View style={[styles.ussdBox, { backgroundColor: '#F0F8FF', borderColor: '#BDE0FF' }]}>
-                  <Ionicons name="phone-portrait-outline" size={22} color="#0077b6" style={{ marginBottom: 6, alignSelf: 'center' }} />
+                <View style={[styles.ussdBox, { backgroundColor: '#eff6ff', borderColor: '#bfdbfe' }]}>
+                  <Ionicons name="phone-portrait-outline" size={22} color="#1a56db" style={{ marginBottom: 6, alignSelf: 'center' }} />
                   <Text style={styles.ussdStep}>① Un menu USSD s'affiche sur votre téléphone</Text>
                   <Text style={styles.ussdStep}>② Entrez votre code secret {selectedMethodData?.name}</Text>
                   <Text style={styles.ussdStep}>③ Confirmez le paiement de <Text style={{ fontWeight: '700' }}>{totalAmount.toLocaleString()} FCFA</Text></Text>
@@ -512,18 +512,20 @@ const PaymentMethodScreen = ({
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, backgroundColor: '#f0f4f8' },
   content:   { padding: 16, paddingBottom: 24 },
 
   doctorCard: {
     flexDirection: 'row', alignItems: 'center',
-    padding: 14, borderRadius: 12, marginBottom: 16,
-    elevation: 2, shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4, gap: 12,
+    padding: 14, borderRadius: 16, marginBottom: 16,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
+    gap: 12,
   },
   avatarBox: {
     width: 56, height: 56, borderRadius: 28,
-    backgroundColor: '#E3F2FD', justifyContent: 'center', alignItems: 'center',
+    backgroundColor: '#eff6ff', justifyContent: 'center', alignItems: 'center',
   },
   doctorName: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
   doctorSpec: { fontSize: 13, marginBottom: 4 },
@@ -531,23 +533,27 @@ const styles = StyleSheet.create({
   ratingText: { fontSize: 13 },
 
   card: {
-    borderRadius: 12, padding: 14, marginBottom: 16,
-    elevation: 2, shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4,
+    borderRadius: 16, padding: 14, marginBottom: 16,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
   },
-  cardTitle:  { fontSize: 15, fontWeight: '700', marginBottom: 12 },
+  cardTitle:  { fontSize: 17, fontWeight: '700', marginBottom: 12 },
   row:        { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8, gap: 12 },
-  rowLabel:   { fontSize: 13 },
-  rowValue:   { fontSize: 13, fontWeight: '500' },
-  totalLabel: { fontSize: 15, fontWeight: '700' },
+  rowLabel:   { fontSize: 13, color: '#6b7280' },
+  rowValue:   { fontSize: 13, fontWeight: '500', color: '#374151' },
+  totalLabel: { fontSize: 15, fontWeight: '700', color: '#111827' },
   totalValue: { fontSize: 15, fontWeight: '700' },
   divider:    { height: 1, marginVertical: 10 },
 
   methodCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    padding: 14, borderRadius: 12, marginBottom: 10, borderWidth: 1.5,
+    padding: 14, borderRadius: 16, marginBottom: 10, borderWidth: 1.5,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
   },
-  methodCardActive: { borderColor: '#0077b6', backgroundColor: '#E0F7FF' },
+  methodCardActive: { borderColor: '#1a56db', backgroundColor: '#eff6ff' },
   methodLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   methodIcon: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
   methodName: { fontSize: 14, fontWeight: '600', marginBottom: 2 },
@@ -562,12 +568,12 @@ const styles = StyleSheet.create({
 
   footer: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    padding: 14, borderTopWidth: 1,
+    padding: 14, borderTopWidth: 1, backgroundColor: '#fff',
   },
   footerLabel: { fontSize: 12, marginBottom: 2 },
   footerTotal: { fontSize: 18, fontWeight: '700' },
-  payBtn:        { backgroundColor: '#0077b6', paddingVertical: 13, paddingHorizontal: 22, borderRadius: 10, minWidth: 160, alignItems: 'center' },
-  payBtnDisabled:{ backgroundColor: '#ccc' },
+  payBtn:        { backgroundColor: '#1a3fad', paddingVertical: 13, paddingHorizontal: 22, borderRadius: 14, minWidth: 160, alignItems: 'center', shadowColor: '#1a56db', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },
+  payBtnDisabled:{ backgroundColor: '#9ca3af' },
   payBtnText:    { color: '#fff', fontSize: 15, fontWeight: '700' },
 
   // Modaux
@@ -580,19 +586,24 @@ const styles = StyleSheet.create({
 
   phoneInputWrapper: {
     flexDirection: 'row', alignItems: 'center',
-    borderWidth: 1.5, borderRadius: 12,
+    borderWidth: 1.5, borderRadius: 14,
     paddingHorizontal: 14, paddingVertical: 12,
     width: '100%', marginBottom: 14, gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
   prefix:    { fontSize: 16, fontWeight: '600' },
   prefixSep: { width: 1, height: 20 },
   phoneInput:{ flex: 1, fontSize: 20, letterSpacing: 3 },
 
   amountBadge: { borderRadius: 8, paddingVertical: 8, paddingHorizontal: 16, marginBottom: 20, width: '100%', alignItems: 'center' },
-  amountText:  { fontSize: 14, color: '#333' },
+  amountText:  { fontSize: 14, color: '#374151' },
 
-  sendBtn:        { backgroundColor: '#0077b6', borderRadius: 12, paddingVertical: 14, width: '100%', alignItems: 'center', marginBottom: 10 },
-  sendBtnDisabled:{ backgroundColor: '#ccc' },
+  sendBtn:        { backgroundColor: '#1a3fad', borderRadius: 14, paddingVertical: 14, width: '100%', alignItems: 'center', marginBottom: 10, shadowColor: '#1a56db', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },
+  sendBtnDisabled:{ backgroundColor: '#9ca3af' },
   sendBtnText:    { color: '#fff', fontSize: 16, fontWeight: '700' },
   cancelBtn:      { paddingVertical: 10, width: '100%', alignItems: 'center' },
   cancelBtnText:  { fontSize: 14, fontWeight: '500' },

@@ -273,8 +273,8 @@ Ordonnance médicale - Mon Hôpital Mobile
 
     if (loading) {
         return (
-            <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-                <View style={[styles.header, { backgroundColor: colors.card }]}>
+            <SafeAreaView style={styles.container}>
+                <View style={styles.header}>
                     <TouchableOpacity style={styles.backButton} onPress={() => onNavigate('profile')}>
                         <Ionicons name="arrow-back" size={24} color={colors.text} />
                     </TouchableOpacity>
@@ -282,7 +282,7 @@ Ordonnance médicale - Mon Hôpital Mobile
                     <View style={styles.placeholder} />
                 </View>
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#0077b6" />
+                    <ActivityIndicator size="large" color="#1a56db" />
                     <Text style={[styles.loadingText, { color: colors.subText }]}>
                         Chargement de vos ordonnances...
                     </Text>
@@ -292,8 +292,8 @@ Ordonnance médicale - Mon Hôpital Mobile
     }
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-            <View style={[styles.header, { backgroundColor: colors.card }]}>
+        <SafeAreaView style={styles.container}>
+            <View style={styles.header}>
                 <TouchableOpacity style={styles.backButton} onPress={() => onNavigate('profile')}>
                     <Ionicons name="arrow-back" size={24} color={colors.text} />
                 </TouchableOpacity>
@@ -306,7 +306,7 @@ Ordonnance médicale - Mon Hôpital Mobile
             </View>
 
             <View style={styles.infoBanner}>
-                <Ionicons name="information-circle" size={24} color="#0077b6" />
+                <Ionicons name="information-circle" size={24} color="#1a56db" />
                 <View style={styles.infoBannerTextContainer}>
                     <Text style={[styles.infoBannerText, { color: colors.subText }]}>
                         {prescriptions.length > 0 
@@ -319,7 +319,7 @@ Ordonnance médicale - Mon Hôpital Mobile
             <ScrollView 
                 showsVerticalScrollIndicator={false}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0077b6']} />
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1a56db']} />
                 }
             >
                 <View style={styles.prescriptionsList}>
@@ -327,12 +327,12 @@ Ordonnance médicale - Mon Hôpital Mobile
                         prescriptions.map((prescription) => (
                             <View
                                 key={prescription.id}
-                                style={[styles.prescriptionCard, { backgroundColor: colors.card }]}
+                                style={styles.prescriptionCard}
                             >
                                 <View style={styles.cardHeader}>
                                     <View style={styles.cardHeaderLeft}>
                                         <View style={styles.doctorIcon}>
-                                            <Ionicons name="medical" size={24} color="#0077b6" />
+                                            <Ionicons name="medical" size={24} color="#1a56db" />
                                         </View>
                                         <View style={styles.doctorInfo}>
                                             <Text style={[styles.doctorName, { color: colors.text }]}>
@@ -361,7 +361,7 @@ Ordonnance médicale - Mon Hôpital Mobile
                                 </View>
 
                                 <View style={styles.medicationsCount}>
-                                    <Ionicons name="medkit-outline" size={18} color="#0077b6" />
+                                    <Ionicons name="medkit-outline" size={18} color="#1a56db" />
                                     <Text style={[styles.medicationsCountText, { color: colors.text }]}>
                                         {prescription.medications.length} médicament(s) prescrit(s)
                                     </Text>
@@ -373,7 +373,7 @@ Ordonnance médicale - Mon Hôpital Mobile
                                         style={styles.actionButton}
                                         onPress={() => handleViewPrescription(prescription)}
                                     >
-                                        <Ionicons name="eye-outline" size={20} color="#0077b6" />
+                                        <Ionicons name="eye-outline" size={20} color="#1a56db" />
                                         <Text style={styles.actionButtonText}>Voir</Text>
                                     </TouchableOpacity>
 
@@ -384,9 +384,9 @@ Ordonnance médicale - Mon Hôpital Mobile
                                         disabled={downloadingId === prescription.id}
                                     >
                                         {downloadingId === prescription.id ? (
-                                            <ActivityIndicator size="small" color="#dc3545" />
+                                            <ActivityIndicator size="small" color="#dc2626" />
                                         ) : (
-                                            <Ionicons name="document-text-outline" size={20} color="#dc3545" />
+                                            <Ionicons name="document-text-outline" size={20} color="#dc2626" />
                                         )}
                                         <Text style={[styles.actionButtonText, styles.pdfButtonText]}>
                                             {downloadingId === prescription.id ? 'Téléchargement...' : 'PDF'}
@@ -397,7 +397,7 @@ Ordonnance médicale - Mon Hôpital Mobile
                                         style={styles.actionButton}
                                         onPress={() => handleSharePrescription(prescription)}
                                     >
-                                        <Ionicons name="share-outline" size={20} color="#0077b6" />
+                                        <Ionicons name="share-outline" size={20} color="#1a56db" />
                                         <Text style={styles.actionButtonText}>Partager</Text>
                                     </TouchableOpacity>
 
@@ -405,7 +405,7 @@ Ordonnance médicale - Mon Hôpital Mobile
                                         style={styles.actionButton}
                                         onPress={() => handlePrintPrescription(prescription)}
                                     >
-                                        <Ionicons name="print-outline" size={20} color="#0077b6" />
+                                        <Ionicons name="print-outline" size={20} color="#1a56db" />
                                         <Text style={styles.actionButtonText}>Imprimer</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -413,7 +413,7 @@ Ordonnance médicale - Mon Hôpital Mobile
                         ))
                     ) : (
                         <View style={styles.emptyState}>
-                            <Ionicons name="document-text-outline" size={60} color="#ccc" />
+                            <Ionicons name="document-text-outline" size={60} color="#9ca3af" />
                             <Text style={[styles.emptyStateText, { color: colors.subText }]}>
                                 Aucune ordonnance disponible
                             </Text>
@@ -424,7 +424,7 @@ Ordonnance médicale - Mon Hôpital Mobile
                                 style={styles.refreshEmptyButton}
                                 onPress={onRefresh}
                             >
-                                <Ionicons name="refresh-outline" size={20} color="#0077b6" />
+                                <Ionicons name="refresh-outline" size={20} color="#1a56db" />
                                 <Text style={styles.refreshEmptyText}>Rafraîchir</Text>
                             </TouchableOpacity>
                         </View>
@@ -441,7 +441,7 @@ Ordonnance médicale - Mon Hôpital Mobile
                 onRequestClose={() => setShowDetailModal(false)}
             >
                 <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+                    <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
                             <Text style={[styles.modalTitle, { color: colors.text }]}>
                                 Détails de l'ordonnance
@@ -496,7 +496,7 @@ Ordonnance médicale - Mon Hôpital Mobile
                                                     {med.name}
                                                 </Text>
                                                 {med.dosage ? (
-                                                    <Text style={[styles.medicationDosage, { color: '#0077b6' }]}>
+                                                    <Text style={[styles.medicationDosage, { color: '#1a56db' }]}>
                                                         {med.dosage}
                                                     </Text>
                                                 ) : null}
@@ -550,6 +550,7 @@ Ordonnance médicale - Mon Hôpital Mobile
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#f0f4f8',
     },
     header: {
         flexDirection: 'row',
@@ -557,6 +558,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 20,
         paddingVertical: 15,
+        backgroundColor: '#fff',
     },
     backButton: {
         padding: 5,
@@ -582,7 +584,7 @@ const styles = StyleSheet.create({
     },
     infoBanner: {
         flexDirection: 'row',
-        backgroundColor: '#E3F2FD',
+        backgroundColor: '#eff6ff',
         marginHorizontal: 20,
         marginVertical: 15,
         borderRadius: 12,
@@ -601,13 +603,14 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     prescriptionCard: {
-        borderRadius: 15,
+        borderRadius: 16,
         padding: 15,
         marginBottom: 15,
+        backgroundColor: '#fff',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
         elevation: 3,
     },
     cardHeader: {
@@ -623,7 +626,7 @@ const styles = StyleSheet.create({
         width: 50,
         height: 50,
         borderRadius: 25,
-        backgroundColor: '#E3F2FD',
+        backgroundColor: '#eff6ff',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
@@ -679,7 +682,7 @@ const styles = StyleSheet.create({
     actionButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#F5F5F5',
+        backgroundColor: '#f3f4f6',
         paddingHorizontal: 12,
         paddingVertical: 8,
         borderRadius: 20,
@@ -688,15 +691,15 @@ const styles = StyleSheet.create({
     actionButtonText: {
         fontSize: 12,
         fontWeight: '500',
-        color: '#333',
+        color: '#374151',
     },
     pdfButton: {
         backgroundColor: '#FFF5F5',
         borderWidth: 1,
-        borderColor: '#dc3545',
+        borderColor: '#dc2626',
     },
     pdfButtonText: {
-        color: '#dc3545',
+        color: '#dc2626',
     },
     emptyState: {
         alignItems: 'center',
@@ -721,11 +724,11 @@ const styles = StyleSheet.create({
         marginTop: 20,
         paddingVertical: 10,
         paddingHorizontal: 20,
-        backgroundColor: '#E3F2FD',
+        backgroundColor: '#eff6ff',
         borderRadius: 25,
     },
     refreshEmptyText: {
-        color: '#0077b6',
+        color: '#1a56db',
         fontSize: 14,
         fontWeight: '600',
     },
@@ -735,6 +738,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     modalContent: {
+        backgroundColor: '#fff',
         borderTopLeftRadius: 25,
         borderTopRightRadius: 25,
         padding: 20,
@@ -754,8 +758,8 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     modalSectionTitle: {
-        fontSize: 16,
-        fontWeight: '600',
+        fontSize: 17,
+        fontWeight: '700',
         marginBottom: 10,
     },
     modalText: {
@@ -820,10 +824,10 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     pdfModalButton: {
-        backgroundColor: '#dc3545',
+        backgroundColor: '#dc2626',
     },
     shareModalButton: {
-        backgroundColor: '#0077b6',
+        backgroundColor: '#1a3fad',
     },
     modalActionButtonText: {
         color: '#fff',

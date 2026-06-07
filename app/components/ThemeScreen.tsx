@@ -34,7 +34,7 @@ const ThemeScreen = ({ onNavigate }: ThemeScreenProps) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.card }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => onNavigate('profile')}>
@@ -50,9 +50,9 @@ const ThemeScreen = ({ onNavigate }: ThemeScreenProps) => {
           {/* Aperçu */}
           <View style={styles.previewSection}>
             <Text style={[styles.sectionTitle, { color: colors.subText }]}>Aperçu</Text>
-            <View style={[styles.previewCard, { backgroundColor: colors.card }]}>
+            <View style={styles.previewCard}>
               <View style={styles.previewHeader}>
-                <View style={[styles.previewLogo, { backgroundColor: '#0077b6' }]}>
+                <View style={[styles.previewLogo, { backgroundColor: '#1a56db' }]}>
                   <Ionicons name="medical" size={28} color="#fff" />
                   <Text style={styles.previewLogoText}>MyHospital</Text>
                 </View>
@@ -72,20 +72,20 @@ const ThemeScreen = ({ onNavigate }: ThemeScreenProps) => {
               key={option.id}
               style={[
                 styles.themeCard,
-                { backgroundColor: colors.card, borderColor: selected === option.id ? '#0077b6' : 'transparent' },
                 selected === option.id && styles.themeCardActive,
+                selected === option.id && { borderColor: '#1a56db' },
               ]}
               onPress={() => setSelected(option.id)}
             >
               <View style={styles.themeLeft}>
                 <View style={[
                   styles.themeIconContainer,
-                  { backgroundColor: selected === option.id ? '#0077b6' : '#e4f4fc' },
+                  { backgroundColor: selected === option.id ? '#1a56db' : '#eff6ff' },
                 ]}>
                   <Ionicons
                     name={option.icon as any}
                     size={24}
-                    color={selected === option.id ? '#fff' : '#0077b6'}
+                    color={selected === option.id ? '#fff' : '#1a56db'}
                   />
                 </View>
                 <View style={{ flex: 1 }}>
@@ -96,7 +96,7 @@ const ThemeScreen = ({ onNavigate }: ThemeScreenProps) => {
               <Ionicons
                 name={selected === option.id ? 'radio-button-on' : 'radio-button-off'}
                 size={24}
-                color={selected === option.id ? '#0077b6' : '#ccc'}
+                color={selected === option.id ? '#1a56db' : '#9ca3af'}
               />
             </TouchableOpacity>
           ))}
@@ -105,9 +105,9 @@ const ThemeScreen = ({ onNavigate }: ThemeScreenProps) => {
           <View style={styles.settingsSection}>
             <Text style={[styles.sectionTitle, { color: colors.subText }]}>Paramètres supplémentaires</Text>
 
-            <View style={[styles.settingCard, { backgroundColor: colors.card }]}>
+            <View style={styles.settingCard}>
               <View style={styles.settingLeft}>
-                <Ionicons name="contrast" size={24} color="#0077b6" />
+                <Ionicons name="contrast" size={24} color="#1a56db" />
                 <View style={styles.settingInfo}>
                   <Text style={[styles.settingName, { color: colors.text }]}>Luminosité automatique</Text>
                   <Text style={[styles.settingDescription, { color: colors.subText }]}>
@@ -118,13 +118,13 @@ const ThemeScreen = ({ onNavigate }: ThemeScreenProps) => {
               <Switch
                 value={autoBrightness}
                 onValueChange={setAutoBrightness}
-                trackColor={{ false: '#E0E0E0', true: '#0077b6' }}
+                trackColor={{ false: '#e5e7eb', true: '#1a56db' }}
                 thumbColor="#fff"
               />
             </View>
 
             <View style={styles.infoCard}>
-              <Ionicons name="information-circle" size={20} color="#0077b6" />
+              <Ionicons name="information-circle" size={20} color="#1a56db" />
               <Text style={[styles.infoText, { color: colors.subText }]}>
                 Le mode sombre peut aider à réduire la fatigue oculaire dans des
                 environnements sombres et économiser la batterie.
@@ -145,7 +145,7 @@ const ThemeScreen = ({ onNavigate }: ThemeScreenProps) => {
 };
 
 const styles = StyleSheet.create({
-  container:    { flex: 1 },
+  container:    { flex: 1, backgroundColor: '#f0f4f8' },
   header:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 15 },
   backButton:   { padding: 5 },
   headerTitle:  { fontSize: 18, fontWeight: '600' },
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   content:      { padding: 20 },
   previewSection: { marginBottom: 30 },
   sectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 15 },
-  previewCard:  { borderRadius: 15, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+  previewCard:  { backgroundColor: '#fff', borderRadius: 16, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
   previewHeader:{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
   previewLogo:  { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
   previewLogoText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
@@ -161,23 +161,24 @@ const styles = StyleSheet.create({
   previewItem:  { height: 40, borderRadius: 8, width: '100%' },
   themeCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 2,
+    backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 2, borderColor: 'transparent',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3,
   },
-  themeCardActive:     { backgroundColor: '#e4f4fc' },
+  themeCardActive:     { backgroundColor: '#eff6ff' },
   themeLeft:           { flexDirection: 'row', alignItems: 'center', gap: 15, flex: 1 },
   themeIconContainer:  { width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center' },
   themeName:           { fontSize: 16, fontWeight: '600', marginBottom: 2 },
   themeDescription:    { fontSize: 13 },
   settingsSection:     { marginTop: 20 },
-  settingCard:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: 12, padding: 16, marginBottom: 15 },
+  settingCard:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
   settingLeft:         { flexDirection: 'row', alignItems: 'center', gap: 15, flex: 1 },
   settingInfo:         { flex: 1 },
   settingName:         { fontSize: 15, fontWeight: '600', marginBottom: 2 },
   settingDescription:  { fontSize: 13 },
-  infoCard:            { flexDirection: 'row', backgroundColor: '#E3F2FD', borderRadius: 12, padding: 15, gap: 12 },
+  infoCard:            { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 16, padding: 15, gap: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3 },
   infoText:            { flex: 1, fontSize: 13, lineHeight: 20 },
   footer:              { padding: 20, paddingBottom: 30, borderTopWidth: 1 },
-  saveButton:          { backgroundColor: '#0077b6', paddingVertical: 16, borderRadius: 30, alignItems: 'center' },
+  saveButton:          { backgroundColor: '#1a3fad', paddingVertical: 16, borderRadius: 14, alignItems: 'center', shadowColor: '#1a56db', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },
   saveButtonText:      { color: '#fff', fontSize: 16, fontWeight: '600' },
 });
 

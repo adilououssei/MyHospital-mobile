@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useApp, useAuth } from '../context/AppContext';
+import { useNotifications } from '../context/NotificationContext';
 import ScreenHeader from '../tabs/ScreenHeader';
 import BottomNavigation from '../tabs/BottomNavigation';
 import rendezVousService from '../services/rendezvous.service';
@@ -54,10 +55,10 @@ interface Appointment {
 
 interface AppointmentsScreenProps {
     onNavigate: (screen: string, params?: any) => void;
-    unreadCount?: number;
 }
 
-const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenProps) => {
+const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
+    const { unreadCount } = useNotifications();
     const { colors, t } = useApp();
     const { user } = useAuth();
 
@@ -216,7 +217,7 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
     // ── Couleurs / textes statut ────────────────────────────────────────────────
     const getStatusColor = (s: string) => {
         switch (s) {
-            case 'confirmed':       return '#0077b6';
+            case 'confirmed':       return '#1a56db';
             case 'pending':         return '#FFA500';
             case 'pending_payment': return '#9B59B6';
             case 'rejected':        return '#FF6B6B';
@@ -325,7 +326,7 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
         if (appointment.status === 'confirmed') return (
             <View style={styles.appointmentActions}>
                 <View style={[styles.confirmedMessage, { backgroundColor: colors.inputBackground }]}>
-                    <Ionicons name="checkmark-circle" size={20} color="#0077b6" />
+                    <Ionicons name="checkmark-circle" size={20} color="#1a56db" />
                     <Text style={[styles.confirmedMessageText, { color: colors.text }]}>{t('aptConfirmedMsg')}</Text>
                 </View>
             </View>
@@ -442,21 +443,21 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
     // ── Chargement initial ──────────────────────────────────────────────────────
     if (loading && appointments.length === 0) {
         return (
-            <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
-                <ScreenHeader title={t('aptTitle')} showNotification unreadCount={unreadCount}
+            <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
+                <ScreenHeader title={t('aptTitle')} showNotification 
                     onNotificationPress={() => onNavigate('notifications')} />
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#0077b6" />
+                    <ActivityIndicator size="large" color="#1a56db" />
                     <Text style={[styles.loadingText, { color: colors.subText }]}>{t('aptLoading')}</Text>
                 </View>
-                <BottomNavigation currentScreen="appointments" onNavigate={onNavigate} unreadCount={unreadCount} />
+                <BottomNavigation currentScreen="appointments" onNavigate={onNavigate} />
             </SafeAreaView>
         );
     }
 
     return (
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
-            <ScreenHeader title={t('aptTitle')} showNotification unreadCount={unreadCount}
+        <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
+            <ScreenHeader title={t('aptTitle')} showNotification 
                 onNotificationPress={() => onNavigate('notifications')} />
 
             {/* ── Tabs ── */}
@@ -466,7 +467,6 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
                     <TouchableOpacity key={tab.key}
                         style={[
                             styles.tab,
-                            { backgroundColor: colors.inputBackground },
                             activeTab === tab.key && styles.activeTab,
                         ]}
                         onPress={() => setActiveTab(tab.key)}
@@ -489,10 +489,10 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
             </ScrollView>
 
             <ScrollView showsVerticalScrollIndicator={false}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0077b6']} tintColor="#0077b6" />}>
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1a56db']} tintColor="#1a56db" />}>
                 <View style={styles.appointmentsList}>
                     {filteredAppointments.length > 0 ? filteredAppointments.map(appointment => (
-                        <View key={appointment.id} style={[styles.appointmentCard, { backgroundColor: colors.card },
+                        <View key={appointment.id} style={[styles.appointmentCard,
                             // Bordure spéciale pour les en attente de paiement
                             appointment.status === 'pending_payment' && styles.pendingPaymentCard
                         ]}>
@@ -501,18 +501,18 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
                             <View style={styles.appointmentHeader}>
                                 <View style={styles.doctorInfo}>
                                     <View style={styles.doctorImagePlaceholder}>
-                                        <FontAwesome5 name="user-md" size={30} color="#0077b6" />
+                                        <FontAwesome5 name="user-md" size={30} color="#1a56db" />
                                     </View>
                                     <View style={styles.doctorDetails}>
-                                        <Text style={[styles.doctorName, { color: colors.text }]}>{appointment.doctorName}</Text>
-                                        <Text style={[styles.doctorSpecialty, { color: colors.subText }]}>{appointment.specialty}</Text>
+                                        <Text style={styles.doctorName}>{appointment.doctorName}</Text>
+                                        <Text style={styles.doctorSpecialty}>{appointment.specialty}</Text>
                                     </View>
                                 </View>
                             </View>
 
                             {/* ── Type consultation ── */}
                             <View style={[styles.consultationTypeBadge, { backgroundColor: colors.inputBackground }]}>
-                                <Ionicons name={getConsultationTypeIcon(appointment.consultationType)} size={16} color="#0077b6" />
+                                <Ionicons name={getConsultationTypeIcon(appointment.consultationType)} size={16} color="#1a56db" />
                                 <Text style={[styles.consultationTypeText, { color: colors.text }]}>
                                     {getConsultationTypeText(appointment.consultationType)}
                                 </Text>
@@ -539,10 +539,10 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
 
                             {/* ── Bouton expand ── */}
                             <TouchableOpacity style={styles.expandButton} onPress={() => toggleExpand(appointment.id)}>
-                                <Text style={[styles.expandButtonText, { color: '#0077b6' }]}>
+                                <Text style={[styles.expandButtonText, { color: '#1a56db' }]}>
                                     {expandedId === appointment.id ? t('aptHideDetails') : t('aptMoreDetails')}
                                 </Text>
-                                <Ionicons name={expandedId === appointment.id ? 'chevron-up' : 'chevron-down'} size={18} color="#0077b6" />
+                                <Ionicons name={expandedId === appointment.id ? 'chevron-up' : 'chevron-down'} size={18} color="#1a56db" />
                             </TouchableOpacity>
 
                             {/* ── Section dépliée ── */}
@@ -550,7 +550,7 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
                                 <View style={[styles.expandedSection, { borderTopColor: colors.border }]}>
                                     <View style={styles.contactRow}>
                                         <TouchableOpacity style={styles.contactButton} onPress={() => handleCall(appointment.doctorPhone)}>
-                                            <Ionicons name="call-outline" size={20} color="#0077b6" />
+                                            <Ionicons name="call-outline" size={20} color="#1a56db" />
                                             <Text style={styles.contactButtonText}>{t('aptCall')}</Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity style={styles.contactButton} onPress={() => handleWhatsApp(appointment.doctorPhone)}>
@@ -565,7 +565,7 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
                                             {/* Adresse que le docteur verra */}
                                             {appointment.adresseLocalisation && (
                                                 <View style={[styles.aptAddressCard, { backgroundColor: colors.inputBackground }]}>
-                                                    <Ionicons name="location" size={18} color="#0077b6" />
+                                                    <Ionicons name="location" size={18} color="#1a56db" />
                                                     <View style={{ flex: 1 }}>
                                                         <Text style={[styles.aptAddressLabel, { color: colors.subText }]}>Position envoyée au docteur</Text>
                                                         <Text style={[styles.aptAddressText, { color: colors.text }]}>{appointment.adresseLocalisation}</Text>
@@ -643,8 +643,8 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
                         </View>
                     )) : (
                         <View style={styles.emptyState}>
-                            <Ionicons name="calendar-outline" size={60} color="#ccc" />
-                            <Text style={[styles.emptyStateText, { color: colors.subText }]}>
+                            <Ionicons name="calendar-outline" size={60} color="#9ca3af" />
+                            <Text style={styles.emptyStateText}>
                                 {t('aptEmpty')}
                             </Text>
                         </View>
@@ -672,25 +672,25 @@ const AppointmentsScreen = ({ onNavigate, unreadCount = 0 }: AppointmentsScreenP
                     }}
                 />
             )}
-            <BottomNavigation currentScreen="appointments" onNavigate={onNavigate} unreadCount={unreadCount} />
+            <BottomNavigation currentScreen="appointments" onNavigate={onNavigate} />
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
+    container: { flex: 1, backgroundColor: '#f0f4f8' },
     loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 40 },
     loadingText: { marginTop: 15, fontSize: 14 },
 
     // Tabs horizontaux (scrollables)
-    tabsScroll: { maxHeight: 55 },
+    tabsScroll: { maxHeight: 55, backgroundColor: '#eff6ff', borderRadius: 25, marginHorizontal: 20, marginTop: 14 },
     tabsContent: { paddingHorizontal: 10, paddingVertical: 10, gap: 6 },
     tab: {
         flexDirection: 'row', alignItems: 'center', gap: 6,
         paddingVertical: 8, paddingHorizontal: 14,
         borderRadius: 20, minWidth: 80,
     },
-    activeTab: { backgroundColor: '#0077b6' },
+    activeTab: { backgroundColor: '#1a56db' },
     tabText: { fontSize: 12, fontWeight: '500' },
     activeTabText: { color: '#fff', fontWeight: '600' },
     tabBadge: {
@@ -702,21 +702,21 @@ const styles = StyleSheet.create({
 
     appointmentsList: { paddingHorizontal: 20 },
     appointmentCard: {
-        borderRadius: 15, padding: 15, marginBottom: 15,
+        backgroundColor: '#fff', borderRadius: 16, padding: 15, marginBottom: 15,
         shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
+        shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
     },
     pendingPaymentCard: { borderWidth: 2, borderColor: '#9B59B6' },
 
-    appointmentHeader: { marginBottom: 12 },
+    appointmentHeader: { padding: 16, gap: 12 },
     doctorInfo: { flexDirection: 'row', alignItems: 'center' },
     doctorImagePlaceholder: {
         width: 60, height: 60, borderRadius: 30,
-        backgroundColor: '#E3F2FD', justifyContent: 'center', alignItems: 'center', marginRight: 12,
+        backgroundColor: '#eff6ff', justifyContent: 'center', alignItems: 'center', marginRight: 12,
     },
     doctorDetails: { flex: 1 },
-    doctorName: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
-    doctorSpecialty: { fontSize: 14 },
+    doctorName: { fontSize: 15, fontWeight: '700', marginBottom: 4, color: '#111827' },
+    doctorSpecialty: { fontSize: 13, color: '#6b7280' },
 
     consultationTypeBadge: {
         flexDirection: 'row', alignItems: 'center', gap: 8,
@@ -731,7 +731,7 @@ const styles = StyleSheet.create({
     },
     infoRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
     infoText: { fontSize: 12 },
-    statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+    statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
     statusText: { fontSize: 12, fontWeight: '600' },
 
     expandButton: {
@@ -744,7 +744,7 @@ const styles = StyleSheet.create({
     contactButton: {
         flex: 1, flexDirection: 'row', alignItems: 'center',
         justifyContent: 'center', gap: 6, paddingVertical: 10,
-        backgroundColor: '#F5F5F5', borderRadius: 10,
+        backgroundColor: '#f3f4f6', borderRadius: 10,
     },
     contactButtonText: { fontSize: 13, fontWeight: '600', color: '#333' },
 
@@ -760,12 +760,12 @@ const styles = StyleSheet.create({
     cancelButtonText: { fontSize: 14, fontWeight: '600' },
     rescheduleButton: {
         flex: 1, flexDirection: 'row', alignItems: 'center',
-        justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 25, backgroundColor: '#0077b6',
+        justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 14, backgroundColor: '#1a3fad',
     },
     rescheduleButtonText: { fontSize: 14, color: '#fff', fontWeight: '600' },
     joinVideoButton: {
         flex: 1, flexDirection: 'row', alignItems: 'center',
-        justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 25, backgroundColor: '#0077b6',
+        justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 14, backgroundColor: '#1a3fad',
     },
     joinVideoButtonDisabled: { backgroundColor: '#b0bec5' },
     joinVideoButtonText: { fontSize: 15, color: '#fff', fontWeight: '700' },
@@ -816,13 +816,13 @@ const styles = StyleSheet.create({
     doctorRouteButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
 
     emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 60 },
-    emptyStateText: { fontSize: 16, marginTop: 15 },
+    emptyStateText: { fontSize: 16, marginTop: 15, color: '#111827' },
 
     fab: {
         position: 'absolute', bottom: 100, right: 20,
-        width: 60, height: 60, borderRadius: 30, backgroundColor: '#0077b6',
+        width: 60, height: 60, borderRadius: 30, backgroundColor: '#1a56db',
         justifyContent: 'center', alignItems: 'center',
-        shadowColor: '#0077b6', shadowOffset: { width: 0, height: 4 },
+        shadowColor: '#1a56db', shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.4, shadowRadius: 8, elevation: 8,
     },
 });

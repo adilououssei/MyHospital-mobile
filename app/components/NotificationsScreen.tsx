@@ -8,6 +8,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp, useAuth } from '../context/AppContext';
+import { useNotifications } from '../context/NotificationContext';
 import ScreenHeader from '../tabs/ScreenHeader';
 
 import {
@@ -24,12 +25,12 @@ import {
 
 interface NotificationsScreenProps {
   onNavigate: (screen: string, params?: any) => void;
-  onUpdateUnreadCount?: (count: number) => void;
 }
 
-const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsScreenProps) => {
+const NotificationsScreen = ({ onNavigate }: NotificationsScreenProps) => {
   const { colors, t } = useApp();
   const { user }      = useAuth();
+  const { refreshUnreadCount } = useNotifications();
 
   const [notifications, setNotifications] = useState<ApiNotification[]>([]);
   const [loading, setLoading]             = useState(true);
@@ -40,9 +41,7 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
   const [error, setError]                 = useState<string | null>(null);
 
   const LIMIT = 20;
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
-
-  useEffect(() => { onUpdateUnreadCount?.(unreadCount); }, [unreadCount]);
+  const unreadLocally = notifications.filter((n) => !n.isRead).length;
 
   // ── Chargement ───────────────────────────────────────────────
   const loadNotifications = useCallback(async (reset = false) => {
@@ -76,15 +75,23 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
   const handlePress = async (notification: ApiNotification) => {
     if (!notification.isRead) {
       const ok = await markNotificationRead(notification.id);
-      if (ok) setNotifications((prev) => prev.map((n) => n.id === notification.id ? { ...n, isRead: true } : n));
+      if (ok) {
+        setNotifications((prev) => prev.map((n) => n.id === notification.id ? { ...n, isRead: true } : n));
+        refreshUnreadCount();
+      }
     }
     onNavigate('notificationDetail', { notification });
   };
 
   const handleMarkAllRead = async () => {
-    if (!user?.id || unreadCount === 0) return;
+    if (!user?.id) return;
+    const hasUnread = notifications.some((n) => !n.isRead);
+    if (!hasUnread) return;
     const ok = await markAllNotificationsRead(user.id);
-    if (ok) setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    if (ok) {
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      refreshUnreadCount();
+    }
   };
 
   // ── Supprimer ────────────────────────────────────────────────
@@ -98,7 +105,10 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
           text: t('ndDelete'), style: 'destructive',
           onPress: async () => {
             const ok = await deleteNotification(notification.id);
-            if (ok) setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+            if (ok) {
+              setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+              refreshUnreadCount();
+            }
           },
         },
       ]
@@ -119,7 +129,7 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
         onLongPress={() => handleLongPress(item)}
         activeOpacity={0.75}>
 
-        <View style={[styles.iconContainer, { backgroundColor: item.isRead ? color + '18' : color }]}>
+        <View style={[styles.iconContainer, { backgroundColor: item.isRead ? color + '18' : '#1a56db' }]}>
           <Ionicons name={iconName as any} size={22} color={item.isRead ? color : '#fff'} />
         </View>
 
@@ -146,7 +156,7 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
     );
   };
 
-  const renderFooter    = () => !loadingMore ? null : <View style={styles.loadMoreContainer}><ActivityIndicator size="small" color="#0077b6" /></View>;
+  const renderFooter    = () => !loadingMore ? null : <View style={styles.loadMoreContainer}><ActivityIndicator size="small" color="#1a56db" /></View>;
   const renderSeparator = () => <View style={styles.separator} />;
 
   const renderEmpty = () => {
@@ -154,7 +164,7 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
     return (
       <View style={styles.emptyState}>
         <View style={styles.emptyIconContainer}>
-          <Ionicons name="notifications-off-outline" size={40} color="#cbd5e0" />
+          <Ionicons name="notifications-off-outline" size={40} color="#9ca3af" />
         </View>
         <Text style={styles.emptyTitle}>{t('notifEmpty')}</Text>
         <Text style={styles.emptySubtitle}>{t('notifEmptySub')}</Text>
@@ -164,10 +174,10 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
 
   // ── État erreur ───────────────────────────────────────────────
   if (error && notifications.length === 0) return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container]}>
       <ScreenHeader title={t('notifTitle')} onBack={() => onNavigate('home')} rightIcon="checkmark-done" onRightPress={handleMarkAllRead} />
       <View style={styles.emptyState}>
-        <Ionicons name="wifi-outline" size={48} color="#cbd5e0" />
+        <Ionicons name="wifi-outline" size={48} color="#9ca3af" />
         <Text style={styles.emptyTitle}>{t('notifConnectError')}</Text>
         <Text style={styles.emptySubtitle}>{error}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={() => { setLoading(true); loadNotifications(true); }}>
@@ -179,10 +189,10 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
 
   // ── Chargement initial ────────────────────────────────────────
   if (loading && notifications.length === 0) return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container]}>
       <ScreenHeader title={t('notifTitle')} onBack={() => onNavigate('home')} rightIcon="checkmark-done" onRightPress={handleMarkAllRead} />
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0077b6" />
+        <ActivityIndicator size="large" color="#1a56db" />
         <Text style={[styles.loadingText, { color: colors.subText }]}>{t('notifLoading')}</Text>
       </View>
     </SafeAreaView>
@@ -190,14 +200,14 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
 
   // ── Vue principale ────────────────────────────────────────────
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container]}>
       <ScreenHeader title={t('notifTitle')} onBack={() => onNavigate('home')} rightIcon="checkmark-done" onRightPress={handleMarkAllRead} />
 
-      {unreadCount > 0 && (
+      {unreadLocally > 0 && (
         <View style={styles.unreadBanner}>
-          <Ionicons name="ellipse" size={8} color="#0077b6" style={{ marginRight: 6 }} />
+          <Ionicons name="ellipse" size={8} color="#1a56db" style={{ marginRight: 6 }} />
           <Text style={styles.unreadBannerText}>
-            {unreadCount} {unreadCount > 1 ? t('notifUnreadPlural') : t('notifUnread')}
+            {unreadLocally} {unreadLocally > 1 ? t('notifUnreadPlural') : t('notifUnread')}
           </Text>
           <TouchableOpacity onPress={handleMarkAllRead} style={styles.markAllBtn}>
             <Text style={styles.markAllBtnText}>{t('notifMarkAll')}</Text>
@@ -213,7 +223,7 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
         ListEmptyComponent={renderEmpty}
         ListFooterComponent={renderFooter}
         contentContainerStyle={[styles.listContent, notifications.length === 0 && { flex: 1 }]}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#0077b6']} tintColor="#0077b6" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#1a56db']} tintColor="#1a56db" />}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.3}
         showsVerticalScrollIndicator={false}
@@ -223,21 +233,21 @@ const NotificationsScreen = ({ onNavigate, onUpdateUnreadCount }: NotificationsS
 };
 
 const styles = StyleSheet.create({
-  container:           { flex: 1 },
-  unreadBanner:        { flexDirection: 'row', alignItems: 'center', backgroundColor: '#E3F2FD', paddingVertical: 10, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#bbdefb' },
-  unreadBannerText:    { flex: 1, fontSize: 13, color: '#0077b6', fontWeight: '600' },
-  markAllBtn:          { backgroundColor: '#0077b6', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
+  container:           { flex: 1, backgroundColor: '#f0f4f8' },
+  unreadBanner:        { flexDirection: 'row', alignItems: 'center', backgroundColor: '#eff6ff', paddingVertical: 10, paddingHorizontal: 16, borderBottomWidth: 1, borderBottomColor: '#dbeafe' },
+  unreadBannerText:    { flex: 1, fontSize: 13, color: '#1a56db', fontWeight: '600' },
+  markAllBtn:          { backgroundColor: '#1a56db', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20 },
   markAllBtnText:      { fontSize: 12, color: '#fff', fontWeight: '600' },
   listContent:         { padding: 16, paddingBottom: 30 },
   separator:           { height: 8 },
-  card:                { flexDirection: 'row', alignItems: 'center', borderRadius: 14, padding: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },
-  cardUnread:          { borderLeftWidth: 4, borderLeftColor: '#0077b6', backgroundColor: '#F0F9FF' },
+  card:                { flexDirection: 'row', alignItems: 'center', borderRadius: 14, padding: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  cardUnread:          { borderLeftWidth: 4, borderLeftColor: '#1a56db', backgroundColor: '#f0f6ff' },
   iconContainer:       { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center', marginRight: 14, flexShrink: 0 },
   cardBody:            { flex: 1, minWidth: 0 },
   cardTop:             { flexDirection: 'row', alignItems: 'center', marginBottom: 3 },
   cardTitle:           { fontSize: 15, fontWeight: '500', flex: 1 },
   cardTitleUnread:     { fontWeight: '700' },
-  unreadDot:           { width: 8, height: 8, borderRadius: 4, backgroundColor: '#0077b6', marginLeft: 8, flexShrink: 0 },
+  unreadDot:           { width: 8, height: 8, borderRadius: 4, backgroundColor: '#1a56db', marginLeft: 8, flexShrink: 0 },
   cardMessage:         { fontSize: 13, lineHeight: 18, marginBottom: 8 },
   cardFooter:          { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   typeBadge:           { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 },
@@ -247,10 +257,10 @@ const styles = StyleSheet.create({
   loadingText:         { marginTop: 12, fontSize: 14 },
   loadMoreContainer:   { paddingVertical: 16, alignItems: 'center' },
   emptyState:          { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
-  emptyIconContainer:  { width: 80, height: 80, borderRadius: 40, backgroundColor: '#f7fafc', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
-  emptyTitle:          { fontSize: 17, fontWeight: '600', color: '#4a5568', marginBottom: 6 },
-  emptySubtitle:       { fontSize: 14, color: '#a0aec0', textAlign: 'center', lineHeight: 20 },
-  retryButton:         { marginTop: 20, backgroundColor: '#0077b6', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 25 },
+  emptyIconContainer:  { width: 80, height: 80, borderRadius: 40, backgroundColor: '#f3f4f6', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  emptyTitle:          { fontSize: 17, fontWeight: '600', color: '#111827', marginBottom: 6 },
+  emptySubtitle:       { fontSize: 14, color: '#6b7280', textAlign: 'center', lineHeight: 20 },
+  retryButton:         { marginTop: 20, backgroundColor: '#1a56db', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 20 },
   retryButtonText:     { color: '#fff', fontWeight: '600', fontSize: 14 },
 });
 

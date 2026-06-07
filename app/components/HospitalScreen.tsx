@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 import { useApp } from '../context/AppContext';
 import BottomNavigation from '../tabs/BottomNavigation';
 import ScreenHeader from '../tabs/ScreenHeader';
@@ -129,7 +130,7 @@ const HospitalCard = memo(({
   const apiImg  = (hospital as any).imageUrl;
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.card }]}>
+    <View style={styles.card}>
       {/* EN-TÊTE */}
       <TouchableOpacity
         style={styles.cardHeader}
@@ -140,7 +141,7 @@ const HospitalCard = memo(({
 
         <View style={{ flex: 1 }}>
           <View style={styles.nameRow}>
-            <Text style={[styles.hospitalName, { color: colors.text }]} numberOfLines={2}>
+            <Text style={styles.hospitalName} numberOfLines={2}>
               {hospital.name}
             </Text>
             {hospital.emergency && <EmergencyBadge label={t('hsEmergencyBadge')} />}
@@ -149,19 +150,19 @@ const HospitalCard = memo(({
           <View style={styles.badgeRow}>
             {hospital.city ? (
               <View style={styles.badge}>
-                <Ionicons name="location-outline" size={11} color="#e74c3c" />
+                <Ionicons name="location-outline" size={11} color="#dc2626" />
                 <Text style={styles.badgeText} numberOfLines={1}>{hospital.city}</Text>
               </View>
             ) : null}
             {hospital.distanceKm !== null ? (
               <View style={[styles.badge, styles.badgeGreen]}>
-                <Ionicons name="navigate-outline" size={11} color="#27ae60" />
-                <Text style={[styles.badgeText, { color: '#27ae60' }]}>{formatDistance(hospital.distanceKm)}</Text>
+                <Ionicons name="navigate-outline" size={11} color="#059669" />
+                <Text style={[styles.badgeText, { color: '#059669' }]}>{formatDistance(hospital.distanceKm)}</Text>
               </View>
             ) : null}
           </View>
           {hospital.address ? (
-            <Text style={[styles.addressShort, { color: colors.subText }]} numberOfLines={1}>
+            <Text style={styles.addressShort} numberOfLines={1}>
               {hospital.address}
             </Text>
           ) : null}
@@ -172,7 +173,7 @@ const HospitalCard = memo(({
 
       {/* DÉTAILS */}
       {expanded && (
-        <View style={[styles.details, { borderTopColor: colors.border }]}>
+        <View style={styles.details}>
 
           {heroImg ? (
             <Image source={heroImg} style={styles.heroImage} resizeMode="cover" />
@@ -186,7 +187,7 @@ const HospitalCard = memo(({
           )}
 
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 2 }}>
-            <Text style={{ fontSize: 13, color: '#e74c3c', fontWeight: '700' }}>{hospital.type}</Text>
+            <Text style={{ fontSize: 13, color: '#dc2626', fontWeight: '700' }}>{hospital.type}</Text>
             {hospital.emergency && <EmergencyBadge label={t('hsEmergencyBadge')} />}
           </View>
 
@@ -197,15 +198,15 @@ const HospitalCard = memo(({
           ) : null}
 
           <View style={styles.detailRow}>
-            <Ionicons name="location" size={17} color="#e74c3c" />
-            <Text style={[styles.detailText, { color: colors.subText }]}>
+            <Ionicons name="location" size={17} color="#dc2626" />
+            <Text style={styles.detailText}>
               {[hospital.address, hospital.city].filter(Boolean).join(' — ') || 'Togo'}
             </Text>
           </View>
 
           {hospital.phone ? (
             <TouchableOpacity style={styles.detailRow} onPress={() => Linking.openURL(`tel:${hospital.phone}`)}>
-              <Ionicons name="call" size={17} color="#e74c3c" />
+              <Ionicons name="call" size={17} color="#dc2626" />
               <Text style={styles.detailLink}>{hospital.phone}</Text>
             </TouchableOpacity>
           ) : (
@@ -216,8 +217,8 @@ const HospitalCard = memo(({
           )}
 
           <View style={styles.detailRow}>
-            <Ionicons name="time-outline" size={17} color="#e74c3c" />
-            <Text style={[styles.detailText, { color: colors.subText }]}>
+            <Ionicons name="time-outline" size={17} color="#dc2626" />
+            <Text style={styles.detailText}>
               {hospital.openingHours
                 ? hospital.openingHours
                 : hospital.emergency
@@ -228,8 +229,8 @@ const HospitalCard = memo(({
 
           {hospital.distanceKm !== null && (
             <View style={styles.detailRow}>
-              <Ionicons name="navigate" size={17} color="#27ae60" />
-              <Text style={[styles.detailText, { color: '#27ae60' }]}>
+              <Ionicons name="navigate" size={17} color="#059669" />
+              <Text style={[styles.detailText, { color: '#059669' }]}>
                 {t('hsDistanceFrom')} {formatDistance(hospital.distanceKm)} {t('hsDistanceFromPos')}
               </Text>
             </View>
@@ -237,7 +238,7 @@ const HospitalCard = memo(({
 
           {hospital.website ? (
             <TouchableOpacity style={styles.detailRow} onPress={() => Linking.openURL(hospital.website)}>
-              <Ionicons name="globe-outline" size={17} color="#e74c3c" />
+              <Ionicons name="globe-outline" size={17} color="#dc2626" />
               <Text style={styles.detailLink} numberOfLines={1}>{hospital.website}</Text>
             </TouchableOpacity>
           ) : null}
@@ -248,7 +249,20 @@ const HospitalCard = memo(({
               <View style={styles.specTags}>
                 {hospital.specialties.map((s, i) => (
                   <View key={i} style={[styles.specTag, s.includes('Urgences') && styles.specTagRed]}>
-                    <Text style={[styles.specTagText, s.includes('Urgences') && { color: '#e74c3c' }]}>{s}</Text>
+                    <Text style={[styles.specTagText, s.includes('Urgences') && { color: '#dc2626' }]}>{s}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {hospital.insurances?.length > 0 && (
+            <View style={{ marginTop: 4 }}>
+              <Text style={[styles.specTitle, { color: colors.subText }]}>{t('hsInsurances')}</Text>
+              <View style={styles.specTags}>
+                {hospital.insurances.map((ins, i) => (
+                  <View key={i} style={[styles.specTag, { backgroundColor: '#ecfdf5' }]}>
+                    <Text style={[styles.specTagText, { color: '#059669' }]}>{ins}</Text>
                   </View>
                 ))}
               </View>
@@ -258,14 +272,14 @@ const HospitalCard = memo(({
           <View style={styles.actions}>
             {hospital.phone ? (
               <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: '#e74c3c' }]}
+                style={[styles.actionBtn, { backgroundColor: '#dc2626' }]}
                 onPress={() => Linking.openURL(`tel:${hospital.phone}`)}>
                 <Ionicons name="call" size={16} color="#fff" />
                 <Text style={styles.actionBtnText}>{t('aptCall')}</Text>
               </TouchableOpacity>
             ) : null}
             <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: '#0077b6', flex: 1 }]}
+              style={[styles.actionBtn, { backgroundColor: '#1a56db', flex: 1 }]}
               onPress={() => openMap(hospital, userLocation)}>
               <Ionicons name="navigate" size={16} color="#fff" />
               <Text style={styles.actionBtnText}>{t('favDirections')}</Text>
@@ -294,16 +308,16 @@ const HospitalScreen = ({ onNavigate }: Props) => {
   const [userLocation, setUserLocation]     = useState<UserLocation | null>(null);
   const [locationStatus, setLocationStatus] = useState<'pending' | 'granted' | 'denied'>('pending');
 
-  const requestLocation = useCallback(() => {
-    if (!navigator.geolocation) { setLocationStatus('denied'); return; }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocationStatus('granted');
-        setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
-      },
-      () => setLocationStatus('denied'),
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
-    );
+  const requestLocation = useCallback(async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') { setLocationStatus('denied'); return; }
+      const pos = await Location.getCurrentPositionAsync({});
+      setLocationStatus('granted');
+      setUserLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+    } catch {
+      setLocationStatus('denied');
+    }
   }, []);
 
   useEffect(() => { requestLocation(); }, []);
@@ -317,12 +331,11 @@ const HospitalScreen = ({ onNavigate }: Props) => {
     })), []);
 
   useEffect(() => {
-    if (userLocation && hospitals.length > 0) {
-      setHospitals((prev) =>
-        [...addDistances(prev, userLocation)].sort((a, b) => (a.distanceKm ?? 9999) - (b.distanceKm ?? 9999))
-      );
-    }
-  }, [userLocation]);
+    if (!userLocation || hospitals.length === 0) return;
+    setHospitals((prev) =>
+      [...addDistances(prev, userLocation)].sort((a, b) => (a.distanceKm ?? 9999) - (b.distanceKm ?? 9999))
+    );
+  }, [userLocation, hospitals.length]);
 
   const fetchHospitals = useCallback(async (forceRefresh = false) => {
     setLoading(true); setError(null); setExpandedId(null);
@@ -330,15 +343,13 @@ const HospitalScreen = ({ onNavigate }: Props) => {
       if (forceRefresh) await refreshHospitalCache().catch(() => {});
       const data = await getHospitals();
       const withExtras: Hospital[] = data.map((h) => ({ ...h, distanceKm: null }));
-      const withDist = addDistances(withExtras, userLocation);
-      const sorted = [...withDist].sort((a, b) => (a.distanceKm ?? 9999) - (b.distanceKm ?? 9999));
-      setHospitals(sorted);
+      setHospitals(withExtras);
     } catch (err: any) {
       setError(err?.response?.data?.error || err.message || t('hsConnectError'));
     } finally {
       setLoading(false);
     }
-  }, [userLocation]);
+  }, []);
 
   useEffect(() => { fetchHospitals(); }, []);
 
@@ -374,11 +385,11 @@ const HospitalScreen = ({ onNavigate }: Props) => {
   const activeRegionData = REGIONS.find(r => r.key === activeRegion);
 
   if (loading) return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScreenHeader title={t('hsTitle')} onBack={() => onNavigate('home')} showNotification unreadCount={4} onNotificationPress={() => onNavigate('messages')} />
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
+      <ScreenHeader title={t('hsTitle')} onBack={() => onNavigate('home')} showNotification onNotificationPress={() => onNavigate('notifications')} />
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#e74c3c" />
-        <Text style={[styles.loadingText, { color: colors.subText }]}>{t('hsLoading')}</Text>
+        <ActivityIndicator size="large" color="#dc2626" />
+        <Text style={styles.loadingText}>{t('hsLoading')}</Text>
         <Text style={{ fontSize: 12, color: colors.subText, textAlign: 'center', marginTop: 4 }}>
           {t('hsLoadingFirst')}
         </Text>
@@ -388,11 +399,11 @@ const HospitalScreen = ({ onNavigate }: Props) => {
   );
 
   if (error) return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScreenHeader title={t('hsTitle')} onBack={() => onNavigate('home')} showNotification unreadCount={4} onNotificationPress={() => onNavigate('messages')} />
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
+      <ScreenHeader title={t('hsTitle')} onBack={() => onNavigate('home')} showNotification onNotificationPress={() => onNavigate('notifications')} />
       <View style={styles.center}>
         <Ionicons name="wifi-outline" size={60} color={colors.subText} />
-        <Text style={[styles.errorTitle, { color: colors.text }]}>{t('hsConnectError')}</Text>
+        <Text style={styles.errorTitle}>{t('hsConnectError')}</Text>
         <Text style={{ fontSize: 13, color: colors.subText, textAlign: 'center' }}>{error}</Text>
         <TouchableOpacity style={styles.retryBtn} onPress={() => fetchHospitals()}>
           <Text style={styles.retryBtnText}>{t('retryButton')}</Text>
@@ -403,10 +414,10 @@ const HospitalScreen = ({ onNavigate }: Props) => {
   );
 
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScreenHeader title={t('hsTitle')} onBack={() => onNavigate('home')} showNotification unreadCount={4} onNotificationPress={() => onNavigate('messages')} />
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
+      <ScreenHeader title={t('hsTitle')} onBack={() => onNavigate('home')} showNotification onNotificationPress={() => onNavigate('notifications')} />
 
-      <View style={[styles.fixedHeader, { backgroundColor: colors.background }]}>
+      <View style={styles.fixedHeader}>
         {locationStatus === 'denied' && (
           <TouchableOpacity style={styles.locBanner} onPress={requestLocation}>
             <Ionicons name="location-outline" size={15} color="#fff" />
@@ -415,13 +426,13 @@ const HospitalScreen = ({ onNavigate }: Props) => {
         )}
         {locationStatus === 'granted' && (
           <View style={styles.locGranted}>
-            <Ionicons name="location" size={12} color="#e74c3c" />
+            <Ionicons name="location" size={12} color="#dc2626" />
             <Text style={styles.locGrantedText}>{t('hsLocGranted')}</Text>
           </View>
         )}
 
         <View style={styles.searchRow}>
-          <View style={[styles.searchBar, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.searchBar}>
             <Ionicons name="search-outline" size={19} color={colors.subText} />
             <TextInput
               style={[styles.searchInput, { color: colors.text }]}
@@ -437,16 +448,16 @@ const HospitalScreen = ({ onNavigate }: Props) => {
             )}
           </View>
           <TouchableOpacity
-            style={[styles.refreshBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            style={styles.refreshBtn}
             onPress={() => fetchHospitals(true)}>
-            <Ionicons name="refresh-outline" size={19} color="#e74c3c" />
+            <Ionicons name="refresh-outline" size={19} color="#dc2626" />
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity
           style={[styles.emergencyFilter, showEmergencyOnly && styles.emergencyFilterActive]}
           onPress={() => setShowEmergencyOnly((v) => !v)}>
-          <Ionicons name="flash" size={14} color={showEmergencyOnly ? '#fff' : '#e74c3c'} />
+          <Ionicons name="flash" size={14} color={showEmergencyOnly ? '#fff' : '#dc2626'} />
           <Text style={[styles.emergencyFilterText, showEmergencyOnly && { color: '#fff' }]}>
             {t('hsEmergencyOnly')}
           </Text>
@@ -458,12 +469,12 @@ const HospitalScreen = ({ onNavigate }: Props) => {
           {REGIONS.map((r) => (
             <TouchableOpacity
               key={r.key}
-              style={[styles.regionChip, { backgroundColor: colors.card, borderColor: colors.border },
+              style={[styles.regionChip,
                 activeRegion === r.key && styles.regionChipActive]}
               onPress={() => setActiveRegion(r.key)}>
-              <Ionicons name={r.icon as any} size={13} color={activeRegion === r.key ? '#e74c3c' : colors.subText} />
+              <Ionicons name={r.icon as any} size={13} color={activeRegion === r.key ? '#dc2626' : colors.subText} />
               <Text style={[styles.regionChipText, { color: colors.subText },
-                activeRegion === r.key && { color: '#e74c3c', fontWeight: '700' }]}>
+                activeRegion === r.key && { color: '#dc2626', fontWeight: '700' }]}>
                 {t(r.labelKey)}
               </Text>
             </TouchableOpacity>
@@ -508,56 +519,62 @@ const HospitalScreen = ({ onNavigate }: Props) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, gap: 14 },
-  loadingText: { fontSize: 14, textAlign: 'center', marginTop: 12 },
-  errorTitle: { fontSize: 18, fontWeight: '600', textAlign: 'center' },
-  retryBtn: { backgroundColor: '#e74c3c', paddingHorizontal: 30, paddingVertical: 12, borderRadius: 25, marginTop: 10 },
+  container: { flex: 1, backgroundColor: '#f0f4f8' },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 40, gap: 14, backgroundColor: '#f0f4f8' },
+  loadingText: { fontSize: 14, textAlign: 'center', marginTop: 12, color: '#6b7280' },
+  errorTitle: { fontSize: 18, fontWeight: '600', textAlign: 'center', color: '#111827' },
+  retryBtn: { backgroundColor: '#dc2626', paddingHorizontal: 30, paddingVertical: 12, borderRadius: 20, marginTop: 10 },
   retryBtnText: { color: '#fff', fontWeight: '600' },
-  fixedHeader: { paddingBottom: 6, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#e0e0e0', zIndex: 10 },
-  locBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#e74c3c', marginHorizontal: 16, marginTop: 10, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12 },
+  fixedHeader: { paddingBottom: 6, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#f3f4f6', zIndex: 10 },
+  locBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#dc2626', marginHorizontal: 16, marginTop: 10, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12 },
   locBannerText: { color: '#fff', fontSize: 13, flex: 1 },
   locGranted: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 2 },
-  locGrantedText: { fontSize: 12, color: '#e74c3c' },
+  locGrantedText: { fontSize: 12, color: '#dc2626' },
   searchRow: { flexDirection: 'row', paddingHorizontal: 16, paddingTop: 10, paddingBottom: 6, gap: 10 },
-  searchBar: { flex: 1, flexDirection: 'row', alignItems: 'center', borderRadius: 22, paddingHorizontal: 13, paddingVertical: 10, borderWidth: 1, gap: 8 },
+  searchBar: {
+    flex: 1, flexDirection: 'row', alignItems: 'center',
+    borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, gap: 8,
+    backgroundColor: '#fff',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 6, elevation: 3,
+  },
   searchInput: { flex: 1, fontSize: 14 },
-  refreshBtn: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center', borderWidth: 1 },
-  emergencyFilter: { flexDirection: 'row', alignItems: 'center', gap: 7, marginHorizontal: 16, marginBottom: 4, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5, borderColor: '#e74c3c', alignSelf: 'flex-start' },
-  emergencyFilterActive: { backgroundColor: '#e74c3c' },
-  emergencyFilterText: { fontSize: 13, fontWeight: '600', color: '#e74c3c' },
+  refreshBtn: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 3 },
+  emergencyFilter: { flexDirection: 'row', alignItems: 'center', gap: 7, marginHorizontal: 16, marginBottom: 4, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5, borderColor: '#dc2626', alignSelf: 'flex-start' },
+  emergencyFilterActive: { backgroundColor: '#dc2626' },
+  emergencyFilterText: { fontSize: 13, fontWeight: '600', color: '#dc2626' },
   regionsContent: { paddingLeft: 16, paddingRight: 16, gap: 8 },
-  regionChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 13, paddingVertical: 8, borderRadius: 18, borderWidth: 1 },
-  regionChipActive: { backgroundColor: '#FDEDEC', borderColor: '#e74c3c' },
+  regionChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 13, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#e5e7eb', backgroundColor: '#fff' },
+  regionChipActive: { backgroundColor: '#fef2f2', borderColor: '#dc2626' },
   regionChipText: { fontSize: 13, fontWeight: '500' },
   countRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4, gap: 8 },
-  countTitle: { fontSize: 15, fontWeight: '700', flex: 1 },
-  countBadge: { backgroundColor: '#FDEDEC', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 10 },
-  countBadgeText: { fontSize: 12, color: '#e74c3c', fontWeight: '600' },
-  card: { marginHorizontal: 16, marginBottom: 8, borderRadius: 14, overflow: 'hidden', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 3 },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', padding: 13, gap: 11 },
+  countTitle: { fontSize: 15, fontWeight: '700' },
+  countBadge: { backgroundColor: '#fef2f2', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 10 },
+  countBadgeText: { fontSize: 12, color: '#dc2626', fontWeight: '600' },
+  card: { marginHorizontal: 16, marginBottom: 8, borderRadius: 16, overflow: 'hidden', backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', padding: 14, gap: 12 },
   nameRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, flexWrap: 'wrap', marginBottom: 2 },
-  hospitalName: { fontSize: 14, fontWeight: '700', lineHeight: 20, flex: 1 },
-  hospitalType: { fontSize: 12, fontWeight: '600', color: '#e74c3c', marginBottom: 4 },
-  emergencyBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#e74c3c', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 7 },
+  hospitalName: { fontSize: 15, fontWeight: '700', lineHeight: 20, flex: 1, color: '#111827' },
+  hospitalType: { fontSize: 12, fontWeight: '600', color: '#dc2626', marginBottom: 4 },
+  emergencyBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#dc2626', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 7 },
   emergencyText: { fontSize: 10, color: '#fff', fontWeight: '700' },
   badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginBottom: 3 },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#FDEDEC', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 7 },
-  badgeGreen: { backgroundColor: '#EAFAF1' },
-  badgeText: { fontSize: 11, color: '#e74c3c', fontWeight: '500' },
-  addressShort: { fontSize: 12, lineHeight: 16 },
-  details: { paddingHorizontal: 14, paddingBottom: 14, paddingTop: 12, borderTopWidth: 1, gap: 9 },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#fef2f2', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8 },
+  badgeGreen: { backgroundColor: '#ecfdf5' },
+  badgeText: { fontSize: 11, color: '#dc2626', fontWeight: '500' },
+  addressShort: { fontSize: 12, lineHeight: 17, color: '#6b7280' },
+  details: { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#f3f4f6', gap: 10 },
   heroImage: { width: '100%', height: 150, borderRadius: 10, marginBottom: 8 },
   heroPlaceholder: { width: '100%', height: 90, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginBottom: 10, gap: 6 },
   heroName: { fontSize: 12, fontWeight: '600' },
-  detailRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 9 },
-  detailText: { fontSize: 14, flex: 1, lineHeight: 20 },
-  detailLink: { fontSize: 14, flex: 1, lineHeight: 20, color: '#0077b6', textDecorationLine: 'underline' },
+  detailRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  detailText: { fontSize: 14, flex: 1, lineHeight: 20, color: '#6b7280' },
+  detailLink: { fontSize: 14, flex: 1, lineHeight: 20, color: '#1a56db', textDecorationLine: 'underline' },
   specTitle: { fontSize: 12, marginBottom: 6, fontWeight: '500' },
   specTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  specTag: { backgroundColor: '#FDEDEC', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 9 },
-  specTagRed: { borderWidth: 1, borderColor: '#e74c3c' },
-  specTagText: { fontSize: 11, color: '#e74c3c' },
+  specTag: { backgroundColor: '#fef2f2', paddingHorizontal: 9, paddingVertical: 3, borderRadius: 9 },
+  specTagRed: { borderWidth: 1, borderColor: '#dc2626' },
+  specTagText: { fontSize: 11, color: '#dc2626' },
   actions: { flexDirection: 'row', gap: 10, marginTop: 4 },
   actionBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 20, gap: 7 },
   actionBtnText: { color: '#fff', fontSize: 13, fontWeight: '600' },

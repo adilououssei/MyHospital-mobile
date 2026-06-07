@@ -34,7 +34,7 @@ const LanguageScreen = ({ onNavigate }: LanguageScreenProps) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.card }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => onNavigate('profile')}>
@@ -55,8 +55,8 @@ const LanguageScreen = ({ onNavigate }: LanguageScreenProps) => {
               key={lang.code}
               style={[
                 styles.languageCard,
-                { backgroundColor: colors.card, borderColor: selected === lang.code ? '#0077b6' : 'transparent' },
                 selected === lang.code && styles.languageCardActive,
+                selected === lang.code && { borderColor: '#1a56db' },
               ]}
               onPress={() => setSelected(lang.code)}
             >
@@ -70,13 +70,13 @@ const LanguageScreen = ({ onNavigate }: LanguageScreenProps) => {
               <Ionicons
                 name={selected === lang.code ? 'radio-button-on' : 'radio-button-off'}
                 size={24}
-                color={selected === lang.code ? '#0077b6' : '#ccc'}
+                color={selected === lang.code ? '#1a56db' : '#9ca3af'}
               />
             </TouchableOpacity>
           ))}
 
           <View style={styles.infoCard}>
-            <Ionicons name="information-circle" size={20} color="#0077b6" />
+            <Ionicons name="information-circle" size={20} color="#1a56db" />
             <Text style={[styles.infoText, { color: colors.subText }]}>
               Le changement de langue sera appliqué immédiatement à toute l'application.
             </Text>
@@ -95,7 +95,7 @@ const LanguageScreen = ({ onNavigate }: LanguageScreenProps) => {
 };
 
 const styles = StyleSheet.create({
-  container:    { flex: 1 },
+  container:    { flex: 1, backgroundColor: '#f0f4f8' },
   header:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 15 },
   backButton:   { padding: 5 },
   headerTitle:  { fontSize: 18, fontWeight: '600' },
@@ -104,20 +104,22 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 20 },
   languageCard: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    borderRadius: 12, padding: 16, marginBottom: 12, borderWidth: 2,
+    backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 2, borderColor: 'transparent',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3,
   },
-  languageCardActive: { backgroundColor: '#e4f4fc' },
+  languageCardActive: { backgroundColor: '#eff6ff', borderColor: '#1a56db' },
   languageLeft: { flexDirection: 'row', alignItems: 'center', gap: 15 },
   flag:         { fontSize: 32 },
   languageName: { fontSize: 16, fontWeight: '600', marginBottom: 2 },
   languageNative: { fontSize: 13 },
   infoCard: {
-    flexDirection: 'row', backgroundColor: '#E3F2FD',
-    borderRadius: 12, padding: 15, gap: 12, marginTop: 20,
+    flexDirection: 'row', backgroundColor: '#fff',
+    borderRadius: 16, padding: 15, gap: 12, marginTop: 20,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 3,
   },
   infoText:    { flex: 1, fontSize: 13, lineHeight: 20 },
   footer:      { padding: 20, paddingBottom: 30, borderTopWidth: 1 },
-  saveButton:  { backgroundColor: '#0077b6', paddingVertical: 16, borderRadius: 30, alignItems: 'center' },
+  saveButton:  { backgroundColor: '#1a3fad', paddingVertical: 16, borderRadius: 14, alignItems: 'center', shadowColor: '#1a56db', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },
   saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });
 

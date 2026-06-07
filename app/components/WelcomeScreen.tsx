@@ -20,7 +20,6 @@ const WelcomeScreen = ({ onNavigate }: WelcomeScreenProps) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        {/* Logo */}
         <View style={styles.logoContainer}>
           <View style={styles.logoIcon}>
             <Image
@@ -30,7 +29,6 @@ const WelcomeScreen = ({ onNavigate }: WelcomeScreenProps) => {
           </View>
         </View>
 
-        {/* Title and Description */}
         <View style={styles.textContainer}>
           <Text style={styles.title}>{t('welcomeStart')}</Text>
           <Text style={styles.description}>
@@ -41,7 +39,6 @@ const WelcomeScreen = ({ onNavigate }: WelcomeScreenProps) => {
           </Text>
         </View>
 
-        {/* Buttons */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.loginButton}
@@ -65,7 +62,7 @@ const WelcomeScreen = ({ onNavigate }: WelcomeScreenProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f0f4f8',
   },
   content: {
     flex: 1,
@@ -87,7 +84,7 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#0077b6',
+    color: '#1a56db',
   },
   textContainer: {
     alignItems: 'center',
@@ -96,12 +93,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#111827',
     marginBottom: 15,
   },
   description: {
     fontSize: 14,
-    color: '#999',
+    color: '#6b7280',
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -110,15 +107,15 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   loginButton: {
-    backgroundColor: '#0077b6',
+    backgroundColor: '#1a3fad',
     paddingVertical: 16,
-    borderRadius: 30,
+    borderRadius: 14,
     alignItems: 'center',
-    shadowColor: '#0077b6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 3,
   },
   loginButtonText: {
     color: '#fff',
@@ -131,10 +128,10 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#0077b6',
+    borderColor: '#1a56db',
   },
   signupButtonText: {
-    color: '#0077b6',
+    color: '#1a56db',
     fontSize: 16,
     fontWeight: '600',
   },

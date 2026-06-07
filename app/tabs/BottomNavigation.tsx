@@ -2,12 +2,12 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useApp, useAuth } from '../context/AppContext';
+import { useAuth } from '../context/AppContext';
+import { useNotifications } from '../context/NotificationContext';
 
 interface BottomNavigationProps {
   currentScreen: string;
   onNavigate: (screen: string, params?: any) => void;
-  unreadCount?: number;
 }
 
 const PROTECTED_SCREENS = ['appointments', 'profile'];
@@ -19,8 +19,8 @@ const navItems = [
   { screen: 'profile',      icon: 'person',           iconOutline: 'person-outline',           label: 'Profil' },
 ];
 
-const BottomNavigation = ({ currentScreen, onNavigate, unreadCount = 0 }: BottomNavigationProps) => {
-  const { colors } = useApp();
+const BottomNavigation = ({ currentScreen, onNavigate }: BottomNavigationProps) => {
+  const { unreadCount } = useNotifications();
   const { isAuthenticated } = useAuth();
   const insets = useSafeAreaInsets();
 
@@ -34,8 +34,8 @@ const BottomNavigation = ({ currentScreen, onNavigate, unreadCount = 0 }: Bottom
 
   return (
     <View style={[styles.bottomNav, {
-      backgroundColor: colors.card,
-      borderTopColor: colors.border,
+      backgroundColor: '#fff',
+      borderTopColor: '#e5e7eb',
       paddingBottom: Math.max(insets.bottom, 8),
     }]}>
       {navItems.map((item) => {
@@ -46,12 +46,21 @@ const BottomNavigation = ({ currentScreen, onNavigate, unreadCount = 0 }: Bottom
             key={item.screen}
             style={styles.navItem}
             onPress={() => handleNav(item.screen)}>
-            <Ionicons
-              name={isActive ? item.icon as any : item.iconOutline as any}
-              size={24}
-              color={isActive ? '#0077b6' : colors.subText}
-            />
-            <Text style={[styles.label, { color: isActive ? '#0077b6' : colors.subText }]}>
+            <View style={styles.iconWrapper}>
+              <Ionicons
+                name={isActive ? item.icon as any : item.iconOutline as any}
+                size={24}
+                color={isActive ? '#1a56db' : '#6b7280'}
+              />
+              {item.screen === 'home' && unreadCount > 0 && (
+                <View style={styles.navBadge}>
+                  <Text style={styles.navBadgeText}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Text>
+                </View>
+              )}
+            </View>
+            <Text style={[styles.label, { color: isActive ? '#1a56db' : '#6b7280' }]}>
               {item.label}
             </Text>
           </TouchableOpacity>
@@ -80,6 +89,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 3,
     paddingHorizontal: 12,
+  },
+  iconWrapper: {
+    position: 'relative',
+  },
+  navBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -10,
+    backgroundColor: '#FF6B6B',
+    borderRadius: 9,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  navBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   label: {
     fontSize: 10,

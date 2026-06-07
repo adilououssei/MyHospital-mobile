@@ -196,7 +196,7 @@ const VideoCallScreen = ({
             {/* ── Spinner de chargement ────────────────────────────────────── */}
             {isLoading && (
                 <View style={styles.loadingOverlay}>
-                    <ActivityIndicator size="large" color="#0077b6" />
+                    <ActivityIndicator size="large" color="#1a56db" />
                     <Text style={styles.loadingText}>
                         Connexion à la consultation...
                     </Text>
@@ -393,11 +393,16 @@ const styles = StyleSheet.create({
         marginBottom: 30,
     },
     retryButton: {
-        backgroundColor: '#0077b6',
+        backgroundColor: '#1a3fad',
         paddingVertical: 14,
         paddingHorizontal: 40,
-        borderRadius: 30,
+        borderRadius: 14,
         marginBottom: 15,
+        shadowColor: '#1a56db',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 5,
     },
     retryText: {
         color: '#fff',

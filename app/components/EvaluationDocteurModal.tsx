@@ -227,8 +227,8 @@ const styles = StyleSheet.create({
   },
   btnSubmit: {
     flex: 1,
-    backgroundColor: '#0077b6',
-    borderRadius: 12,
+    backgroundColor: '#1a3fad',
+    borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center',
   },

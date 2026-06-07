@@ -70,10 +70,10 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
 
   if (loading) {
     return (
-      <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
+      <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
         <ScreenHeader title="Profil du médecin" onBack={() => onNavigate('doctorsDirectory')} />
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#0077b6" />
+          <ActivityIndicator size="large" color="#1a56db" />
           <Text style={[styles.loadingText, { color: colors.subText }]}>Chargement des informations...</Text>
         </View>
       </SafeAreaView>
@@ -85,7 +85,7 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
   const availableTypes = doctorDetail?.typesConsultation || [];
 
   return (
-    <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
       <ScreenHeader title="Profil du médecin" onBack={() => onNavigate('doctorsDirectory')} />
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -96,8 +96,8 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
             {photoUrl ? (
               <Image source={{ uri: photoUrl }} style={styles.doctorImageLarge} />
             ) : (
-              <View style={[styles.doctorImagePlaceholderLarge, { backgroundColor: colors.inputBackground }]}>
-                <FontAwesome5 name="user-md" size={60} color="#0077b6" />
+              <View style={styles.doctorImagePlaceholderLarge}>
+                <FontAwesome5 name="user-md" size={60} color="#1a56db" />
               </View>
             )}
             
@@ -118,12 +118,12 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
 
             {/* Boutons de contact */}
             <View style={styles.contactButtons}>
-              <TouchableOpacity style={[styles.contactBtn, { backgroundColor: colors.inputBackground }]} onPress={handleCall}>
-                <Ionicons name="call-outline" size={20} color="#0077b6" />
+              <TouchableOpacity style={styles.contactBtn} onPress={handleCall}>
+                <Ionicons name="call-outline" size={20} color="#1a56db" />
                 <Text style={[styles.contactBtnText, { color: colors.text }]}>Appeler</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.contactBtn, { backgroundColor: colors.inputBackground }]} onPress={handleEmail}>
-                <Ionicons name="mail-outline" size={20} color="#0077b6" />
+              <TouchableOpacity style={styles.contactBtn} onPress={handleEmail}>
+                <Ionicons name="mail-outline" size={20} color="#1a56db" />
                 <Text style={[styles.contactBtnText, { color: colors.text }]}>Email</Text>
               </TouchableOpacity>
             </View>
@@ -131,8 +131,8 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
 
           {/* Localisation */}
           {doctor?.ville && (
-            <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
-              <Ionicons name="location-outline" size={22} color="#0077b6" />
+            <View style={styles.infoCard}>
+              <Ionicons name="location-outline" size={22} color="#1a56db" />
               <View style={styles.infoCardContent}>
                 <Text style={[styles.infoCardTitle, { color: colors.text }]}>Localisation</Text>
                 <Text style={[styles.infoCardValue, { color: colors.subText }]}>{doctor.ville}</Text>
@@ -145,7 +145,7 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
 
           {/* Lieu de consultation */}
           {doctorDetail?.consultationLocation?.latitude && doctorDetail?.consultationLocation?.longitude && (
-            <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
+            <View style={styles.infoCard}>
               <Ionicons name="navigate-outline" size={22} color="#198754" />
               <View style={styles.infoCardContent}>
                 <Text style={[styles.infoCardTitle, { color: colors.text }]}>Lieu de consultation</Text>
@@ -174,14 +174,14 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
 
           {/* Tarifs des consultations */}
           {availableTypes.length > 0 && (
-            <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
-              <Ionicons name="cash-outline" size={22} color="#0077b6" />
+            <View style={styles.infoCard}>
+              <Ionicons name="cash-outline" size={22} color="#1a56db" />
               <View style={styles.infoCardContent}>
                 <Text style={[styles.infoCardTitle, { color: colors.text }]}>Tarifs des consultations</Text>
                 {doctorDetail?.typesConsultation?.map((type: any) => (
                   <View key={type.type} style={styles.priceRow}>
                     <Text style={[styles.priceLabel, { color: colors.subText }]}>{type.label}</Text>
-                    <Text style={[styles.priceValue, { color: '#0077b6' }]}>{type.prix.toLocaleString()} FCFA</Text>
+                    <Text style={[styles.priceValue, { color: '#1a56db' }]}>{type.prix.toLocaleString()} FCFA</Text>
                   </View>
                 ))}
               </View>
@@ -190,8 +190,8 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
 
           {/* Description */}
           {doctorDetail?.biographie && (
-            <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
-              <Ionicons name="information-circle-outline" size={22} color="#0077b6" />
+            <View style={styles.infoCard}>
+              <Ionicons name="information-circle-outline" size={22} color="#1a56db" />
               <View style={styles.infoCardContent}>
                 <Text style={[styles.infoCardTitle, { color: colors.text }]}>À propos</Text>
                 <Text style={[styles.bioText, { color: colors.subText }]}>{doctorDetail.biographie}</Text>
@@ -201,8 +201,8 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
 
           {/* Informations professionnelles */}
           {(doctorDetail?.diplomes || doctorDetail?.anneesExperience > 0 || doctorDetail?.languesParlees) && (
-            <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
-              <Ionicons name="school-outline" size={22} color="#0077b6" />
+            <View style={styles.infoCard}>
+              <Ionicons name="school-outline" size={22} color="#1a56db" />
               <View style={styles.infoCardContent}>
                 <Text style={[styles.infoCardTitle, { color: colors.text }]}>Informations professionnelles</Text>
                 {doctorDetail?.diplomes && (
@@ -228,12 +228,12 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
           )}
 
           {/* Avis des patients */}
-          <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
+            <View style={styles.infoCard}>
             <Ionicons name="chatbubbles-outline" size={22} color="#FFC107" />
             <View style={styles.infoCardContent}>
               <Text style={[styles.infoCardTitle, { color: colors.text }]}>Avis des patients</Text>
               {loadingEvals ? (
-                <ActivityIndicator size="small" color="#0077b6" style={{ marginTop: 8 }} />
+                <ActivityIndicator size="small" color="#1a56db" style={{ marginTop: 8 }} />
               ) : evaluations.length === 0 ? (
                 <Text style={[styles.infoText, { color: colors.subText }]}>Aucun avis pour le moment.</Text>
               ) : (
@@ -257,8 +257,8 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
           </View>
 
           {/* Message pour prendre rendez-vous */}
-          <View style={[styles.infoCard, { backgroundColor: colors.card }]}>
-            <Ionicons name="calendar-outline" size={22} color="#0077b6" />
+          <View style={styles.infoCard}>
+            <Ionicons name="calendar-outline" size={22} color="#1a56db" />
             <View style={styles.infoCardContent}>
               <Text style={[styles.infoCardTitle, { color: colors.text }]}>Prendre rendez-vous</Text>
               <Text style={[styles.infoText, { color: colors.subText }]}>
@@ -273,23 +273,23 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { padding: 20, paddingBottom: 40 },
+  container: { flex: 1, backgroundColor: '#f0f4f8' },
+  content: { paddingHorizontal: 20, paddingBottom: 40 },
   
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
   loadingText: { marginTop: 12, fontSize: 14 },
   
-  headerSection: { alignItems: 'center', marginBottom: 24 },
-  doctorImageLarge: { width: 120, height: 120, borderRadius: 60, marginBottom: 16 },
-  doctorImagePlaceholderLarge: { width: 120, height: 120, borderRadius: 60, justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
-  doctorNameLarge: { fontSize: 24, fontWeight: '700', marginBottom: 4 },
-  doctorSpecialtyLarge: { fontSize: 16, marginBottom: 12 },
+  headerSection: { alignItems: 'center', marginBottom: 20 },
+  doctorImageLarge: { width: 100, height: 100, borderRadius: 50, marginBottom: 16 },
+  doctorImagePlaceholderLarge: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#eff6ff', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  doctorNameLarge: { fontSize: 22, fontWeight: '800', color: '#111827', marginBottom: 4 },
+  doctorSpecialtyLarge: { fontSize: 15, color: '#6b7280', marginBottom: 12 },
   ratingContainerLarge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 16 },
   ratingText: { fontSize: 14, fontWeight: '600', marginLeft: 8 },
   
   contactButtons: { flexDirection: 'row', gap: 12 },
-  contactBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 25 },
-  contactBtnText: { fontSize: 14, fontWeight: '500' },
+  contactBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, backgroundColor: '#f3f4f6' },
+  contactBtnText: { fontSize: 14, fontWeight: '600', color: '#374151' },
   
   routeButton: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
@@ -297,30 +297,30 @@ const styles = StyleSheet.create({
     borderRadius: 20, marginTop: 10, alignSelf: 'flex-start',
   },
   routeButtonText: { color: '#fff', fontSize: 13, fontWeight: '600' },
-  infoCard: { flexDirection: 'row', padding: 16, borderRadius: 12, marginBottom: 16, gap: 12 },
+  infoCard: { flexDirection: 'row', padding: 16, borderRadius: 16, marginBottom: 12, gap: 12, backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3, marginHorizontal: 0 },
   infoCardContent: { flex: 1 },
-  infoCardTitle: { fontSize: 16, fontWeight: '600', marginBottom: 8 },
-  infoCardValue: { fontSize: 14 },
+  infoCardTitle: { fontSize: 16, fontWeight: '700', marginBottom: 8 },
+  infoCardValue: { fontSize: 14, color: '#6b7280' },
   
-  priceRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
+  priceRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
   priceLabel: { fontSize: 14 },
   priceValue: { fontSize: 14, fontWeight: '700' },
   
-  bioText: { fontSize: 14, lineHeight: 22 },
-  profInfo: { fontSize: 14, marginBottom: 6 },
+  bioText: { fontSize: 14, lineHeight: 22, color: '#6b7280' },
+  profInfo: { fontSize: 14, marginBottom: 6, color: '#6b7280' },
   profLabel: { fontWeight: '600' },
   
   infoText: { fontSize: 14, lineHeight: 20 },
   evaluationItem: {
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#f3f4f6',
   },
   evaluationHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4,
   },
-  evaluationDate: { fontSize: 11 },
-  evaluationComment: { fontSize: 13, lineHeight: 18, fontStyle: 'italic' },
+  evaluationDate: { fontSize: 11, color: '#9ca3af' },
+  evaluationComment: { fontSize: 13, lineHeight: 18, fontStyle: 'italic', color: '#6b7280' },
 });
 
 export default DoctorProfileScreen;

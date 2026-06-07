@@ -45,7 +45,7 @@ const PrivacySecurityScreen = ({ onNavigate }: PrivacySecurityScreenProps) => {
 
     const SettingsSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
         <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.subText }]}>{title}</Text>
+            <Text style={styles.sectionTitle}>{title}</Text>
             {children}
         </View>
     );
@@ -63,10 +63,10 @@ const PrivacySecurityScreen = ({ onNavigate }: PrivacySecurityScreenProps) => {
         value: boolean;
         onValueChange: (value: boolean) => void;
     }) => (
-        <View style={[styles.settingsItem, { backgroundColor: colors.card }]}>
+        <View style={styles.settingsItem}>
             <View style={styles.settingsItemLeft}>
                 <View style={styles.iconContainer}>
-                    <Ionicons name={icon as any} size={22} color="#0077b6" />
+                    <Ionicons name={icon as any} size={22} color="#1a56db" />
                 </View>
                 <View style={styles.settingsItemText}>
                     <Text style={[styles.settingsItemTitle, { color: colors.text }]}>{title}</Text>
@@ -80,7 +80,7 @@ const PrivacySecurityScreen = ({ onNavigate }: PrivacySecurityScreenProps) => {
             <Switch
                 value={value}
                 onValueChange={onValueChange}
-                trackColor={{ false: colors.border, true: '#0077b6' }}
+                trackColor={{ false: colors.border, true: '#1a56db' }}
                 thumbColor="#fff"
             />
         </View>
@@ -91,7 +91,7 @@ const PrivacySecurityScreen = ({ onNavigate }: PrivacySecurityScreenProps) => {
         title,
         subtitle,
         onPress,
-        iconColor = '#0077b6'
+        iconColor = '#1a56db'
     }: {
         icon: string;
         title: string;
@@ -100,7 +100,7 @@ const PrivacySecurityScreen = ({ onNavigate }: PrivacySecurityScreenProps) => {
         iconColor?: string;
     }) => (
         <TouchableOpacity
-            style={[styles.settingsItem, { backgroundColor: colors.card }]}
+            style={styles.settingsItem}
             onPress={onPress}
         >
             <View style={styles.settingsItemLeft}>
@@ -121,7 +121,7 @@ const PrivacySecurityScreen = ({ onNavigate }: PrivacySecurityScreenProps) => {
     );
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity
@@ -202,7 +202,7 @@ const PrivacySecurityScreen = ({ onNavigate }: PrivacySecurityScreenProps) => {
                 {/* Zone dangereuse */}
                 <SettingsSection title="ZONE DANGEREUSE">
                     <TouchableOpacity
-                        style={[styles.dangerItem, { backgroundColor: colors.card }]}
+                        style={styles.dangerItem}
                         onPress={handleDeleteAccount}
                     >
                         <View style={styles.settingsItemLeft}>
@@ -231,6 +231,7 @@ const PrivacySecurityScreen = ({ onNavigate }: PrivacySecurityScreenProps) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#f0f4f8',
     },
     header: {
         flexDirection: 'row',
@@ -250,11 +251,12 @@ const styles = StyleSheet.create({
         marginTop: 25,
     },
     sectionTitle: {
-        fontSize: 12,
-        fontWeight: '600',
+        fontSize: 17,
+        fontWeight: '700',
         letterSpacing: 0.5,
         paddingHorizontal: 20,
         marginBottom: 10,
+        color: '#6b7280',
     },
     settingsItem: {
         flexDirection: 'row',
@@ -263,6 +265,13 @@ const styles = StyleSheet.create({
         paddingVertical: 15,
         paddingHorizontal: 20,
         marginBottom: 1,
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 3,
     },
     settingsItemLeft: {
         flexDirection: 'row',
@@ -272,8 +281,8 @@ const styles = StyleSheet.create({
     iconContainer: {
         width: 40,
         height: 40,
-        backgroundColor: '#e4f4fcff',
-        borderRadius: 10,
+        backgroundColor: '#eff6ff',
+        borderRadius: 8,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 15,
@@ -285,6 +294,7 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '500',
         marginBottom: 2,
+        color: '#111827',
     },
     settingsItemSubtitle: {
         fontSize: 13,
@@ -296,6 +306,13 @@ const styles = StyleSheet.create({
         paddingVertical: 15,
         paddingHorizontal: 20,
         marginBottom: 1,
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 3,
     },
 });
 

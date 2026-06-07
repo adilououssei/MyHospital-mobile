@@ -69,8 +69,7 @@ const TermsScreen = ({ onNavigate }: TermsScreenProps) => {
     ];
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-            {/* Header */}
+        <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity
                     style={styles.backButton}
@@ -86,20 +85,17 @@ const TermsScreen = ({ onNavigate }: TermsScreenProps) => {
 
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.content}>
-                    {/* Last Updated */}
-                    <View style={[styles.updateBox, { backgroundColor: colors.card }]}>
-                        <Ionicons name="calendar-outline" size={20} color="#0077b6" />
+                    <View style={styles.updateBox}>
+                        <Ionicons name="calendar-outline" size={20} color="#1a56db" />
                         <Text style={[styles.updateText, { color: colors.subText }]}>
                             Dernière mise à jour : 28 octobre 2025
                         </Text>
                     </View>
 
-                    {/* Introduction */}
                     <Text style={[styles.introText, { color: colors.text }]}>
                         Bienvenue sur MyHospital. Veuillez lire attentivement ces conditions d'utilisation avant d'utiliser nos services.
                     </Text>
 
-                    {/* Sections */}
                     {sections.map((section, index) => (
                         <View key={index} style={styles.section}>
                             <Text style={[styles.sectionTitle, { color: colors.text }]}>
@@ -111,9 +107,8 @@ const TermsScreen = ({ onNavigate }: TermsScreenProps) => {
                         </View>
                     ))}
 
-                    {/* Contact */}
-                    <View style={[styles.contactBox, { backgroundColor: '#e4f4fcff' }]}>
-                        <Ionicons name="mail-outline" size={24} color="#0077b6" />
+                    <View style={styles.contactBox}>
+                        <Ionicons name="mail-outline" size={24} color="#1a56db" />
                         <View style={styles.contactText}>
                             <Text style={[styles.contactTitle, { color: colors.text }]}>
                                 Questions ?
@@ -134,6 +129,7 @@ const TermsScreen = ({ onNavigate }: TermsScreenProps) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#f0f4f8',
     },
     header: {
         flexDirection: 'row',
@@ -156,9 +152,12 @@ const styles = StyleSheet.create({
     updateBox: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 15,
-        borderRadius: 12,
+        padding: 16,
+        borderRadius: 16,
         marginBottom: 20,
+        backgroundColor: '#fff',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
     },
     updateText: {
         marginLeft: 10,
@@ -174,8 +173,8 @@ const styles = StyleSheet.create({
         marginBottom: 25,
     },
     sectionTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
+        fontSize: 17,
+        fontWeight: '700',
         marginBottom: 10,
     },
     sectionContent: {
@@ -186,8 +185,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         padding: 20,
-        borderRadius: 15,
+        borderRadius: 16,
         marginTop: 10,
+        backgroundColor: '#eff6ff',
     },
     contactText: {
         marginLeft: 15,
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     },
     contactTitle: {
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '700',
         marginBottom: 4,
     },
     contactSubtitle: {

@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
   Modal, KeyboardAvoidingView, Platform, ScrollView,
-  ActivityIndicator, Alert,
+  ActivityIndicator, Alert, Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import authService from '../services/authService';
 import apiClient from '../services/api.config';
 import { secureStorage } from '../services/secureStorage';
@@ -23,6 +24,48 @@ const LANGUAGES = [
   { code: 'de', flag: '🇩🇪', label: 'Deutsch' },
 ];
 
+// ─── Arrière-plan décoratif ───────────────────────────────────────────────────
+const DecorBackground = () => (
+  <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    {/* Blob haut droite */}
+    <View style={decor.blobTopRight} />
+    {/* Blob bas gauche */}
+    <View style={decor.blobBottomLeft} />
+    {/* Vague bas */}
+    <View style={decor.waveBottom} />
+    {/* Croix médicales */}
+    <Text style={decor.plus1}>✚</Text>
+    <Text style={decor.plus2}>✚</Text>
+    <Text style={decor.plus3}>✚</Text>
+    <Text style={decor.plus4}>✚</Text>
+    <Text style={decor.plus5}>✚</Text>
+  </View>
+);
+
+const decor = StyleSheet.create({
+  blobTopRight: {
+    position: 'absolute', top: -60, right: -60,
+    width: 220, height: 220, borderRadius: 110,
+    backgroundColor: '#dbeafe', opacity: 0.55,
+  },
+  blobBottomLeft: {
+    position: 'absolute', bottom: 80, left: -80,
+    width: 260, height: 260, borderRadius: 130,
+    backgroundColor: '#bfdbfe', opacity: 0.35,
+  },
+  waveBottom: {
+    position: 'absolute', bottom: -40, left: -40, right: -40,
+    height: 130, borderRadius: 80,
+    backgroundColor: '#dbeafe', opacity: 0.6,
+  },
+  plus1: { position: 'absolute', bottom: 55, right: 24,  fontSize: 30, color: '#93c5fd', opacity: 0.75 },
+  plus2: { position: 'absolute', bottom: 18, left:  48,  fontSize: 22, color: '#86efac', opacity: 0.70 },
+  plus3: { position: 'absolute', bottom: 72, left:  18,  fontSize: 15, color: '#93c5fd', opacity: 0.55 },
+  plus4: { position: 'absolute', top:   90, right: 18,   fontSize: 14, color: '#bfdbfe', opacity: 0.60 },
+  plus5: { position: 'absolute', top:  180, left:  14,   fontSize: 12, color: '#86efac', opacity: 0.45 },
+});
+
+// ─── Composant principal ──────────────────────────────────────────────────────
 const LoginScreen = ({ onNavigate, returnTo, forwardParams }: LoginScreenProps) => {
   const [email, setEmail]               = useState('');
   const [password, setPassword]         = useState('');
@@ -54,18 +97,17 @@ const LoginScreen = ({ onNavigate, returnTo, forwardParams }: LoginScreenProps) 
         if (token) {
           apiClient.setAuthToken(token);
           await secureStorage.setToken(token);
-          if ((response as any).refresh_token) {
+          if ((response as any).refresh_token)
             await secureStorage.setRefreshToken((response as any).refresh_token);
-          }
         }
-        const userData = {
+        await saveUser({
           ...response.user,
           roles: response.roles,
           isDocteur: response.isDocteur,
           docteurId: response.docteurId,
           hasConsultationLocation: response.hasConsultationLocation,
-        };
-        await saveUser(userData);
+          photo: response.user.photo ?? '',
+        });
         setShowSuccessModal(true);
       } else {
         setPasswordError(true);
@@ -75,199 +117,251 @@ const LoginScreen = ({ onNavigate, returnTo, forwardParams }: LoginScreenProps) 
     } catch (error: any) {
       setIsLoading(false);
       setPasswordError(true);
-      let errorMsg = t('loginErrServer');
-      if (error.response) errorMsg = error.response.data?.message ?? error.response.data?.error ?? t('loginErrServer');
-      else if (error.message) errorMsg = error.message;
-      setErrorMessage(errorMsg);
-      Alert.alert(t('error'), errorMsg);
+      let msg = t('loginErrServer');
+      if (error.response) msg = error.response.data?.message ?? error.response.data?.error ?? msg;
+      else if (error.message) msg = error.message;
+      setErrorMessage(msg);
+      Alert.alert(t('error'), msg);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
-        <ScrollView showsVerticalScrollIndicator={false}>
+    <View style={styles.root}>
+      {/* ── Fond décoratif absolu ─────────────────────────────── */}
+      <DecorBackground />
 
-          <View style={styles.header}>
-            <TouchableOpacity style={styles.backButton} onPress={() => onNavigate('welcome')}>
-              <Ionicons name="chevron-back" size={24} color="#000" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>{t('loginTitle')}</Text>
-            <TouchableOpacity style={styles.langButton} onPress={() => setShowLangModal(true)}>
-              <Text style={styles.langFlag}>{currentLang.flag}</Text>
-              <Text style={styles.langLabel}>{currentLang.label}</Text>
-              <Ionicons name="chevron-down" size={14} color="#0077b6" />
-            </TouchableOpacity>
-          </View>
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
-          <View style={styles.content}>
-            <Text style={styles.welcomeText}>{t('loginWelcome')}</Text>
-            <Text style={styles.subtitleText}>{t('loginSubtitle')}</Text>
+            {/* ── Top bar ──────────────────────────────────────── */}
+            <View style={styles.topBar}>
+              <View style={{ flex: 1 }} />
+              <TouchableOpacity style={styles.langPill} onPress={() => setShowLangModal(true)}>
+                <Text style={styles.langFlag}>{currentLang.flag}</Text>
+                <Text style={styles.langLabel}>{currentLang.label}</Text>
+                <Ionicons name="chevron-down" size={13} color="#1a56db" />
+              </TouchableOpacity>
+            </View>
 
-            <View style={[styles.inputContainer, emailError && styles.inputError]}>
-              <Ionicons name="mail-outline" size={20} color="#999" />
+            {/* ── Logo ─────────────────────────────────────────── */}
+            <View style={styles.logoWrap}>
+              <Image
+                source={require('../../assets/MyHospitalMyHospital.png')}
+                style={styles.logoImg}
+                resizeMode="contain"
+              />
+            </View>
+
+            {/* ── Titre ────────────────────────────────────────── */}
+            <Text style={styles.title}>{t('loginWelcome')}</Text>
+            <Text style={styles.subtitle}>{t('loginSubtitle')}</Text>
+
+            {/* ── Champs ───────────────────────────────────────── */}
+            <View style={[styles.inputBox, emailError && styles.inputBoxError]}>
+              <Ionicons name="mail-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder={t('loginEmailPlaceholder')}
-                placeholderTextColor="#999"
+                placeholderTextColor="#9ca3af"
                 value={email}
                 onChangeText={text => { setEmail(text); setEmailError(false); setErrorMessage(''); }}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 editable={!isLoading}
               />
-              {email && validateEmail(email) && <Ionicons name="checkmark" size={20} color="#0077b6" />}
+              {email && validateEmail(email) && <Ionicons name="checkmark-circle" size={20} color="#1a56db" />}
             </View>
 
-            <View style={[styles.inputContainer, passwordError && styles.inputError]}>
-              <Ionicons name="lock-closed-outline" size={20} color="#999" />
+            <View style={[styles.inputBox, passwordError && styles.inputBoxError]}>
+              <Ionicons name="lock-closed-outline" size={20} color="#9ca3af" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder={t('loginPasswordPlaceholder')}
-                placeholderTextColor="#999"
+                placeholderTextColor="#9ca3af"
                 value={password}
                 onChangeText={text => { setPassword(text); setPasswordError(false); setErrorMessage(''); }}
                 secureTextEntry={!showPassword}
                 editable={!isLoading}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Ionicons name={showPassword ? 'eye-outline' : 'eye-off-outline'} size={20} color="#999" />
+                <Ionicons name={showPassword ? 'eye-outline' : 'eye-off-outline'} size={20} color="#9ca3af" />
               </TouchableOpacity>
             </View>
 
-            {errorMessage ? <Text style={styles.errorText}>*{errorMessage}</Text> : null}
+            {errorMessage ? <Text style={styles.errorText}>* {errorMessage}</Text> : null}
 
-            <TouchableOpacity style={styles.forgotPassword} onPress={() => onNavigate('forgotPassword')} disabled={isLoading}>
-              <Text style={styles.forgotPasswordText}>{t('loginForgotPassword')}</Text>
+            <TouchableOpacity style={styles.forgotRow} onPress={() => onNavigate('forgotPassword')} disabled={isLoading}>
+              <Text style={styles.forgotText}>{t('loginForgotPassword')}</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.loginButton, isLoading && styles.loginButtonDisabled]} onPress={handleLogin} disabled={isLoading}>
-              {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.loginButtonText}>{t('loginBtn')}</Text>}
+            {/* ── Bouton Connexion ─────────────────────────────── */}
+            <TouchableOpacity
+              style={[styles.primaryBtn, isLoading && styles.primaryBtnDisabled]}
+              onPress={handleLogin} disabled={isLoading} activeOpacity={0.85}
+            >
+              {isLoading
+                ? <ActivityIndicator color="#fff" />
+                : <Text style={styles.primaryBtnText}>{t('loginBtn')}</Text>
+              }
             </TouchableOpacity>
 
-            <View style={styles.signupContainer}>
-              <Text style={styles.signupText}>{t('loginNoAccount')}</Text>
+            {/* ── Inscription ──────────────────────────────────── */}
+            <View style={styles.switchRow}>
+              <Text style={styles.switchText}>{t('loginNoAccount')} </Text>
               <TouchableOpacity onPress={() => onNavigate('signup')} disabled={isLoading}>
-                <Text style={styles.signupLink}>{t('loginSignup')}</Text>
+                <Text style={styles.switchLink}>{t('loginSignup')}</Text>
               </TouchableOpacity>
             </View>
 
+            {/* ── Divider ──────────────────────────────────────── */}
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>{t('loginOr')}</Text>
               <View style={styles.dividerLine} />
             </View>
 
-            <TouchableOpacity style={styles.socialButton} disabled={isLoading}>
-              <Ionicons name="logo-google" size={24} color="#DB4437" />
-              <Text style={styles.socialButtonText}>{t('loginGoogle')}</Text>
+            {/* ── Google ───────────────────────────────────────── */}
+            <TouchableOpacity style={styles.socialBtn} disabled={isLoading} activeOpacity={0.8}>
+              <Ionicons name="logo-google" size={22} color="#DB4437" />
+              <Text style={styles.socialBtnText}>{t('loginGoogle')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton} disabled={isLoading}>
-              <Ionicons name="logo-apple" size={24} color="#000" />
-              <Text style={styles.socialButtonText}>{t('loginApple')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton} disabled={isLoading}>
-              <Ionicons name="logo-facebook" size={24} color="#1877F2" />
-              <Text style={styles.socialButtonText}>{t('loginFacebook')}</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
 
-      {/* Modal succès */}
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+
+      {/* ── Modal succès ─────────────────────────────────────────── */}
       <Modal visible={showSuccessModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalIconContainer}>
-              <Ionicons name="checkmark" size={50} color="#0077b6" />
+          <View style={styles.modalCard}>
+            <View style={styles.modalIconWrap}>
+              <Ionicons name="checkmark" size={44} color="#1a56db" />
             </View>
             <Text style={styles.modalTitle}>{t('loginSuccessTitle')}</Text>
-            <Text style={styles.modalDescription}>{t('loginSuccessDesc1')}</Text>
-            <Text style={styles.modalDescription}>{t('loginSuccessDesc2')}</Text>
-            <TouchableOpacity style={styles.modalButton} onPress={() => {
+            <Text style={styles.modalDesc}>{t('loginSuccessDesc1')}</Text>
+            <Text style={styles.modalDesc}>{t('loginSuccessDesc2')}</Text>
+            <TouchableOpacity style={styles.primaryBtn} onPress={() => {
               setShowSuccessModal(false);
               const target = returnTo || 'home';
               if (forwardParams && returnTo) {
-                const preserved = { ...forwardParams };
-                delete preserved.returnTo;
-                onNavigate(target, preserved);
-              } else {
-                onNavigate(target);
-              }
+                const p = { ...forwardParams }; delete p.returnTo; onNavigate(target, p);
+              } else { onNavigate(target); }
             }}>
-              <Text style={styles.modalButtonText}>{returnTo ? 'Continuer' : t('loginSuccessBtn')}</Text>
+              <Text style={styles.primaryBtnText}>{returnTo ? 'Continuer' : t('loginSuccessBtn')}</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      {/* Modal langue */}
+      {/* ── Modal langue ─────────────────────────────────────────── */}
       <Modal visible={showLangModal} transparent animationType="fade" onRequestClose={() => setShowLangModal(false)}>
-        <TouchableOpacity style={styles.langModalOverlay} activeOpacity={1} onPress={() => setShowLangModal(false)}>
-          <View style={styles.langModalContent}>
-            <Text style={styles.langModalTitle}>{t('loginLangTitle')}</Text>
+        <TouchableOpacity style={styles.langOverlay} activeOpacity={1} onPress={() => setShowLangModal(false)}>
+          <View style={styles.langSheet}>
+            <View style={styles.langSheetHandle} />
+            <Text style={styles.langSheetTitle}>{t('loginLangTitle')}</Text>
             {LANGUAGES.map(lang => (
               <TouchableOpacity
                 key={lang.code}
-                style={[styles.langModalItem, language === lang.code && styles.langModalItemActive]}
+                style={[styles.langItem, language === lang.code && styles.langItemActive]}
                 onPress={async () => { await setLanguage(lang.code); setShowLangModal(false); }}
               >
-                <Text style={styles.langModalFlag}>{lang.flag}</Text>
-                <Text style={[styles.langModalItemText, language === lang.code && { color: '#0077b6', fontWeight: '700' }]}>
+                <Text style={styles.langItemFlag}>{lang.flag}</Text>
+                <Text style={[styles.langItemText, language === lang.code && styles.langItemTextActive]}>
                   {lang.label}
                 </Text>
-                {language === lang.code && <Ionicons name="checkmark" size={18} color="#0077b6" />}
+                {language === lang.code && <Ionicons name="checkmark-circle" size={20} color="#1a56db" />}
               </TouchableOpacity>
             ))}
           </View>
         </TouchableOpacity>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container:           { flex: 1, backgroundColor: '#fff' },
-  header:              { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 20 },
-  backButton:          { padding: 5 },
-  headerTitle:         { fontSize: 18, fontWeight: '600', color: '#000' },
-  langButton:          { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#f0f8ff', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: '#0077b620' },
-  langFlag:            { fontSize: 18 },
-  langLabel:           { fontSize: 12, fontWeight: '700', color: '#0077b6' },
-  content:             { paddingHorizontal: 30, paddingTop: 20 },
-  welcomeText:         { fontSize: 28, fontWeight: 'bold', color: '#000', marginBottom: 8 },
-  subtitleText:        { fontSize: 14, color: '#999', marginBottom: 30 },
-  inputContainer:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F5F5F5', borderRadius: 25, paddingHorizontal: 20, paddingVertical: 15, marginBottom: 15, borderWidth: 1, borderColor: '#F5F5F5' },
-  inputError:          { borderColor: '#FF6B6B', borderWidth: 2 },
-  input:               { flex: 1, marginLeft: 10, fontSize: 14, color: '#000' },
-  errorText:           { color: '#FF6B6B', fontSize: 12, marginTop: -10, marginBottom: 10, marginLeft: 20 },
-  forgotPassword:      { alignSelf: 'flex-end', marginBottom: 30 },
-  forgotPasswordText:  { color: '#0077b6', fontSize: 14, fontWeight: '500' },
-  loginButton:         { backgroundColor: '#0077b6', paddingVertical: 16, borderRadius: 30, alignItems: 'center', marginBottom: 20 },
-  loginButtonDisabled: { backgroundColor: '#B0B0B0' },
-  loginButtonText:     { color: '#fff', fontSize: 16, fontWeight: '600' },
-  signupContainer:     { flexDirection: 'row', justifyContent: 'center', marginBottom: 30 },
-  signupText:          { color: '#666', fontSize: 14 },
-  signupLink:          { color: '#0077b6', fontSize: 14, fontWeight: '600' },
-  divider:             { flexDirection: 'row', alignItems: 'center', marginBottom: 25 },
-  dividerLine:         { flex: 1, height: 1, backgroundColor: '#E0E0E0' },
-  dividerText:         { marginHorizontal: 15, color: '#999', fontSize: 14 },
-  socialButton:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: '#E0E0E0', borderRadius: 25, paddingVertical: 15, marginBottom: 15 },
-  socialButtonText:    { marginLeft: 12, fontSize: 15, color: '#000', fontWeight: '500' },
-  modalOverlay:        { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 30 },
-  modalContent:        { backgroundColor: '#fff', borderRadius: 25, padding: 35, width: '100%', alignItems: 'center' },
-  modalIconContainer:  { width: 100, height: 100, backgroundColor: '#E8F9F5', borderRadius: 50, justifyContent: 'center', alignItems: 'center', marginBottom: 25 },
-  modalTitle:          { fontSize: 22, fontWeight: 'bold', color: '#000', marginBottom: 12 },
-  modalDescription:    { fontSize: 14, color: '#999', textAlign: 'center' },
-  modalButton:         { backgroundColor: '#0077b6', paddingVertical: 15, paddingHorizontal: 60, borderRadius: 25, marginTop: 30, width: '100%', alignItems: 'center' },
-  modalButtonText:     { color: '#fff', fontSize: 16, fontWeight: '600' },
-  langModalOverlay:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-end' },
-  langModalContent:    { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
-  langModalTitle:      { fontSize: 16, fontWeight: '700', color: '#000', marginBottom: 20, textAlign: 'center' },
-  langModalItem:       { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16, borderRadius: 12, marginBottom: 6, gap: 14 },
-  langModalItemActive: { backgroundColor: '#e4f4fc' },
-  langModalFlag:       { fontSize: 28 },
-  langModalItemText:   { flex: 1, fontSize: 15, color: '#333' },
+  root: { flex: 1, backgroundColor: '#f0f6ff' },
+  safeArea: { flex: 1, backgroundColor: 'transparent' },
+  flex: { flex: 1 },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 140 },
+
+  topBar: { flexDirection: 'row', alignItems: 'center', paddingTop: 12, marginBottom: 28 },
+  langPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    borderWidth: 1.5, borderColor: '#e5e7eb',
+    paddingHorizontal: 12, paddingVertical: 7, borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06, shadowRadius: 3, elevation: 2,
+  },
+  langFlag: { fontSize: 18 },
+  langLabel: { fontSize: 13, fontWeight: '600', color: '#374151' },
+
+  logoWrap: { marginBottom: 28 },
+  logoImg: { width: 160, height: 52 },
+
+  title: { fontSize: 30, fontWeight: '800', color: '#111827', marginBottom: 6, letterSpacing: -0.5 },
+  subtitle: { fontSize: 14, color: '#6b7280', marginBottom: 28, lineHeight: 20 },
+
+  inputBox: {
+    flexDirection: 'row', alignItems: 'center',
+    borderWidth: 1.5, borderColor: '#e5e7eb',
+    borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14,
+    marginBottom: 14, backgroundColor: 'rgba(255,255,255,0.88)',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
+  },
+  inputBoxError: { borderColor: '#ef4444' },
+  inputIcon: { marginRight: 10 },
+  input: { flex: 1, fontSize: 15, color: '#111827' },
+  errorText: { color: '#ef4444', fontSize: 12, marginTop: -8, marginBottom: 10, marginLeft: 4 },
+
+  forgotRow: { alignSelf: 'flex-end', marginBottom: 24 },
+  forgotText: { color: '#1a56db', fontSize: 14, fontWeight: '600' },
+
+  primaryBtn: {
+    backgroundColor: '#1a3fad', borderRadius: 14, paddingVertical: 16,
+    alignItems: 'center', marginBottom: 20,
+    shadowColor: '#1a56db', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 8, elevation: 5,
+  },
+  primaryBtnDisabled: { backgroundColor: '#9ca3af', shadowOpacity: 0 },
+  primaryBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+
+  switchRow: { flexDirection: 'row', justifyContent: 'center', marginBottom: 24 },
+  switchText: { fontSize: 14, color: '#6b7280' },
+  switchLink: { fontSize: 14, fontWeight: '700', color: '#1a56db' },
+
+  divider: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: '#d1d5db' },
+  dividerText: { marginHorizontal: 14, fontSize: 13, color: '#9ca3af', fontWeight: '500' },
+
+  socialBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12,
+    borderWidth: 1.5, borderColor: '#e5e7eb',
+    borderRadius: 14, paddingVertical: 14, marginBottom: 14,
+    backgroundColor: 'rgba(255,255,255,0.88)',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05, shadowRadius: 3, elevation: 1,
+  },
+  socialBtnText: { fontSize: 15, fontWeight: '600', color: '#111827' },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 28 },
+  modalCard: { backgroundColor: '#fff', borderRadius: 24, padding: 32, width: '100%', alignItems: 'center' },
+  modalIconWrap: { width: 90, height: 90, borderRadius: 45, backgroundColor: '#eff6ff', justifyContent: 'center', alignItems: 'center', marginBottom: 22 },
+  modalTitle: { fontSize: 22, fontWeight: '800', color: '#111827', marginBottom: 10, textAlign: 'center' },
+  modalDesc: { fontSize: 14, color: '#6b7280', textAlign: 'center', lineHeight: 20 },
+
+  langOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-end' },
+  langSheet: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40 },
+  langSheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#e5e7eb', alignSelf: 'center', marginBottom: 18 },
+  langSheetTitle: { fontSize: 16, fontWeight: '700', color: '#111827', textAlign: 'center', marginBottom: 16 },
+  langItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 14, borderRadius: 12, marginBottom: 4, gap: 14 },
+  langItemActive: { backgroundColor: '#eff6ff' },
+  langItemFlag: { fontSize: 26 },
+  langItemText: { flex: 1, fontSize: 15, color: '#374151' },
+  langItemTextActive: { color: '#1a56db', fontWeight: '700' },
 });
 
 export default LoginScreen;

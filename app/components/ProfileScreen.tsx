@@ -9,6 +9,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useApp, useAuth } from '../context/AppContext';
+import { useNotifications } from '../context/NotificationContext';
 import BottomNavigation from '../tabs/BottomNavigation';
 import {
   PatientProfile, getProfileByUserId,
@@ -29,7 +30,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
   const [loading, setLoading]                 = useState(true);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showMenuModal, setShowMenuModal]     = useState(false);
-  const [unreadCount, setUnreadCount]         = useState(0);
+  const { unreadCount } = useNotifications();
 
   useEffect(() => { if (user?.id) loadProfile(); }, [user?.id]);
 
@@ -65,49 +66,49 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
     {
       id: '1', icon: 'person-outline',
       label: t('editProfile'), screen: 'editProfile',
-      iconColor: '#0077b6', bgColor: '#e4f4fc',
+      iconColor: '#1a56db', bgColor: '#eff6ff',
     },
     {
       id: '2', icon: 'heart-outline',
       label: t('favorites'), screen: 'favorites',
-      iconColor: '#0077b6', bgColor: '#e4f4fc',
+      iconColor: '#1a56db', bgColor: '#eff6ff',
     },
     {
       id: '3', icon: 'calendar-outline',
       label: t('appointments'), screen: 'appointments',
-      iconColor: '#0077b6', bgColor: '#e4f4fc',
+      iconColor: '#1a56db', bgColor: '#eff6ff',
     },
     {
       id: '4', icon: 'document-text-outline',
       label: t('prescriptions'), screen: 'prescriptions',
-      iconColor: '#0077b6', bgColor: '#e4f4fc',
+      iconColor: '#1a56db', bgColor: '#eff6ff',
     },
     {
       id: '5', icon: 'notifications-outline',
       label: t('notifications'), screen: 'notifications',
-      iconColor: '#0077b6', bgColor: '#e4f4fc',
+      iconColor: '#1a56db', bgColor: '#eff6ff',
     },
     {
       id: '6', icon: 'language-outline',
       label: t('language'), screen: 'language',
-      iconColor: '#0077b6', bgColor: '#e4f4fc',
+      iconColor: '#1a56db', bgColor: '#eff6ff',
       badge: LANG_LABELS[language] ?? '🇫🇷 Français',
     },
     {
       id: '7', icon: isDarkMode ? 'moon' : 'sunny-outline',
       label: t('theme'), screen: 'theme',
-      iconColor: '#0077b6', bgColor: '#e4f4fc',
+      iconColor: '#1a56db', bgColor: '#eff6ff',
       badge: isDarkMode ? t('settingsDark') : t('settingsLight'),
     },
     {
       id: '8', icon: 'card-outline',
       label: t('paymentMethod'), screen: 'savedPaymentMethods',
-      iconColor: '#0077b6', bgColor: '#e4f4fc',
+      iconColor: '#1a56db', bgColor: '#eff6ff',
     },
     {
       id: '9', icon: 'help-circle-outline',
       label: t('faqs'), screen: 'faqs',
-      iconColor: '#0077b6', bgColor: '#e4f4fc',
+      iconColor: '#1a56db', bgColor: '#eff6ff',
     },
     {
       id: '10', icon: 'log-out-outline',
@@ -149,7 +150,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
   if (loading) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color="#0077b6" />
+        <ActivityIndicator size="large" color="#1a56db" />
       </View>
     );
   }
@@ -164,7 +165,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
 
       {/* ── Header gradient ──────────────────────────────── */}
-      <LinearGradient colors={['#0077b6', '#005a8c']} style={styles.headerGradient}>
+      <LinearGradient colors={['#1a56db', '#1e40af']} style={styles.headerGradient}>
         <SafeAreaView edges={['top']} style={styles.safeArea}>
 
           <TouchableOpacity style={styles.menuButton} onPress={() => setShowMenuModal(true)}>
@@ -178,7 +179,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
                 ? <Image source={{ uri: photoUrl }} style={styles.profileImage} />
                 : (
                   <View style={styles.profileImagePlaceholder}>
-                    <Ionicons name="person" size={50} color="#0077b6" />
+                    <Ionicons name="person" size={50} color="#1a56db" />
                   </View>
                 )}
               <View style={styles.editButton}>
@@ -215,7 +216,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
 
       {/* ── Menu + carte santé ───────────────────────────── */}
       <ScrollView
-        style={[styles.menuContainer, { backgroundColor: colors.card }]}
+        style={[styles.menuContainer, { backgroundColor: '#f0f4f8' }]}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.menuContent}
       >
@@ -230,7 +231,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
               { icon: 'stats-chart-outline', label: t('appointments'),    value: String(profile.stats.appointments_count) },
             ].map(row => (
               <View key={row.label} style={styles.infoRow}>
-                <Ionicons name={row.icon as any} size={18} color="#0077b6" />
+                <Ionicons name={row.icon as any} size={18} color="#1a56db" />
                 <Text style={[styles.infoLabel, { color: colors.subText }]}>{row.label}</Text>
                 <Text style={[styles.infoValue, { color: colors.text }]}>{row.value}</Text>
               </View>
@@ -242,14 +243,14 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
         <View style={{ height: insets.bottom + 80 }} />
       </ScrollView>
 
-      <BottomNavigation currentScreen="profile" onNavigate={onNavigate} unreadCount={unreadCount} />
+      <BottomNavigation currentScreen="profile" onNavigate={onNavigate} />
 
       {/* ── Modal menu ⋮ ─────────────────────────────────── */}
       <Modal visible={showMenuModal} transparent animationType="fade" onRequestClose={() => setShowMenuModal(false)}>
         <TouchableOpacity style={styles.menuModalOverlay} activeOpacity={1} onPress={() => setShowMenuModal(false)}>
           <View style={[styles.menuModalContent, { backgroundColor: colors.card }]}>
             <TouchableOpacity style={styles.menuModalItem} onPress={() => { setShowMenuModal(false); onNavigate('settings'); }}>
-              <Ionicons name="settings-outline" size={22} color="#0077b6" />
+              <Ionicons name="settings-outline" size={22} color="#1a56db" />
               <Text style={[styles.menuModalItemText, { color: colors.text }]}>{t('settings')}</Text>
             </TouchableOpacity>
             <View style={[styles.menuModalDivider, { backgroundColor: colors.border }]} />
@@ -266,7 +267,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
             <View style={styles.modalIconContainer}>
-              <Ionicons name="log-out-outline" size={40} color="#0077b6" />
+              <Ionicons name="log-out-outline" size={40} color="#1a56db" />
             </View>
             <Text style={[styles.modalTitle, { color: colors.text }]}>{t('logoutTitle')}</Text>
             <Text style={[styles.modalTitle, { color: colors.text }]}>{t('logoutTitle2')}</Text>
@@ -299,51 +300,51 @@ const styles = StyleSheet.create({
   },
   editButton: {
     position: 'absolute', bottom: 0, right: 0,
-    backgroundColor: '#0077b6', width: 30, height: 30,
-    borderRadius: 15, justifyContent: 'center', alignItems: 'center',
+    backgroundColor: '#1a56db', width: 28, height: 28,
+    borderRadius: 14, justifyContent: 'center', alignItems: 'center',
     borderWidth: 3, borderColor: '#fff',
   },
 
   userName:  { fontSize: 22, fontWeight: 'bold', color: '#fff', textAlign: 'center', marginTop: 12 },
   userEmail: { fontSize: 13, color: 'rgba(255,255,255,0.8)', textAlign: 'center', marginBottom: 20 },
 
-  statsContainer: { flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 20, paddingTop: 5 },
+  statsContainer: { flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 16, paddingTop: 5 },
   statItem:       { alignItems: 'center', flex: 1 },
   statIcon:       { marginBottom: 6 },
   statLabel:      { fontSize: 11, color: '#fff', opacity: 0.85, marginBottom: 3, textAlign: 'center' },
   statValue:      { fontSize: 15, fontWeight: 'bold', color: '#fff' },
-  statDivider:    { width: 1, backgroundColor: 'rgba(255,255,255,0.3)', marginHorizontal: 8 },
+  statDivider:    { width: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginHorizontal: 8 },
 
-  menuContainer: { flex: 1, marginTop: -25, borderTopLeftRadius: 25, borderTopRightRadius: 25 },
+  menuContainer: { flex: 1, marginTop: -25, borderTopLeftRadius: 25, borderTopRightRadius: 25, backgroundColor: '#f0f4f8' },
   menuContent:   { paddingTop: 20 },
 
-  infoCard:      { marginHorizontal: 15, marginBottom: 16, borderRadius: 14, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },
+  infoCard:      { marginHorizontal: 15, marginBottom: 16, backgroundColor: '#fff', borderRadius: 16, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   infoCardTitle: { fontSize: 15, fontWeight: '700', marginBottom: 12 },
-  infoRow:       { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f0f0f0', gap: 8 },
+  infoRow:       { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', gap: 8 },
   infoLabel:     { flex: 1, fontSize: 14 },
   infoValue:     { fontSize: 14, fontWeight: '600' },
 
-  menuItem:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, paddingHorizontal: 20, marginBottom: 1 },
+  menuItem:           { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fff', marginHorizontal: 16, marginBottom: 8, borderRadius: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3, paddingVertical: 14, paddingHorizontal: 16 },
   menuItemLeft:       { flexDirection: 'row', alignItems: 'center' },
-  menuIconContainer:  { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
+  menuIconContainer:  { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 14, backgroundColor: '#eff6ff' },
   menuItemText:       { fontSize: 15, fontWeight: '500' },
   // ✅ Sous-titre (badge) pour Langue et Apparence
   menuItemBadge:      { fontSize: 12, marginTop: 2 },
 
-  menuModalOverlay:  { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-start', alignItems: 'flex-end', paddingTop: 70, paddingRight: 20 },
+  menuModalOverlay:  { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-start', alignItems: 'flex-end', paddingTop: 70, paddingRight: 20 },
   menuModalContent:  { borderRadius: 12, paddingVertical: 8, minWidth: 200, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 8 },
   menuModalItem:     { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 20 },
   menuModalItemText: { fontSize: 15, fontWeight: '500', marginLeft: 14 },
   menuModalDivider:  { height: 1, marginVertical: 4 },
 
   modalOverlay:       { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 30 },
-  modalContent:       { borderRadius: 25, padding: 30, width: '100%', alignItems: 'center' },
-  modalIconContainer: { width: 80, height: 80, backgroundColor: '#e4f4fc', borderRadius: 40, justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
+  modalContent:       { borderRadius: 24, padding: 32, width: '100%', alignItems: 'center' },
+  modalIconContainer: { width: 80, height: 80, backgroundColor: '#eff6ff', borderRadius: 40, justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
   modalTitle:         { fontSize: 17, fontWeight: '600', textAlign: 'center' },
-  logoutButton:       { backgroundColor: '#0077b6', paddingVertical: 14, borderRadius: 25, marginTop: 25, width: '100%', alignItems: 'center' },
+  logoutButton:       { backgroundColor: '#1a56db', paddingVertical: 14, borderRadius: 20, marginTop: 25, width: '100%', alignItems: 'center' },
   logoutButtonText:   { color: '#fff', fontSize: 15, fontWeight: '600' },
   cancelButton:       { marginTop: 12, paddingVertical: 8 },
-  cancelButtonText:   { color: '#0077b6', fontSize: 15, fontWeight: '500' },
+  cancelButtonText:   { color: '#1a56db', fontSize: 15, fontWeight: '500' },
 });
 
 export default ProfileScreen;

@@ -38,11 +38,11 @@ const FavoritesScreen = ({ onNavigate }: FavoritesScreenProps) => {
     const hospitalCount = favorites.filter(f => f.type === 'hospital').length;
 
     return (
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
             <ScreenHeader title={t('favTitle')} onBack={() => onNavigate('profile')} />
 
             {/* Tabs */}
-            <View style={[styles.tabsContainer, { backgroundColor: colors.card }]}>
+            <View style={styles.tabsContainer}>
                 {([
                     ['all',      `${t('favAll')} (${favorites.length})`],
                     ['pharmacy', `${t('favPharmacies')} (${pharmacyCount})`],
@@ -61,10 +61,10 @@ const FavoritesScreen = ({ onNavigate }: FavoritesScreenProps) => {
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.content}>
                     {filteredFavorites.length > 0 ? filteredFavorites.map(item => (
-                        <View key={item.id} style={[styles.favoriteCard, { backgroundColor: colors.card }]}>
+                        <View key={item.id} style={styles.favoriteCard}>
                             <View style={styles.cardHeader}>
                                 <View style={styles.iconContainer}>
-                                    <Ionicons name={item.type === 'pharmacy' ? 'medical' : 'business'} size={28} color="#0077b6" />
+                                    <Ionicons name={item.type === 'pharmacy' ? 'medical' : 'business'} size={28} color="#1a56db" />
                                 </View>
                                 <TouchableOpacity style={styles.favoriteButton} onPress={() => removeFavorite(item.id)}>
                                     <Ionicons name="heart" size={24} color="#FF6B6B" />
@@ -88,8 +88,8 @@ const FavoritesScreen = ({ onNavigate }: FavoritesScreenProps) => {
                             {item.specialties && (
                                 <View style={styles.specialtiesContainer}>
                                     {item.specialties.map((specialty, index) => (
-                                        <View key={index} style={[styles.specialtyChip, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
-                                            <Text style={[styles.specialtyText, { color: colors.subText }]}>{specialty}</Text>
+                                        <View key={index} style={styles.specialtyChip}>
+                                            <Text style={[styles.specialtyText, { color: '#1a56db' }]}>{specialty}</Text>
                                         </View>
                                     ))}
                                 </View>
@@ -101,13 +101,13 @@ const FavoritesScreen = ({ onNavigate }: FavoritesScreenProps) => {
                                     <Text style={styles.actionButtonText}>{t('favDirections')}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity style={styles.callButton}>
-                                    <Ionicons name="call" size={18} color="#0077b6" />
+                                    <Ionicons name="call" size={18} color="#1a56db" />
                                 </TouchableOpacity>
                             </View>
                         </View>
                     )) : (
                         <View style={styles.emptyState}>
-                            <Ionicons name="heart-outline" size={80} color="#ccc" />
+                            <Ionicons name="heart-outline" size={80} color="#9ca3af" />
                             <Text style={[styles.emptyText, { color: colors.subText }]}>{t('favEmpty')}</Text>
                             <Text style={styles.emptySubtext}>{t('favEmptySub')}</Text>
                         </View>
@@ -119,16 +119,16 @@ const FavoritesScreen = ({ onNavigate }: FavoritesScreenProps) => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
-    tabsContainer: { flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 15, gap: 8 },
+    container: { flex: 1, backgroundColor: '#f0f4f8' },
+    tabsContainer: { flexDirection: 'row', paddingHorizontal: 20, paddingVertical: 15, gap: 8, backgroundColor: '#fff' },
     tab: { flex: 1, paddingVertical: 10, borderRadius: 20, alignItems: 'center' },
-    activeTab: { backgroundColor: '#0077b6' },
+    activeTab: { backgroundColor: '#1a56db' },
     tabText: { fontSize: 13, fontWeight: '500' },
     activeTabText: { color: '#fff', fontWeight: '600' },
     content: { padding: 20 },
-    favoriteCard: { borderRadius: 15, padding: 20, marginBottom: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+    favoriteCard: { borderRadius: 16, padding: 20, marginBottom: 15, backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
     cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
-    iconContainer: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#e4f4fc', justifyContent: 'center', alignItems: 'center' },
+    iconContainer: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#eff6ff', justifyContent: 'center', alignItems: 'center' },
     favoriteButton: { padding: 5 },
     itemName: { fontSize: 18, fontWeight: '600', marginBottom: 6 },
     itemAddress: { fontSize: 14, marginBottom: 12 },
@@ -136,15 +136,15 @@ const styles = StyleSheet.create({
     infoItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     infoText: { fontSize: 13 },
     specialtiesContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 15 },
-    specialtyChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, borderWidth: 1 },
+    specialtyChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: '#eff6ff' },
     specialtyText: { fontSize: 12, fontWeight: '500' },
     cardActions: { flexDirection: 'row', gap: 10 },
-    actionButton: { flex: 1, flexDirection: 'row', backgroundColor: '#0077b6', paddingVertical: 12, borderRadius: 20, justifyContent: 'center', alignItems: 'center', gap: 8 },
+    actionButton: { flex: 1, flexDirection: 'row', backgroundColor: '#1a3fad', paddingVertical: 12, borderRadius: 14, justifyContent: 'center', alignItems: 'center', gap: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
     actionButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
-    callButton: { width: 50, height: 44, borderRadius: 20, backgroundColor: '#e4f4fc', justifyContent: 'center', alignItems: 'center' },
+    callButton: { width: 50, height: 44, borderRadius: 14, backgroundColor: '#eff6ff', justifyContent: 'center', alignItems: 'center' },
     emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 80 },
     emptyText: { fontSize: 20, fontWeight: '600', marginTop: 20, marginBottom: 8 },
-    emptySubtext: { fontSize: 14, color: '#ccc', textAlign: 'center' },
+    emptySubtext: { fontSize: 14, color: '#9ca3af', textAlign: 'center' },
 });
 
 export default FavoritesScreen;

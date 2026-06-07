@@ -171,7 +171,7 @@ const TransactionHistoryScreen = ({ onNavigate }: TransactionHistoryScreenProps)
             case 'flooz':
                 return '#0066CC';
             case 'card':
-                return '#0077b6';
+                return '#1a56db';
             default:
                 return colors.subText;
         }
@@ -194,9 +194,9 @@ const TransactionHistoryScreen = ({ onNavigate }: TransactionHistoryScreenProps)
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView style={styles.container}>
             {/* Header */}
-            <View style={[styles.header, { backgroundColor: colors.card }]}>
+            <View style={styles.header}>
                 <TouchableOpacity
                     style={styles.backButton}
                     onPress={() => onNavigate('settings')}
@@ -210,7 +210,7 @@ const TransactionHistoryScreen = ({ onNavigate }: TransactionHistoryScreenProps)
             </View>
 
             {/* Summary Card */}
-            <View style={[styles.summaryCard, { backgroundColor: colors.card }]}>
+            <View style={styles.summaryCard}>
                 <View style={styles.summaryItem}>
                     <Text style={[styles.summaryLabel, { color: colors.subText }]}>
                         Total dépensé
@@ -248,7 +248,7 @@ const TransactionHistoryScreen = ({ onNavigate }: TransactionHistoryScreenProps)
                         key={filter.key}
                         style={[
                             styles.filterChip,
-                            { backgroundColor: colors.card, borderColor: colors.border },
+                            { borderColor: colors.border },
                             activeFilter === filter.key && styles.filterChipActive,
                         ]}
                         onPress={() => setActiveFilter(filter.key as any)}
@@ -272,7 +272,7 @@ const TransactionHistoryScreen = ({ onNavigate }: TransactionHistoryScreenProps)
                         filteredTransactions.map((transaction) => (
                             <TouchableOpacity
                                 key={transaction.id}
-                                style={[styles.transactionCard, { backgroundColor: colors.card }]}
+                                style={styles.transactionCard}
                                 onPress={() => handleTransactionPress(transaction)}
                             >
                                 <View style={styles.transactionLeft}>
@@ -315,7 +315,7 @@ const TransactionHistoryScreen = ({ onNavigate }: TransactionHistoryScreenProps)
                         ))
                     ) : (
                         <View style={styles.emptyState}>
-                            <Ionicons name="receipt-outline" size={60} color="#ccc" />
+                            <Ionicons name="receipt-outline" size={60} color="#9ca3af" />
                             <Text style={[styles.emptyStateText, { color: colors.subText }]}>
                                 Aucune transaction trouvée
                             </Text>
@@ -333,7 +333,7 @@ const TransactionHistoryScreen = ({ onNavigate }: TransactionHistoryScreenProps)
                 onRequestClose={() => setShowDetailModal(false)}
             >
                 <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+                    <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
                             <Text style={[styles.modalTitle, { color: colors.text }]}>
                                 Détails de la transaction
@@ -473,6 +473,7 @@ const TransactionHistoryScreen = ({ onNavigate }: TransactionHistoryScreenProps)
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#f0f4f8',
     },
     header: {
         flexDirection: 'row',
@@ -480,6 +481,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 20,
         paddingVertical: 15,
+        backgroundColor: '#fff',
     },
     backButton: {
         padding: 5,
@@ -496,11 +498,12 @@ const styles = StyleSheet.create({
         marginHorizontal: 20,
         marginVertical: 20,
         padding: 20,
-        borderRadius: 15,
+        borderRadius: 16,
+        backgroundColor: '#fff',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
         elevation: 3,
     },
     summaryItem: {
@@ -517,7 +520,7 @@ const styles = StyleSheet.create({
     },
     summaryDivider: {
         width: 1,
-        backgroundColor: '#E0E0E0',
+        backgroundColor: '#e5e7eb',
         marginHorizontal: 15,
     },
     filtersContainer: {
@@ -536,10 +539,11 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         minWidth: 90,
         alignItems: 'center',
+        backgroundColor: '#fff',
     },
     filterChipActive: {
-        backgroundColor: '#E3F2FD',
-        borderColor: '#0077b6',
+        backgroundColor: '#eff6ff',
+        borderColor: '#1a56db',
     },
     filterChipText: {
         fontSize: 13,
@@ -547,7 +551,7 @@ const styles = StyleSheet.create({
         
     },
     filterChipTextActive: {
-        color: '#0077b6',
+        color: '#1a56db',
     },
     transactionsList: {
         paddingHorizontal: 20,
@@ -556,12 +560,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         padding: 15,
-        borderRadius: 12,
+        borderRadius: 14,
         marginBottom: 12,
+        backgroundColor: '#fff',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
         elevation: 3,
     },
     transactionLeft: {
@@ -630,6 +635,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     modalContent: {
+        backgroundColor: '#fff',
         borderTopLeftRadius: 25,
         borderTopRightRadius: 25,
         padding: 20,
@@ -692,14 +698,19 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     downloadButton: {
-        backgroundColor: '#0077b6',
+        backgroundColor: '#1a3fad',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 16,
-        borderRadius: 30,
+        borderRadius: 14,
         gap: 10,
         marginTop: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 3,
     },
     downloadButtonText: {
         color: '#fff',

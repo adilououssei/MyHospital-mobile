@@ -100,7 +100,7 @@ const handleDoctorPress = (doctor: Docteur) => {
   };
 
     return (
-        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView edges={['bottom', 'left', 'right']} style={[styles.container, { backgroundColor: '#f0f4f8' }]}>
             <ScreenHeader title="Annuaire des Médecins" onBack={() => onNavigate('home')} />
 
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -151,7 +151,7 @@ const handleDoctorPress = (doctor: Docteur) => {
                     {/* Liste des docteurs - SANS PRIX */}
                     {loading ? (
                         <View style={styles.centerContainer}>
-                            <ActivityIndicator size="large" color="#0077b6" />
+                            <ActivityIndicator size="large" color="#1a56db" />
                             <Text style={[styles.centerText, { color: colors.subText }]}>Chargement des médecins...</Text>
                         </View>
                     ) : error ? (
@@ -179,13 +179,13 @@ const handleDoctorPress = (doctor: Docteur) => {
                                 return (
                                     <TouchableOpacity
                                         key={doctor.id}
-                                        style={[styles.doctorCard, { backgroundColor: colors.card }]}
+                                        style={styles.doctorCard}
                                         onPress={() => handleDoctorPress(doctor)}
                                     >
                                         {photoUrl
                                             ? <Image source={{ uri: photoUrl }} style={styles.doctorImage} />
                                             : <View style={styles.doctorImagePlaceholder}>
-                                                <FontAwesome5 name="user-md" size={40} color="#0077b6" />
+                                                <FontAwesome5 name="user-md" size={40} color="#1a56db" />
                                             </View>
                                         }
                                         <View style={styles.doctorInfo}>
@@ -218,17 +218,23 @@ const handleDoctorPress = (doctor: Docteur) => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
-    content: { padding: 20 },
+    container: { flex: 1, backgroundColor: '#f0f4f8' },
+    content: {},
 
     searchBar: {
         flexDirection: 'row',
         alignItems: 'center',
-        borderRadius: 25,
-        paddingHorizontal: 15,
+        backgroundColor: '#fff',
+        borderRadius: 14,
+        paddingHorizontal: 14,
         paddingVertical: 12,
+        marginHorizontal: 20,
         marginBottom: 15,
-        borderWidth: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 6,
+        elevation: 3,
     },
     searchInput: { flex: 1, marginLeft: 10, fontSize: 14 },
 
@@ -237,44 +243,51 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
-        backgroundColor: '#f0f0f0',
-        marginRight: 10,
+        backgroundColor: '#fff',
+        marginRight: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 6,
+        elevation: 3,
     },
-    specialtyChipActive: { backgroundColor: '#0077b6' },
-    specialtyChipText: { fontSize: 13, color: '#666' },
+    specialtyChipActive: { backgroundColor: '#1a56db' },
+    specialtyChipText: { fontSize: 13, color: '#6b7280' },
     specialtyChipTextActive: { color: '#fff' },
 
     centerContainer: { padding: 40, alignItems: 'center' },
-    centerText: { fontSize: 14, textAlign: 'center', marginTop: 12 },
-    emptyText: { fontSize: 18, fontWeight: '600', marginTop: 20, marginBottom: 8 },
-    retryButton: { marginTop: 16, backgroundColor: '#0077b6', paddingHorizontal: 30, paddingVertical: 12, borderRadius: 25 },
+    centerText: { fontSize: 14, textAlign: 'center', marginTop: 12, color: '#6b7280' },
+    emptyText: { fontSize: 18, fontWeight: '600', marginTop: 20, marginBottom: 8, color: '#111827' },
+    retryButton: { marginTop: 16, backgroundColor: '#1a56db', paddingHorizontal: 30, paddingVertical: 12, borderRadius: 20 },
     retryButtonText: { color: '#fff', fontSize: 14, fontWeight: '600' },
 
     doctorsList: { gap: 12, paddingBottom: 50 },
     doctorCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        borderRadius: 15,
+        backgroundColor: '#fff',
+        borderRadius: 16,
         padding: 15,
+        marginHorizontal: 20,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
         elevation: 3,
     },
-    doctorImage: { width: 70, height: 70, borderRadius: 35, marginRight: 15 },
+    doctorImage: { width: 68, height: 68, borderRadius: 34, marginRight: 15 },
     doctorImagePlaceholder: {
-        width: 70,
-        height: 70,
-        borderRadius: 35,
-        backgroundColor: '#E3F2FD',
+        width: 68,
+        height: 68,
+        borderRadius: 34,
+        backgroundColor: '#eff6ff',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 15,
     },
     doctorInfo: { flex: 1 },
-    doctorName: { fontSize: 16, fontWeight: '600', marginBottom: 4 },
-    doctorSpecialty: { fontSize: 13, marginBottom: 6 },
+    doctorName: { fontSize: 15, fontWeight: '700', marginBottom: 4 },
+    doctorSpecialty: { fontSize: 13, marginBottom: 6, color: '#6b7280' },
     doctorMeta: { flexDirection: 'row', gap: 12, marginBottom: 4 },
     ratingContainer: { flexDirection: 'row', alignItems: 'center', gap: 4 },
     rating: { fontSize: 12, fontWeight: '600' },

@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { BackHandler, View } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { AppProvider, useApp, useAuth } from './app/context/AppContext';
+import { NotificationProvider } from './app/context/NotificationContext';
 import apiClient from './app/services/api.config';
 import { secureStorage } from './app/services/secureStorage';
 import CustomSplashScreen from './app/components/SplashScreen';
@@ -58,7 +59,6 @@ function AppContent() {
 
   const [currentScreen, setCurrentScreen] = useState('home');
   const [screenParams, setScreenParams] = useState<any>({});
-  const [unreadCount, setUnreadCount] = useState(2);
   const [navigationHistory, setNavigationHistory] = useState<string[]>(['home']);
 
   useEffect(() => {
@@ -99,7 +99,7 @@ function AppContent() {
     'appointments', 'profile', 'bookingType', 'paymentMethod',
     'notifications', 'favorites', 'editProfile', 'changePassword',
     'prescriptions', 'savedPaymentMethods', 'transactionHistory',
-    'doctorProfile',
+    'doctorProfile', 'pharmacy', 'hospital',
   ];
 
   const handleNavigation = (screen: string, params?: any) => {
@@ -170,7 +170,7 @@ function AppContent() {
       case 'createNewPassword':
         return <CreateNewPasswordScreen onNavigate={handleNavigation} />;
       case 'home':
-        return <HomeScreen onNavigate={handleNavigation} unreadCount={unreadCount} />;
+        return <HomeScreen onNavigate={handleNavigation} />;
       case 'chatbot':
         return <ChatbotScreen onNavigate={handleNavigation} />;
       case 'profile':
@@ -223,7 +223,7 @@ function AppContent() {
           />
         );
       case 'notifications':
-        return <NotificationsScreen onNavigate={handleNavigation} onUpdateUnreadCount={setUnreadCount} />;
+        return <NotificationsScreen onNavigate={handleNavigation} />;
       case 'notificationDetail':
         return (
           <NotificationDetailScreen
@@ -289,7 +289,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <AppProvider>
-        <AppContent />
+        <NotificationProvider>
+          <AppContent />
+        </NotificationProvider>
       </AppProvider>
     </SafeAreaProvider>
   );

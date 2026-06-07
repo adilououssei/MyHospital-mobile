@@ -21,7 +21,6 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
     const [imageError, setImageError] = useState(false);
 
     useEffect(() => {
-        // Animation du logo
         Animated.parallel([
             Animated.timing(fadeAnim, {
                 toValue: 1,
@@ -36,7 +35,6 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
             }),
         ]).start();
 
-        // Afficher le splash pendant 3 secondes
         const timer = setTimeout(() => {
             onFinish();
         }, 3000);
@@ -46,7 +44,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
 
     return (
         <LinearGradient
-            colors={['#0077b6', '#00a8e8', '#0077b6']}
+            colors={['#1a56db', '#00a8e8', '#1a56db']}
             style={styles.container}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -60,7 +58,6 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
                     },
                 ]}
             >
-                {/* Logo */}
                 <View style={styles.logoContainer}>
                     {!imageError ? (
                         <Image
@@ -70,18 +67,15 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
                             onError={() => setImageError(true)}
                         />
                     ) : (
-                        // Fallback vers l'icône si l'image ne charge pas
                         <View style={styles.logoCircle}>
                             <Ionicons name="medical" size={80} color="#fff" />
                         </View>
                     )}
                 </View>
 
-                {/* App Name */}
                 <Text style={styles.appName}>MyHospital</Text>
                 <Text style={styles.tagline}>{t('splashTagline')}</Text>
 
-                {/* Loading Indicator */}
                 <View style={styles.loadingContainer}>
                     <Animated.View
                         style={[
@@ -119,7 +113,6 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
                 </View>
             </Animated.View>
 
-            {/* Footer */}
             <View style={styles.footer}>
                 <Text style={styles.footerText}>Version 1.0.0</Text>
                 <Text style={styles.footerText}>© 2026 MyHospital</Text>

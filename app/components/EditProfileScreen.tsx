@@ -171,8 +171,8 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
     label: string; value: string; field: string; icon: string; keyboardType?: any;
   }) => (
     <View style={styles.inputContainer}>
-      <Text style={[styles.inputLabel, { color: colors.text }]}>{label}</Text>
-      <View style={[styles.inputWrapper, { backgroundColor: colors.inputBackground, borderColor: '#e2e8f0' }]}>
+      <Text style={styles.inputLabel}>{label}</Text>
+      <View style={styles.inputWrapper}>
         <Ionicons name={icon as any} size={20} color={colors.subText} style={styles.inputIcon} />
         <TextInput style={[styles.input, { color: colors.text }]} value={value}
           onChangeText={text => setFormData(p => ({ ...p, [field]: text }))}
@@ -182,7 +182,7 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
   );
 
   if (loading) return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => onNavigate('profile')}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
@@ -191,13 +191,13 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
         <View style={{ width: 40 }} />
       </View>
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#0077b6" />
+        <ActivityIndicator size="large" color="#1a56db" />
       </View>
     </SafeAreaView>
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => onNavigate('profile')}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
@@ -211,16 +211,16 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
         <View style={styles.profileSection}>
           <View style={styles.profileImageContainer}>
             <View style={[styles.profileImagePlaceholder, { backgroundColor: colors.card }]}>
-              {uploadingPhoto ? <ActivityIndicator size="large" color="#0077b6" />
+              {uploadingPhoto ? <ActivityIndicator size="large" color="#1a56db" />
                 : photoUrl ? <Image source={{ uri: photoUrl }} style={styles.profileImage} />
-                : <Ionicons name="person" size={60} color="#0077b6" />}
+                : <Ionicons name="person" size={60} color="#1a56db" />}
             </View>
             <TouchableOpacity style={styles.changePhotoButton} onPress={() => setShowPhotoOptions(true)} disabled={uploadingPhoto}>
               <Ionicons name="camera" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
           <TouchableOpacity onPress={() => setShowPhotoOptions(true)} disabled={uploadingPhoto}>
-            <Text style={[styles.changePhotoText, { color: colors.text }]}>
+            <Text style={styles.changePhotoText}>
               {uploadingPhoto ? t('epUploading') : t('epChangePhoto')}
             </Text>
           </TouchableOpacity>
@@ -234,8 +234,8 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
 
           {/* Date naissance */}
           <View style={styles.inputContainer}>
-            <Text style={[styles.inputLabel, { color: colors.text }]}>{t('epDateBirth')}</Text>
-            <TouchableOpacity style={[styles.inputWrapper, { backgroundColor: colors.inputBackground, borderColor: '#e2e8f0' }]} onPress={() => setShowDatePicker(true)}>
+            <Text style={styles.inputLabel}>{t('epDateBirth')}</Text>
+            <TouchableOpacity style={styles.inputWrapper} onPress={() => setShowDatePicker(true)}>
               <Ionicons name="calendar-outline" size={20} color={colors.subText} style={styles.inputIcon} />
               <Text style={[styles.input, { color: formData.dateOfBirth ? colors.text : colors.subText }]}>
                 {formData.dateOfBirth || t('epDatePlaceholder')}
@@ -246,11 +246,11 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
 
           {/* Genre */}
           <View style={styles.inputContainer}>
-            <Text style={[styles.inputLabel, { color: colors.text }]}>{t('epGender')}</Text>
+            <Text style={styles.inputLabel}>{t('epGender')}</Text>
             <View style={styles.genderContainer}>
               {[['homme', t('epMale')], ['femme', t('epFemale')], ['autre', t('epOther')]].map(([val, label]) => (
                 <TouchableOpacity key={val}
-                  style={[styles.genderButton, { backgroundColor: formData.gender === val ? '#0077b6' : colors.card, borderColor: formData.gender === val ? '#0077b6' : '#e2e8f0' }]}
+                  style={[styles.genderButton, { backgroundColor: formData.gender === val ? '#1a3fad' : colors.card, borderColor: formData.gender === val ? '#1a3fad' : '#e5e7eb' }]}
                   onPress={() => setFormData(p => ({ ...p, gender: val }))}>
                   <Text style={[styles.genderButtonText, { color: formData.gender === val ? '#fff' : colors.text }]}>{label}</Text>
                 </TouchableOpacity>
@@ -263,8 +263,8 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
 
           {/* Groupe sanguin */}
           <View style={styles.inputContainer}>
-            <Text style={[styles.inputLabel, { color: colors.text }]}>{t('epBloodGroup')}</Text>
-            <TouchableOpacity style={[styles.inputWrapper, { backgroundColor: colors.inputBackground, borderColor: '#e2e8f0' }]} onPress={() => setShowBloodGroupPicker(true)}>
+            <Text style={styles.inputLabel}>{t('epBloodGroup')}</Text>
+            <TouchableOpacity style={styles.inputWrapper} onPress={() => setShowBloodGroupPicker(true)}>
               <Ionicons name="water-outline" size={20} color={colors.subText} style={styles.inputIcon} />
               <Text style={[styles.input, { color: formData.bloodGroup ? colors.text : colors.subText }]}>
                 {formData.bloodGroup || t('epBloodSelect')}
@@ -281,7 +281,7 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
 
           {formData.height && formData.weight && parseFloat(formData.height) > 0 && parseFloat(formData.weight) > 0 && (
             <View style={styles.imcCard}>
-              <Ionicons name="analytics-outline" size={20} color="#0077b6" />
+              <Ionicons name="analytics-outline" size={20} color="#1a56db" />
               <Text style={styles.imcText}>
                 IMC : {(parseFloat(formData.weight) / parseFloat(formData.height) ** 2).toFixed(1)}
               </Text>
@@ -293,8 +293,8 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
           <TouchableOpacity style={[styles.saveButton, saving && { opacity: 0.7 }]} onPress={handleSave} disabled={saving}>
             {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveButtonText}>{t('epSave')}</Text>}
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.cancelButton, { borderColor: '#e2e8f0' }]} onPress={() => onNavigate('profile')}>
-            <Text style={[styles.cancelButtonText, { color: colors.text }]}>{t('cancel')}</Text>
+          <TouchableOpacity style={styles.cancelButton} onPress={() => onNavigate('profile')}>
+            <Text style={styles.cancelButtonText}>{t('cancel')}</Text>
           </TouchableOpacity>
         </View>
         <View style={{ height: 40 }} />
@@ -309,12 +309,12 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
               <TouchableOpacity onPress={() => setShowPhotoOptions(false)}><Ionicons name="close" size={24} color={colors.text} /></TouchableOpacity>
             </View>
             <TouchableOpacity style={[styles.photoOption, { backgroundColor: colors.inputBackground }]} onPress={handleTakePhoto}>
-              <View style={styles.photoOptionIcon}><Ionicons name="camera" size={24} color="#0077b6" /></View>
+              <View style={styles.photoOptionIcon}><Ionicons name="camera" size={24} color="#1a56db" /></View>
               <Text style={[styles.photoOptionText, { color: colors.text }]}>{t('epTakePhoto')}</Text>
               <Ionicons name="chevron-forward" size={20} color={colors.subText} />
             </TouchableOpacity>
             <TouchableOpacity style={[styles.photoOption, { backgroundColor: colors.inputBackground }]} onPress={handleChooseFromGallery}>
-              <View style={styles.photoOptionIcon}><Ionicons name="images" size={24} color="#0077b6" /></View>
+              <View style={styles.photoOptionIcon}><Ionicons name="images" size={24} color="#1a56db" /></View>
               <Text style={[styles.photoOptionText, { color: colors.text }]}>{t('epGallery')}</Text>
               <Ionicons name="chevron-forward" size={20} color={colors.subText} />
             </TouchableOpacity>
@@ -393,55 +393,55 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15 },
+  container: { flex: 1, backgroundColor: '#f0f4f8' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12 },
   backButton: { padding: 5 },
   headerTitle: { fontSize: 20, fontWeight: 'bold' },
-  profileSection: { alignItems: 'center', paddingVertical: 30 },
+  profileSection: { alignItems: 'center', paddingVertical: 20 },
   profileImageContainer: { position: 'relative', marginBottom: 15 },
-  profileImagePlaceholder: { width: 120, height: 120, borderRadius: 60, justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: '#0077b6', overflow: 'hidden' },
+  profileImagePlaceholder: { width: 110, height: 110, borderRadius: 55, justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: '#1a56db', overflow: 'hidden' },
   profileImage: { width: '100%', height: '100%' },
-  changePhotoButton: { position: 'absolute', bottom: 0, right: 0, backgroundColor: '#0077b6', width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: '#fff' },
-  changePhotoText: { fontSize: 16, fontWeight: '600', marginTop: 10 },
+  changePhotoButton: { position: 'absolute', bottom: 0, right: 0, backgroundColor: '#1a56db', width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: '#fff' },
+  changePhotoText: { color: '#1a56db', fontSize: 14, fontWeight: '600', marginTop: 10 },
   formContainer: { paddingHorizontal: 20 },
-  inputContainer: { marginBottom: 20 },
-  inputLabel: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
-  inputWrapper: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, borderWidth: 1, paddingHorizontal: 15, height: 50 },
+  inputContainer: { marginBottom: 16 },
+  inputLabel: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  inputWrapper: { flexDirection: 'row', alignItems: 'center', borderRadius: 14, borderWidth: 1.5, borderColor: '#e5e7eb', backgroundColor: 'rgba(255,255,255,0.88)', paddingHorizontal: 16, height: 50, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
   inputIcon: { marginRight: 10 },
   input: { flex: 1, fontSize: 15 },
   genderContainer: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
-  genderButton: { flex: 1, paddingVertical: 12, borderRadius: 12, borderWidth: 1, alignItems: 'center' },
+  genderButton: { flex: 1, paddingVertical: 12, borderRadius: 12, borderWidth: 1.5, borderColor: '#e5e7eb', alignItems: 'center' },
   genderButtonText: { fontSize: 14, fontWeight: '600' },
   rowInputs: { flexDirection: 'row', gap: 15 },
   halfInput: { flex: 1 },
-  imcCard: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#e4f4fc', borderRadius: 10, padding: 12, marginBottom: 16 },
-  imcText: { fontSize: 15, fontWeight: '700', color: '#0077b6' },
+  imcCard: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#eff6ff', borderRadius: 12, padding: 12, marginBottom: 16 },
+  imcText: { fontSize: 15, fontWeight: '700', color: '#1a56db' },
   buttonContainer: { paddingHorizontal: 20, marginTop: 20 },
-  saveButton: { backgroundColor: '#0077b6', paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginBottom: 15 },
-  saveButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  cancelButton: { paddingVertical: 16, borderRadius: 12, alignItems: 'center', borderWidth: 1 },
-  cancelButtonText: { fontSize: 16, fontWeight: '600' },
+  saveButton: { backgroundColor: '#1a3fad', paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginBottom: 15, shadowColor: '#1a56db', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },
+  saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  cancelButton: { paddingVertical: 16, borderRadius: 14, alignItems: 'center', borderWidth: 1.5, borderColor: '#e5e7eb' },
+  cancelButtonText: { color: '#374151', fontSize: 15, fontWeight: '600' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  photoOptionsModal: { borderTopLeftRadius: 25, borderTopRightRadius: 25, paddingBottom: 30 },
-  photoOptionsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
+  photoOptionsModal: { borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingBottom: 30 },
+  photoOptionsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
   photoOptionsTitle: { fontSize: 18, fontWeight: '600' },
-  photoOption: { flexDirection: 'row', alignItems: 'center', padding: 16, marginHorizontal: 20, marginTop: 12, borderRadius: 12 },
-  photoOptionIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#e4f4fc', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+  photoOption: { flexDirection: 'row', alignItems: 'center', padding: 16, marginHorizontal: 20, marginTop: 12, borderRadius: 14 },
+  photoOptionIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#eff6ff', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
   photoOptionText: { flex: 1, fontSize: 15, fontWeight: '500' },
-  pickerModal: { borderTopLeftRadius: 25, borderTopRightRadius: 25, maxHeight: '80%', paddingBottom: 30 },
-  pickerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderBottomWidth: 1, borderBottomColor: '#F0F0F0' },
+  pickerModal: { borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '80%', paddingBottom: 30 },
+  pickerHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
   pickerTitle: { fontSize: 18, fontWeight: '600' },
   datePickerContainer: { flexDirection: 'row', padding: 20, height: 250 },
   datePicker: { flex: 1 },
   dateItem: { paddingVertical: 12, alignItems: 'center' },
-  dateItemSelected: { backgroundColor: '#0077b6', borderRadius: 10 },
+  dateItemSelected: { backgroundColor: '#1a3fad', borderRadius: 10 },
   dateItemText: { fontSize: 16 },
   dateItemTextSelected: { color: '#fff', fontWeight: '600' },
-  confirmButton: { backgroundColor: '#0077b6', paddingVertical: 15, marginHorizontal: 20, borderRadius: 25, alignItems: 'center' },
+  confirmButton: { backgroundColor: '#1a3fad', paddingVertical: 15, marginHorizontal: 20, borderRadius: 20, alignItems: 'center' },
   confirmButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   bloodGroupGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: 20, gap: 15 },
   bloodGroupItem: { width: '22%', aspectRatio: 1, borderRadius: 15, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'transparent' },
-  bloodGroupItemSelected: { borderColor: '#0077b6', backgroundColor: '#e4f4fc' },
+  bloodGroupItemSelected: { borderColor: '#1a56db', backgroundColor: '#eff6ff' },
   bloodGroupText: { fontSize: 16, fontWeight: 'bold', marginTop: 5 },
 });
 

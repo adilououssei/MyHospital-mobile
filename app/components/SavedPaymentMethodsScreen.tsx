@@ -112,7 +112,7 @@ const SavedPaymentMethodsScreen = ({ onNavigate }: SavedPaymentMethodsScreenProp
             details: selectedType === 'card' ? `**** **** **** ${cardNumber.slice(-4)}` : phoneNumber,
             isDefault: paymentMethods.length === 0,
             icon: selectedType === 'card' ? 'card-outline' : 'phone-portrait-outline',
-            color: selectedType === 'tmoney' ? '#FF6B00' : selectedType === 'flooz' ? '#0066CC' : '#0077b6',
+            color: selectedType === 'tmoney' ? '#FF6B00' : selectedType === 'flooz' ? '#0066CC' : '#1a56db',
         };
 
         setPaymentMethods([...paymentMethods, newMethod]);
@@ -130,9 +130,9 @@ const SavedPaymentMethodsScreen = ({ onNavigate }: SavedPaymentMethodsScreenProp
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView style={styles.container}>
             {/* Header */}
-            <View style={[styles.header, { backgroundColor: colors.card }]}>
+            <View style={styles.header}>
                 <TouchableOpacity
                     style={styles.backButton}
                     onPress={() => onNavigate('profile')}
@@ -147,7 +147,7 @@ const SavedPaymentMethodsScreen = ({ onNavigate }: SavedPaymentMethodsScreenProp
                 <View style={styles.content}>
                     {/* Info Card */}
                     <View style={styles.infoCard}>
-                        <Ionicons name="shield-checkmark" size={24} color="#0077b6" />
+                        <Ionicons name="shield-checkmark" size={24} color="#1a56db" />
                         <View style={styles.infoTextContainer}>
                             <Text style={[styles.infoText, { color: colors.subText }]}>
                                 Vos informations de paiement sont sécurisées et cryptées
@@ -162,7 +162,6 @@ const SavedPaymentMethodsScreen = ({ onNavigate }: SavedPaymentMethodsScreenProp
                                 key={method.id}
                                 style={[
                                     styles.methodCard,
-                                    { backgroundColor: colors.card },
                                     method.isDefault && styles.defaultMethodCard,
                                 ]}
                             >
@@ -209,7 +208,7 @@ const SavedPaymentMethodsScreen = ({ onNavigate }: SavedPaymentMethodsScreenProp
                         ))
                     ) : (
                         <View style={styles.emptyState}>
-                            <Ionicons name="wallet-outline" size={60} color="#ccc" />
+                            <Ionicons name="wallet-outline" size={60} color="#9ca3af" />
                             <Text style={[styles.emptyStateText, { color: colors.subText }]}>
                                 Aucun moyen de paiement enregistré
                             </Text>
@@ -222,7 +221,7 @@ const SavedPaymentMethodsScreen = ({ onNavigate }: SavedPaymentMethodsScreenProp
             </ScrollView>
 
             {/* Add Button */}
-            <View style={[styles.footer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
+            <View style={[styles.footer, { borderTopColor: colors.border }]}>
                 <TouchableOpacity
                     style={styles.addButton}
                     onPress={() => setShowAddModal(true)}
@@ -240,7 +239,7 @@ const SavedPaymentMethodsScreen = ({ onNavigate }: SavedPaymentMethodsScreenProp
                 onRequestClose={() => setShowAddModal(false)}
             >
                 <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+                    <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
                             <Text style={[styles.modalTitle, { color: colors.text }]}>
                                 Ajouter un moyen de paiement
@@ -289,8 +288,8 @@ const SavedPaymentMethodsScreen = ({ onNavigate }: SavedPaymentMethodsScreenProp
                                     ]}
                                     onPress={() => setSelectedType('card')}
                                 >
-                                    <Ionicons name="card-outline" size={24} color={selectedType === 'card' ? '#0077b6' : colors.subText} />
-                                    <Text style={[styles.typeButtonText, { color: selectedType === 'card' ? '#0077b6' : colors.subText }]}>
+                                    <Ionicons name="card-outline" size={24} color={selectedType === 'card' ? '#1a56db' : colors.subText} />
+                                    <Text style={[styles.typeButtonText, { color: selectedType === 'card' ? '#1a56db' : colors.subText }]}>
                                         Carte
                                     </Text>
                                 </TouchableOpacity>
@@ -387,6 +386,7 @@ const SavedPaymentMethodsScreen = ({ onNavigate }: SavedPaymentMethodsScreenProp
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#f0f4f8',
     },
     header: {
         flexDirection: 'row',
@@ -394,6 +394,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 20,
         paddingVertical: 15,
+        backgroundColor: '#fff',
     },
     backButton: {
         padding: 5,
@@ -410,7 +411,7 @@ const styles = StyleSheet.create({
     },
     infoCard: {
         flexDirection: 'row',
-        backgroundColor: '#E3F2FD',
+        backgroundColor: '#eff6ff',
         borderRadius: 12,
         padding: 15,
         marginBottom: 20,
@@ -425,18 +426,19 @@ const styles = StyleSheet.create({
         lineHeight: 18,
     },
     methodCard: {
-        borderRadius: 15,
+        borderRadius: 16,
         padding: 15,
         marginBottom: 15,
+        backgroundColor: '#fff',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
         elevation: 3,
     },
     defaultMethodCard: {
         borderWidth: 2,
-        borderColor: '#0077b6',
+        borderColor: '#1a56db',
     },
     methodHeader: {
         flexDirection: 'row',
@@ -464,13 +466,13 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     defaultBadge: {
-        backgroundColor: '#0077b6',
+        backgroundColor: '#eff6ff',
         paddingHorizontal: 10,
         paddingVertical: 4,
-        borderRadius: 12,
+        borderRadius: 8,
     },
     defaultBadgeText: {
-        color: '#fff',
+        color: '#1a56db',
         fontSize: 11,
         fontWeight: '600',
     },
@@ -516,15 +518,21 @@ const styles = StyleSheet.create({
         padding: 20,
         paddingBottom: 30,
         borderTopWidth: 1,
+        backgroundColor: '#fff',
     },
     addButton: {
-        backgroundColor: '#0077b6',
+        backgroundColor: '#1a3fad',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 16,
-        borderRadius: 30,
+        borderRadius: 14,
         gap: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 3,
     },
     addButtonText: {
         color: '#fff',
@@ -537,6 +545,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     modalContent: {
+        backgroundColor: '#fff',
         borderTopLeftRadius: 25,
         borderTopRightRadius: 25,
         padding: 20,
@@ -565,9 +574,9 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     typeButtonActive: {
-        backgroundColor: '#E3F2FD',
+        backgroundColor: '#eff6ff',
         borderWidth: 2,
-        borderColor: '#0077b6',
+        borderColor: '#1a56db',
     },
     typeButtonText: {
         fontSize: 12,
@@ -597,10 +606,15 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     saveButton: {
-        backgroundColor: '#0077b6',
+        backgroundColor: '#1a3fad',
         paddingVertical: 16,
-        borderRadius: 30,
+        borderRadius: 14,
         alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 3,
     },
     saveButtonText: {
         color: '#fff',

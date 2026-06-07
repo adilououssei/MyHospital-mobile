@@ -41,7 +41,7 @@ const ChangePasswordScreen = ({ onNavigate }: ChangePasswordScreenProps) => {
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView style={styles.container}>
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
                 {/* Header */}
                 <View style={styles.header}>
@@ -55,8 +55,8 @@ const ChangePasswordScreen = ({ onNavigate }: ChangePasswordScreenProps) => {
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <View style={styles.content}>
                         {/* Info */}
-                        <View style={[styles.infoBox, { backgroundColor: '#e4f4fcff' }]}>
-                            <Ionicons name="information-circle" size={24} color="#0077b6" />
+                        <View style={[styles.infoBox, { backgroundColor: '#eff6ff' }]}>
+                            <Ionicons name="information-circle" size={24} color="#1a56db" />
                             <Text style={[styles.infoText, { color: colors.text }]}>{t('cpInfo')}</Text>
                         </View>
 
@@ -141,31 +141,31 @@ const ChangePasswordScreen = ({ onNavigate }: ChangePasswordScreenProps) => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
+    container: { flex: 1, backgroundColor: '#f0f4f8' },
     header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15 },
     backButton: { padding: 5 },
-    headerTitle: { fontSize: 18, fontWeight: 'bold' },
+    headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#111827' },
     content: { paddingHorizontal: 20, paddingTop: 20 },
-    infoBox: { flexDirection: 'row', alignItems: 'center', padding: 15, borderRadius: 12, marginBottom: 25 },
+    infoBox: { flexDirection: 'row', alignItems: 'center', padding: 15, borderRadius: 16, marginBottom: 25, backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
     infoText: { flex: 1, marginLeft: 12, fontSize: 13, lineHeight: 18 },
     inputContainer: { marginBottom: 20 },
-    inputLabel: { fontSize: 14, fontWeight: '600', marginBottom: 8 },
-    inputWrapper: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, borderWidth: 1, paddingHorizontal: 15, height: 50 },
+    inputLabel: { fontSize: 14, fontWeight: '600', marginBottom: 8, color: '#374151' },
+    inputWrapper: { flexDirection: 'row', alignItems: 'center', borderRadius: 14, borderWidth: 1.5, borderColor: '#e5e7eb', backgroundColor: 'rgba(255,255,255,0.88)', paddingHorizontal: 15, height: 50, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
     inputIcon: { marginRight: 10 },
-    input: { flex: 1, fontSize: 15 },
+    input: { flex: 1, fontSize: 15, color: '#111827' },
     forgotLink: { alignSelf: 'flex-end', marginTop: 8 },
-    forgotLinkText: { color: '#0077b6', fontSize: 13, fontWeight: '500' },
+    forgotLinkText: { color: '#1a56db', fontSize: 13, fontWeight: '500' },
     strengthContainer: { marginTop: 10 },
-    strengthBarContainer: { height: 4, backgroundColor: '#E0E0E0', borderRadius: 2, overflow: 'hidden', marginBottom: 6 },
+    strengthBarContainer: { height: 4, backgroundColor: '#e5e7eb', borderRadius: 2, overflow: 'hidden', marginBottom: 6 },
     strengthBar: { height: '100%', borderRadius: 2 },
     strengthLabel: { fontSize: 12, fontWeight: '600' },
     matchContainer: { marginTop: 10 },
     matchRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     matchText: { fontSize: 12, fontWeight: '500' },
-    saveButton: { backgroundColor: '#0077b6', paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginTop: 10 },
+    saveButton: { backgroundColor: '#1a3fad', paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginTop: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
     saveButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-    cancelButton: { paddingVertical: 16, borderRadius: 12, alignItems: 'center', borderWidth: 1, marginTop: 15, marginBottom: 40 },
-    cancelButtonText: { fontSize: 16, fontWeight: '600' },
+    cancelButton: { paddingVertical: 16, borderRadius: 14, alignItems: 'center', borderWidth: 1.5, borderColor: '#e5e7eb', marginTop: 15, marginBottom: 40 },
+    cancelButtonText: { fontSize: 16, fontWeight: '600', color: '#374151' },
 });
 
 export default ChangePasswordScreen;

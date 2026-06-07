@@ -29,7 +29,7 @@ const SettingsScreen = ({ onNavigate }: SettingsScreenProps) => {
 
     const SettingsSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
         <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: colors.subText }]}>{title}</Text>
+            <Text style={styles.sectionTitle}>{title}</Text>
             {children}
         </View>
     );
@@ -56,7 +56,7 @@ const SettingsScreen = ({ onNavigate }: SettingsScreenProps) => {
         >
             <View style={styles.settingsItemLeft}>
                 <View style={styles.iconContainer}>
-                    <Ionicons name={icon as any} size={22} color="#0077b6" />
+                    <Ionicons name={icon as any} size={22} color="#1a56db" />
                 </View>
                 <View style={styles.settingsItemText}>
                     <Text style={[styles.settingsItemTitle, { color: colors.text }]}>{title}</Text>
@@ -89,7 +89,7 @@ const SettingsScreen = ({ onNavigate }: SettingsScreenProps) => {
         <View style={[styles.settingsItem, { backgroundColor: colors.card }]}>
             <View style={styles.settingsItemLeft}>
                 <View style={styles.iconContainer}>
-                    <Ionicons name={icon as any} size={22} color="#0077b6" />
+                    <Ionicons name={icon as any} size={22} color="#1a56db" />
                 </View>
                 <View style={styles.settingsItemText}>
                     <Text style={[styles.settingsItemTitle, { color: colors.text }]}>{title}</Text>
@@ -103,14 +103,14 @@ const SettingsScreen = ({ onNavigate }: SettingsScreenProps) => {
             <Switch
                 value={value}
                 onValueChange={onValueChange}
-                trackColor={{ false: colors.border, true: '#0077b6' }}
+                trackColor={{ false: colors.border, true: '#1a56db' }}
                 thumbColor="#fff"
             />
         </View>
     );
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <SafeAreaView style={[styles.container, { backgroundColor: '#f0f4f8' }]}>
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity
@@ -253,6 +253,7 @@ const SettingsScreen = ({ onNavigate }: SettingsScreenProps) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        paddingBottom: 20,
     },
     header: {
         flexDirection: 'row',
@@ -269,7 +270,8 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     section: {
-        marginTop: 25,
+        paddingHorizontal: 0,
+        paddingBottom: 25,
     },
     sectionTitle: {
         fontSize: 12,
@@ -277,6 +279,7 @@ const styles = StyleSheet.create({
         letterSpacing: 0.5,
         paddingHorizontal: 20,
         marginBottom: 10,
+        color: '#6b7280',
     },
     settingsItem: {
         flexDirection: 'row',
@@ -284,7 +287,14 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingVertical: 15,
         paddingHorizontal: 20,
-        marginBottom: 1,
+        marginHorizontal: 20,
+        marginBottom: 10,
+        borderRadius: 14,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 3,
     },
     settingsItemLeft: {
         flexDirection: 'row',
@@ -294,7 +304,7 @@ const styles = StyleSheet.create({
     iconContainer: {
         width: 40,
         height: 40,
-        backgroundColor: '#e4f4fcff',
+        backgroundColor: '#eff6ff',
         borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',

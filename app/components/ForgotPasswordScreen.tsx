@@ -56,7 +56,7 @@ const ForgotPasswordScreen = ({ onNavigate }: ForgotPasswordScreenProps) => {
                 </View>
                 <View style={styles.successContainer}>
                     <View style={styles.successIcon}>
-                        <Ionicons name="mail-outline" size={60} color="#0077b6" />
+                        <Ionicons name="mail-outline" size={60} color="#1a56db" />
                     </View>
                     <Text style={styles.successTitle}>{t('forgotCheckEmail')}</Text>
                     <Text style={styles.successText}>
@@ -93,11 +93,11 @@ const ForgotPasswordScreen = ({ onNavigate }: ForgotPasswordScreenProps) => {
                         <Text style={styles.subtitle}>{t('forgotSubtitle')}</Text>
 
                         <View style={[styles.inputContainer, errorMessage ? styles.inputError : null]}>
-                            <Ionicons name="mail-outline" size={20} color="#999" />
+                            <Ionicons name="mail-outline" size={20} color="#9ca3af" />
                             <TextInput
                                 style={styles.input}
                                 placeholder={t('forgotEmailPlaceholder')}
-                                placeholderTextColor="#999"
+                                placeholderTextColor="#9ca3af"
                                 value={email}
                                 onChangeText={text => { setEmail(text); setErrorMessage(''); }}
                                 keyboardType="email-address"
@@ -105,7 +105,7 @@ const ForgotPasswordScreen = ({ onNavigate }: ForgotPasswordScreenProps) => {
                                 editable={!isLoading}
                             />
                             {email && validateEmail(email) && (
-                                <Ionicons name="checkmark" size={20} color="#0077b6" />
+                                <Ionicons name="checkmark" size={20} color="#1a56db" />
                             )}
                         </View>
 
@@ -135,39 +135,41 @@ const ForgotPasswordScreen = ({ onNavigate }: ForgotPasswordScreenProps) => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#fff' },
+    container: { flex: 1, backgroundColor: '#f0f4f8' },
     header: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 20 },
     backButton: { padding: 5 },
     content: { paddingHorizontal: 30, paddingTop: 20 },
-    title: { fontSize: 28, fontWeight: 'bold', color: '#000', marginBottom: 12 },
-    subtitle: { fontSize: 14, color: '#999', marginBottom: 40, lineHeight: 20 },
+    title: { fontSize: 28, fontWeight: 'bold', color: '#111827', marginBottom: 12 },
+    subtitle: { fontSize: 14, color: '#6b7280', marginBottom: 40, lineHeight: 20 },
     inputContainer: {
         flexDirection: 'row', alignItems: 'center',
-        backgroundColor: '#F5F5F5', borderRadius: 25,
+        backgroundColor: 'rgba(255,255,255,0.88)', borderRadius: 14,
         paddingHorizontal: 20, paddingVertical: 15,
-        marginBottom: 15, borderWidth: 1, borderColor: '#F5F5F5'
+        marginBottom: 15, borderWidth: 1.5, borderColor: '#e5e7eb',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3
     },
     inputError: { borderColor: '#FF6B6B', borderWidth: 2 },
-    input: { flex: 1, marginLeft: 10, fontSize: 14, color: '#000' },
+    input: { flex: 1, marginLeft: 10, fontSize: 14, color: '#111827' },
     errorText: { color: '#FF6B6B', fontSize: 12, marginBottom: 10, marginLeft: 20 },
     sendButton: {
-        backgroundColor: '#0077b6',
+        backgroundColor: '#1a3fad',
         paddingVertical: 16,
-        borderRadius: 30,
+        borderRadius: 14,
         alignItems: 'center',
-        marginTop: 20
+        marginTop: 20,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3
     },
     sendButtonDisabled: { backgroundColor: '#B0B0B0' },
     sendButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
     backToLogin: { alignItems: 'center', marginTop: 20 },
-    backToLoginText: { color: '#0077b6', fontSize: 14, fontWeight: '500' },
+    backToLoginText: { color: '#1a56db', fontSize: 14, fontWeight: '500' },
     successContainer: { paddingHorizontal: 30, alignItems: 'center', marginTop: 60 },
     successIcon: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#E8F9F5', justifyContent: 'center', alignItems: 'center', marginBottom: 30 },
-    successTitle: { fontSize: 24, fontWeight: 'bold', color: '#000', marginBottom: 15, textAlign: 'center' },
-    successText: { fontSize: 14, color: '#666', textAlign: 'center', marginBottom: 10 },
-    successSubtext: { fontSize: 13, color: '#999', textAlign: 'center', lineHeight: 20 },
+    successTitle: { fontSize: 24, fontWeight: 'bold', color: '#111827', marginBottom: 15, textAlign: 'center' },
+    successText: { fontSize: 14, color: '#6b7280', textAlign: 'center', marginBottom: 10 },
+    successSubtext: { fontSize: 13, color: '#9ca3af', textAlign: 'center', lineHeight: 20 },
     resendButton: { marginTop: 30, paddingVertical: 12, paddingHorizontal: 30 },
-    resendButtonText: { color: '#0077b6', fontSize: 14, fontWeight: '600' }
+    resendButtonText: { color: '#1a56db', fontSize: 14, fontWeight: '600' }
 });
 
 export default ForgotPasswordScreen;
