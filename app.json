@@ -4,11 +4,11 @@
     "slug": "MyHospital-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/Fichier 2icône MyHospital.png",
+    "icon": "./assets/myhospitalicone.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/Fichier 2icône MyHospital.png",
+      "image": "./assets/myhospitalicone.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/Fichier 2icône MyHospital.png",
+        "foregroundImage": "./assets/myhospitalicone.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -29,7 +29,7 @@
       ]
     },
     "web": {
-      "favicon": "./assets/Fichier 2icône MyHospital.png"
+      "favicon": "./assets/myhospitalicone.png"
     },
     "extra": {
       "eas": {
