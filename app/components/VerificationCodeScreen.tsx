@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, TextInput,
-    KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator
+    KeyboardAvoidingView, ScrollView, ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -75,7 +75,7 @@ const VerificationCodeScreen = ({ onNavigate, route, contact, type }: Verificati
 
     return (
         <SafeAreaView style={styles.container}>
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
+            <KeyboardAvoidingView behavior="padding" style={styles.container}>
                 <ScrollView showsVerticalScrollIndicator={false}>
                     <View style={styles.header}>
                         <TouchableOpacity style={styles.backButton} onPress={() => onNavigate('forgotPassword')}>

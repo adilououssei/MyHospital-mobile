@@ -38,7 +38,8 @@
     },
     "plugins": [
       "expo-localization",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-splash-screen"
     ],
     "owner": "ouss_adilou"
   }

@@ -12,7 +12,6 @@ import {
   ActivityIndicator,
   TextInput,
   KeyboardAvoidingView,
-  Platform,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -349,7 +348,7 @@ const PaymentMethodScreen = ({
         onRequestClose={() => !isSending && setShowPhoneModal(false)}
       >
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior="padding"
           style={styles.modalOverlay}
         >
           <View style={[styles.modalSheet, { backgroundColor: colors.card }]}>

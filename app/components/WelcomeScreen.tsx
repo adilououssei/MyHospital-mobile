@@ -23,8 +23,8 @@ const WelcomeScreen = ({ onNavigate }: WelcomeScreenProps) => {
         <View style={styles.logoContainer}>
           <View style={styles.logoIcon}>
             <Image
-              source={require('../../assets/MyHospital1.png')}
-              style={{ width: 250, height: 200 }}
+              source={require('../../assets/Fichier 2icône MyHospital.png')}
+              style={{ width: 250, height: 200, resizeMode: 'contain' }}
             />
           </View>
         </View>

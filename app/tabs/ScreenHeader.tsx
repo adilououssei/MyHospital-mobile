@@ -1,7 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useApp } from '../context/AppContext';
 import { useNotifications } from '../context/NotificationContext';
 
@@ -27,13 +26,11 @@ const ScreenHeader = ({
 }: ScreenHeaderProps) => {
   const { unreadCount: ctxCount } = useNotifications();
   const unreadCount = explicitCount ?? ctxCount;
-  const insets = useSafeAreaInsets();
-
   return (
     <View style={[styles.header, {
       backgroundColor: '#fff',
       borderBottomColor: '#f3f4f6',
-      paddingTop: insets.top + 15,
+      paddingTop: (StatusBar.currentHeight ?? 24) + 15,
     }]}>
       {/* Left Button (Back or Empty) */}
       {onBack ? (

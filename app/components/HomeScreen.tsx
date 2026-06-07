@@ -6,7 +6,7 @@ import {
   TouchableOpacity, Image, ActivityIndicator, Modal,
   Dimensions, FlatList, NativeScrollEvent, NativeSyntheticEvent,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
@@ -131,7 +131,6 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
   const { unreadCount } = useNotifications();
   const { colors, t, language, setLanguage } = useApp();
   const { user, isAuthenticated } = useAuth();
-  const insets = useSafeAreaInsets();
 
   const [topDoctors, setTopDoctors] = useState<Docteur[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
@@ -163,7 +162,7 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
     <SafeAreaView style={[styles.container, { backgroundColor: '#f0f4f8' }]} edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 90 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 90 }]}
       >
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <View style={styles.header}>

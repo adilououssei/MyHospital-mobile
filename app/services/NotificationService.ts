@@ -139,12 +139,12 @@ export async function getNotifications(
 export async function getUnreadCount(userId: number): Promise<number> {
   try {
     const response = await apiClient.get<UnreadCountResponse>(
-      NOTIFICATION_ENDPOINTS.UNREAD_COUNT(userId)
+      NOTIFICATION_ENDPOINTS.UNREAD_COUNT(userId),
+      { timeout: 5000 }
     );
     return response.data.count ?? 0;
-  } catch (error: any) {
-    console.error('❌ [Notifications] getUnreadCount:', error.message);
-    return 0; // Valeur par défaut silencieuse pour la navbar
+  } catch {
+    return 0;
   }
 }
 

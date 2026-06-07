@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
-  Modal, KeyboardAvoidingView, Platform, ScrollView,
+  Modal, KeyboardAvoidingView, ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -33,7 +33,7 @@ const CreateNewPasswordScreen = ({ onNavigate }: CreateNewPasswordScreenProps) =
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
+      <KeyboardAvoidingView behavior="padding" style={styles.container}>
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.header}>
             <TouchableOpacity style={styles.backButton} onPress={() => onNavigate('verification')}>

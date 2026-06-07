@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, TextInput,
-    Alert, KeyboardAvoidingView, Platform, ScrollView,
+    Alert, KeyboardAvoidingView, ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -42,7 +42,7 @@ const ChangePasswordScreen = ({ onNavigate }: ChangePasswordScreenProps) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
+            <KeyboardAvoidingView behavior="padding" style={styles.container}>
                 {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity style={styles.backButton} onPress={() => onNavigate('privacySecurity')}>

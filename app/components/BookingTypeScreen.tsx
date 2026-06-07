@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, KeyboardAvoidingView, Platform,
+  TextInput, KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -37,8 +37,8 @@ const BookingTypeScreen = ({ onNavigate }: BookingTypeScreenProps) => {
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
       <ScreenHeader title={t('bkTitle')} onBack={() => onNavigate('appointments')} />
 
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardAvoidingView} keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
+      <KeyboardAvoidingView behavior="padding"
+        style={styles.keyboardAvoidingView} keyboardVerticalOffset={0}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
           <View style={styles.content}>
             {/* Step Indicator */}

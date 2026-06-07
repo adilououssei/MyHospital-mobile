@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
-  Modal, KeyboardAvoidingView, Platform, ScrollView,
+  Modal, KeyboardAvoidingView, ScrollView,
   FlatList, ActivityIndicator, Alert, Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -172,7 +172,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
       <DecorBackground />
 
       <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.flex}>
+        <KeyboardAvoidingView behavior="padding" style={styles.flex}>
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
             {/* ── Top bar ──────────────────────────────────────── */}

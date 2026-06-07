@@ -408,6 +408,9 @@ const translations = {
     evalFeedbackThanks: 'Merci pour votre feedback !',
     evalBtnEvaluate: 'Évaluer',
     evalAvis: 'avis',
+    // Chatbot
+    chatbotError: 'Désolé, l\'assistant IA a rencontré une erreur. Veuillez réessayer.',
+    chatbotNoResponse: 'Je n\'ai pas compris votre demande. Pouvez-vous reformuler ?',
   },
   en: {
     home: 'Home', profile: 'Profile', appointments: 'Appointments', notifications: 'Notifications',
@@ -596,6 +599,9 @@ const translations = {
     evalFeedbackThanks: 'Thank you for your feedback!',
     evalBtnEvaluate: 'Evaluate',
     evalAvis: 'reviews',
+    // Chatbot
+    chatbotError: 'Sorry, the AI assistant encountered an error. Please try again.',
+    chatbotNoResponse: 'I didn\'t understand your request. Can you rephrase?',
   },
   de: {
     home: 'Startseite', profile: 'Profil', appointments: 'Termine', notifications: 'Benachrichtigungen',
@@ -798,6 +804,9 @@ const translations = {
     evalFeedbackThanks: 'Vielen Dank für Ihr Feedback!',
     evalBtnEvaluate: 'Bewerten',
     evalAvis: 'Bewertungen',
+    // Chatbot
+    chatbotError: 'Entschuldigung, der KI-Assistent hat einen Fehler. Bitte versuchen Sie es erneut.',
+    chatbotNoResponse: 'Ich habe Ihre Anfrage nicht verstanden. Können Sie sie umformulieren?',
   },
 };
 

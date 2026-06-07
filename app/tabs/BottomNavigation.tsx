@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AppContext';
 import { useNotifications } from '../context/NotificationContext';
 
@@ -22,7 +21,6 @@ const navItems = [
 const BottomNavigation = ({ currentScreen, onNavigate }: BottomNavigationProps) => {
   const { unreadCount } = useNotifications();
   const { isAuthenticated } = useAuth();
-  const insets = useSafeAreaInsets();
 
   const handleNav = (screen: string) => {
     if (!isAuthenticated && PROTECTED_SCREENS.includes(screen)) {
@@ -36,7 +34,7 @@ const BottomNavigation = ({ currentScreen, onNavigate }: BottomNavigationProps) 
     <View style={[styles.bottomNav, {
       backgroundColor: '#fff',
       borderTopColor: '#e5e7eb',
-      paddingBottom: Math.max(insets.bottom, 8),
+      paddingBottom: 10,
     }]}>
       {navItems.map((item) => {
         const isActive = currentScreen === item.screen;
