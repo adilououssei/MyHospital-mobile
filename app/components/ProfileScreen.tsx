@@ -3,14 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Modal, Image, ActivityIndicator,
+  Modal, Image, ActivityIndicator, StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useApp, useAuth } from '../context/AppContext';
 import { useNotifications } from '../context/NotificationContext';
-import BottomNavigation from '../tabs/BottomNavigation';
 import {
   PatientProfile, getProfileByUserId,
   formatTaille, getGenreLabel, getImcLabel,
@@ -163,6 +162,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
 
+      <StatusBar barStyle="light-content" backgroundColor="#1a56db" />
       {/* ── Header gradient ──────────────────────────────── */}
       <LinearGradient colors={['#1a56db', '#1e40af']} style={styles.headerGradient}>
         <SafeAreaView edges={['top']} style={styles.safeArea}>
@@ -239,10 +239,8 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
         )}
 
         {menuItems.map(renderMenuItem)}
-        <View style={{ height: 80 }} />
+        <View style={{ height: 110 }} />
       </ScrollView>
-
-      <BottomNavigation currentScreen="profile" onNavigate={onNavigate} />
 
       {/* ── Modal menu ⋮ ─────────────────────────────────── */}
       <Modal visible={showMenuModal} transparent animationType="fade" onRequestClose={() => setShowMenuModal(false)}>

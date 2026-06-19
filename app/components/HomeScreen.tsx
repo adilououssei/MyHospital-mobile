@@ -12,7 +12,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useApp, useAuth } from '../context/AppContext';
 import { useNotifications } from '../context/NotificationContext';
-import BottomNavigation from '../tabs/BottomNavigation';
 import docteurService, { Docteur } from '../services/docteur.service';
 import rendezVousService from '../services/rendezvous.service';
 import StarRating from './StarRating';
@@ -339,10 +338,9 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
         {/* ── Bannière Gérer RDV ───────────────────────────────────────────── */}
         <ManageAppointmentsBanner onNavigate={onNavigate} colors={colors} />
 
-        <View style={{ height: 16 }} />
+        <View style={{ height: 110 }} />
       </ScrollView>
 
-      <BottomNavigation currentScreen="home" onNavigate={onNavigate} />
     </SafeAreaView>
   );
 };

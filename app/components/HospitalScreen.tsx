@@ -7,7 +7,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useApp } from '../context/AppContext';
-import BottomNavigation from '../tabs/BottomNavigation';
 import ScreenHeader from '../tabs/ScreenHeader';
 import {
   getHospitals,
@@ -394,7 +393,6 @@ const HospitalScreen = ({ onNavigate }: Props) => {
           {t('hsLoadingFirst')}
         </Text>
       </View>
-      <BottomNavigation currentScreen="hospital" onNavigate={onNavigate} />
     </SafeAreaView>
   );
 
@@ -409,7 +407,6 @@ const HospitalScreen = ({ onNavigate }: Props) => {
           <Text style={styles.retryBtnText}>{t('retryButton')}</Text>
         </TouchableOpacity>
       </View>
-      <BottomNavigation currentScreen="hospital" onNavigate={onNavigate} />
     </SafeAreaView>
   );
 
@@ -513,7 +510,6 @@ const HospitalScreen = ({ onNavigate }: Props) => {
         }
       />
 
-      <BottomNavigation currentScreen="hospital" onNavigate={onNavigate} />
     </SafeAreaView>
   );
 };
