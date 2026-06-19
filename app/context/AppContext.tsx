@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { View, ActivityIndicator } from "react-native";
 import * as Localization from "expo-localization";
 import { secureStorage } from "../services/secureStorage";
 import apiClient from "../services/api.config";
@@ -918,6 +919,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState]       = useState<'light' | 'dark' | 'auto'>('light');
   const [isDarkMode, setIsDarkMode]  = useState(false);
   const [language, setLanguageState] = useState('fr');
+  const [isReady, setIsReady]        = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -929,6 +931,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         ]);
 
         if (savedUser) setUser(JSON.parse(savedUser));
+
+        const token = await secureStorage.getToken();
+        if (token) apiClient.setAuthToken(token);
 
         if (savedLanguage) {
           setLanguageState(savedLanguage);
@@ -944,6 +949,8 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         }
       } catch (e) {
         console.error('Erreur chargement préférences:', e);
+      } finally {
+        setIsReady(true);
       }
     };
     load();
@@ -1003,6 +1010,14 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     language, setLanguage,
     t,
   };
+
+  if (!isReady) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#1a56db" />
+      </View>
+    );
+  }
 
   return (
     <AuthContext.Provider value={authValue}>

@@ -87,7 +87,7 @@ class DocteurService {
       const response = await apiClient.get(API_ENDPOINTS.DOCTEURS, { params });
       return response.data.docteurs ?? [];
     } catch (error: any) {
-      console.error('❌ getDocteurs:', error.message);
+      console.error('❌ getDocteurs:', error.message, error?.response?.status);
       throw error;
     }
   }

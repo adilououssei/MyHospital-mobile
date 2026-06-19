@@ -104,7 +104,8 @@ const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
                 docteurConsultationLocation: rdv.docteurConsultationLocation ?? null,
             }));
             setAppointments(mapped);
-        } catch {
+        } catch (error: any) {
+            console.error('❌ loadAppointments error:', error?.response?.data || error.message);
             Alert.alert(t('error'), t('aptErrLoad'));
         } finally {
             setLoading(false);
