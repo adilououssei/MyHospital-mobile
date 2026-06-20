@@ -13,10 +13,7 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
-      "infoPlist": {
-        "LSApplicationQueriesSchemes": ["org.jitsi.meet", "jitsi"]
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {

@@ -187,7 +187,7 @@ const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
     }, []);
 
     // ── Rejoindre la consultation vidéo ────────────────────────────────────────
-    const handleJoinVideoCall = useCallback(async (appointment: Appointment) => {
+    const handleJoinVideoCall = useCallback((appointment: Appointment) => {
         if (!appointment.jitsiUrl) {
             Alert.alert(
                 'Consultation non disponible',
@@ -197,53 +197,48 @@ const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
             return;
         }
 
-        try {
-            const canOpenJitsi = await Linking.canOpenURL('org.jitsi.meet://');
+        Alert.alert(
+            '📹 Rejoindre la consultation',
+            `Vous allez rejoindre ${appointment.doctorName}.`,
+            [
+                { text: 'Annuler', style: 'cancel' },
+                {
+                    text: 'Ouvrir Jitsi',
+                    onPress: async () => {
+                        const httpsUrl = appointment.jitsiUrl!;
+                        const room = httpsUrl.replace(/https?:\/\/[^\/]+\//, '').split('#')[0];
+                        const jitsiAppUrl = `org.jitsi.meet://${room}`;
 
-            if (canOpenJitsi) {
-                Alert.alert(
-                    '📹 Rejoindre la consultation',
-                    `Vous allez rejoindre ${appointment.doctorName} via l'application Jitsi Meet.`,
-                    [
-                        { text: 'Annuler', style: 'cancel' },
-                        {
-                            text: 'Ouvrir Jitsi',
-                            onPress: () => Linking.openURL(appointment.jitsiUrl!),
-                        },
-                    ]
-                );
-            } else {
-                const storeUrl = Platform.OS === 'ios'
-                    ? 'https://apps.apple.com/app/jitsi-meet/id1165103905'
-                    : 'https://play.google.com/store/apps/details?id=org.jitsi.meet';
+                        if (Platform.OS === 'android') {
+                            // Tentative 1 : Intent Android avec package explicite
+                            try {
+                                await Linking.openURL(
+                                    `intent://meet.jit.si/${room}#Intent;scheme=https;package=org.jitsi.meet;end`
+                                );
+                                return;
+                            } catch {}
+                        }
 
-                Alert.alert(
-                    '📹 Jitsi Meet requis',
-                    `Pour rejoindre la consultation avec ${appointment.doctorName}, vous devez avoir Jitsi Meet installé.\n\nSouhaitez-vous le télécharger ou utiliser la version intégrée ?`,
-                    [
-                        { text: 'Annuler', style: 'cancel' },
-                        {
-                            text: '📲 Télécharger Jitsi',
-                            onPress: () => Linking.openURL(storeUrl),
-                        },
-                        {
-                            text: '💻 Version intégrée',
-                            onPress: () => onNavigate('videoCall', {
-                                jitsiUrl:    appointment.jitsiUrl,
-                                doctorName:  appointment.doctorName,
-                                patientName: user ? `${user.prenom} ${user.nom}` : 'Patient',
-                            }),
-                        },
-                    ]
-                );
-            }
-        } catch {
-            onNavigate('videoCall', {
-                jitsiUrl:    appointment.jitsiUrl,
-                doctorName:  appointment.doctorName,
-                patientName: user ? `${user.prenom} ${user.nom}` : 'Patient',
-            });
-        }
+                        // Tentative 2 : Custom scheme (iOS / Android fallback)
+                        try {
+                            await Linking.openURL(jitsiAppUrl);
+                            return;
+                        } catch {}
+
+                        // Dernier recours : navigateur
+                        Linking.openURL(httpsUrl);
+                    },
+                },
+                {
+                    text: 'Version intégrée',
+                    onPress: () => onNavigate('videoCall', {
+                        jitsiUrl:    appointment.jitsiUrl,
+                        doctorName:  appointment.doctorName,
+                        patientName: user ? `${user.prenom} ${user.nom}` : 'Patient',
+                    }),
+                },
+            ]
+        );
     }, [user]);
 
     // ── Couleurs / textes statut ────────────────────────────────────────────────
