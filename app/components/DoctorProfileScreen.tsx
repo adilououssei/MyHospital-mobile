@@ -256,16 +256,16 @@ const DoctorProfileScreen = ({ onNavigate, doctor }: DoctorProfileScreenProps) =
             </View>
           </View>
 
-          {/* Message pour prendre rendez-vous */}
-          <View style={styles.infoCard}>
-            <Ionicons name="calendar-outline" size={22} color="#1a56db" />
-            <View style={styles.infoCardContent}>
-              <Text style={[styles.infoCardTitle, { color: colors.text }]}>Prendre rendez-vous</Text>
-              <Text style={[styles.infoText, { color: colors.subText }]}>
-                Pour consulter ce médecin, utilisez l'option "Prendre rendez-vous" depuis l'accueil.
-              </Text>
-            </View>
-          </View>
+          {/* Bouton Prendre rendez-vous */}
+          <TouchableOpacity
+            style={styles.bookButton}
+            onPress={() => onNavigate('doctorDetail', { doctor })}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="calendar-outline" size={22} color="#fff" />
+            <Text style={styles.bookButtonText}>Prendre rendez-vous</Text>
+            <Ionicons name="arrow-forward" size={20} color="#fff" />
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -321,6 +321,14 @@ const styles = StyleSheet.create({
   },
   evaluationDate: { fontSize: 11, color: '#9ca3af' },
   evaluationComment: { fontSize: 13, lineHeight: 18, fontStyle: 'italic', color: '#6b7280' },
+
+  bookButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+    backgroundColor: '#1a3fad', paddingVertical: 16, borderRadius: 14, marginTop: 8,
+    shadowColor: '#1a56db', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3, shadowRadius: 8, elevation: 5,
+  },
+  bookButtonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });
 
 export default DoctorProfileScreen;
