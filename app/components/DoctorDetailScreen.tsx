@@ -683,7 +683,7 @@ const styles = StyleSheet.create({
   noteCard: { flexDirection: 'row', backgroundColor: '#FFF9E6', borderRadius: 12, padding: 15, gap: 10, marginBottom: 20, borderWidth: 1, borderColor: '#FFE4A0' },
   noteText: { flex: 1, fontSize: 13, lineHeight: 20 },
   noteBold: { fontWeight: '700' },
-  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, borderTopWidth: 1 },
+  footer: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, paddingBottom: 60, borderTopWidth: 1 },
   nextBtn: { backgroundColor: '#1a3fad', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 14, gap: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   nextBtnDisabled: { backgroundColor: '#9ca3af' },
   nextBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },

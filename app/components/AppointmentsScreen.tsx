@@ -221,6 +221,7 @@ const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
             case 'pending':         return '#FFA500';
             case 'pending_payment': return '#9B59B6';
             case 'rejected':        return '#FF6B6B';
+            case 'past':            return '#10b981';
             default:                return '#666';
         }
     };
@@ -242,9 +243,12 @@ const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
             case 'pending_payment': return 'card-outline';
             case 'pending':         return 'time-outline';
             case 'rejected':        return 'close-circle-outline';
+            case 'past':            return 'checkmark-done-outline';
             default:                return 'ellipse-outline';
         }
     };
+
+    const getStatusBg = (s: string) => getStatusColor(s) + '20';
 
     const getConsultationTypeText = (type: ConsultationType) => {
         switch (type) {
@@ -322,13 +326,19 @@ const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
             </View>
         );
 
-        // ✅ Confirmé (autre type)
+        // ✅ Confirmé (autre type) → message + annulation
         if (appointment.status === 'confirmed') return (
             <View style={styles.appointmentActions}>
                 <View style={[styles.confirmedMessage, { backgroundColor: colors.inputBackground }]}>
                     <Ionicons name="checkmark-circle" size={20} color="#1a56db" />
                     <Text style={[styles.confirmedMessageText, { color: colors.text }]}>{t('aptConfirmedMsg')}</Text>
                 </View>
+                <TouchableOpacity
+                    style={[styles.cancelButton, { backgroundColor: '#FFE5E5', flex: 0.6 }]}
+                    onPress={() => handleCancelAppointment(appointment.id)}
+                >
+                    <Text style={[styles.cancelButtonText, { color: '#FF6B6B' }]}>{t('cancel')}</Text>
+                </TouchableOpacity>
             </View>
         );
 
@@ -460,32 +470,32 @@ const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
                 onNotificationPress={() => onNavigate('notifications')} />
 
             {/* ── Tabs ── */}
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}
-                style={styles.tabsScroll} contentContainerStyle={styles.tabsContent}>
-                {tabs.map(tab => (
-                    <TouchableOpacity key={tab.key}
-                        style={[
-                            styles.tab,
-                            activeTab === tab.key && styles.activeTab,
-                        ]}
-                        onPress={() => setActiveTab(tab.key)}
-                    >
-                        <Text style={[styles.tabText, { color: colors.subText },
-                            activeTab === tab.key && styles.activeTabText]}>
-                            {tab.label}
-                        </Text>
-                        {/* Badge compteur */}
-                        {appointments.filter(a => a.status === tab.key).length > 0 && (
-                            <View style={[styles.tabBadge,
-                                activeTab === tab.key && styles.tabBadgeActive]}>
-                                <Text style={styles.tabBadgeText}>
-                                    {appointments.filter(a => a.status === tab.key).length}
+            <View style={styles.tabsContainer}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.tabsContent}>
+                    {tabs.map(tab => {
+                        const isActive = activeTab === tab.key;
+                        const count = appointments.filter(a => a.status === tab.key).length;
+                        return (
+                            <TouchableOpacity key={tab.key}
+                                style={[styles.tab, isActive ? styles.activeTab : styles.inactiveTab]}
+                                onPress={() => setActiveTab(tab.key)}
+                            >
+                                <Text style={isActive ? styles.activeTabText : styles.inactiveTabText}>
+                                    {tab.label}
                                 </Text>
-                            </View>
-                        )}
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
+                                {count > 0 && (
+                                    <View style={[styles.tabBadge, isActive && styles.tabBadgeActive]}>
+                                        <Text style={[styles.tabBadgeText, isActive && styles.tabBadgeTextActive]}>
+                                            {count}
+                                        </Text>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        );
+                    })}
+                </ScrollView>
+            </View>
 
             <ScrollView showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 110 }}
@@ -520,18 +530,21 @@ const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
 
                             {/* ── Info date / heure / statut ── */}
                             <View style={[styles.appointmentInfo, { backgroundColor: colors.inputBackground }]}>
-                                <View style={styles.infoRow}>
-                                    <Ionicons name="calendar-outline" size={16} color={colors.subText} />
-                                    <Text style={[styles.infoText, { color: colors.subText }]}>{appointment.date}</Text>
+                                <View style={styles.infoLeft}>
+                                    <View style={styles.infoRow}>
+                                        <Ionicons name="calendar-outline" size={16} color={colors.subText} />
+                                        <Text style={[styles.infoText, { color: colors.subText }]}>{appointment.date}</Text>
+                                    </View>
+                                    <View style={styles.infoRow}>
+                                        <Ionicons name="time-outline" size={16} color={colors.subText} />
+                                        <Text style={[styles.infoText, { color: colors.subText }]}>{appointment.time}</Text>
+                                    </View>
                                 </View>
-                                <View style={styles.infoRow}>
-                                    <Ionicons name="time-outline" size={16} color={colors.subText} />
-                                    <Text style={[styles.infoText, { color: colors.subText }]}>{appointment.time}</Text>
-                                </View>
-                                <View style={styles.statusBadge}>
+                                <View style={[styles.statusBadge, { backgroundColor: getStatusBg(appointment.status) }]}>
                                     <Ionicons name={getStatusIcon(appointment.status)} size={14}
                                         color={getStatusColor(appointment.status)} />
-                                    <Text style={[styles.statusText, { color: getStatusColor(appointment.status) }]}>
+                                    <Text style={[styles.statusText, { color: getStatusColor(appointment.status) }]}
+                                        numberOfLines={1} ellipsizeMode="tail">
                                         {getStatusText(appointment.status)}
                                     </Text>
                                 </View>
@@ -681,22 +694,32 @@ const styles = StyleSheet.create({
     loadingText: { marginTop: 15, fontSize: 14 },
 
     // Tabs horizontaux (scrollables)
-    tabsScroll: { maxHeight: 55, backgroundColor: '#eff6ff', borderRadius: 25, marginHorizontal: 20, marginTop: 14 },
-    tabsContent: { paddingHorizontal: 10, paddingVertical: 10, gap: 6 },
+    tabsContainer: {
+        marginHorizontal: 16, marginTop: 14, borderRadius: 25,
+        backgroundColor: '#eff6ff', overflow: 'hidden',
+    },
+    tabsContent: {
+        flexDirection: 'row', paddingHorizontal: 8, paddingVertical: 6, gap: 6,
+    },
     tab: {
-        flexDirection: 'row', alignItems: 'center', gap: 6,
-        paddingVertical: 8, paddingHorizontal: 14,
-        borderRadius: 20, minWidth: 80,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+        paddingVertical: 7, paddingHorizontal: 14,
+        borderRadius: 20, minWidth: 80, height: 34,
     },
+    inactiveTab: { backgroundColor: '#e8edf5' },
     activeTab: { backgroundColor: '#1a56db' },
-    tabText: { fontSize: 12, fontWeight: '500' },
-    activeTabText: { color: '#fff', fontWeight: '600' },
+    inactiveTabText: { color: '#374151', fontSize: 13, fontWeight: '600' },
+    activeTabText: { color: '#fff', fontSize: 13, fontWeight: '700' },
     tabBadge: {
-        backgroundColor: '#ccc', borderRadius: 10,
-        minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4,
+        marginLeft: 6,
+        backgroundColor: '#6b7280', borderRadius: 10,
+        minWidth: 20, height: 20,
+        paddingHorizontal: 5,
+        alignItems: 'center', justifyContent: 'center',
     },
-    tabBadgeActive: { backgroundColor: 'rgba(255,255,255,0.3)' },
-    tabBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+    tabBadgeActive: { backgroundColor: '#fff' },
+    tabBadgeText: { fontSize: 11, fontWeight: '700', color: '#fff' },
+    tabBadgeTextActive: { color: '#1a56db' },
 
     appointmentsList: { paddingHorizontal: 20 },
     appointmentCard: {
@@ -724,12 +747,13 @@ const styles = StyleSheet.create({
     consultationTypeText: { fontSize: 13, fontWeight: '600' },
 
     appointmentInfo: {
-        flexDirection: 'row', justifyContent: 'space-between',
-        marginBottom: 12, paddingVertical: 10, borderRadius: 10, paddingHorizontal: 12,
+        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+        marginBottom: 12, paddingVertical: 10, borderRadius: 10, paddingHorizontal: 12, gap: 8,
     },
+    infoLeft: { flexDirection: 'row', gap: 10, flexShrink: 0 },
     infoRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
     infoText: { fontSize: 12 },
-    statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
+    statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3, flexShrink: 1 },
     statusText: { fontSize: 12, fontWeight: '600' },
 
     expandButton: {

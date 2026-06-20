@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   checkmark: { position: 'absolute', top: 10, right: 10 },
   descriptionContainer: { marginBottom: 20 },
   label: { fontSize: 17, fontWeight: '700', marginBottom: 10, color: '#374151' },
-  textArea: { borderRadius: 14, padding: 15, fontSize: 14, minHeight: 100, borderWidth: 1.5, borderColor: '#e5e7eb', backgroundColor: 'rgba(255,255,255,0.88)', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  textArea: { borderRadius: 14, padding: 15, fontSize: 14, minHeight: 100, borderWidth: 1.5, borderColor: '#e5e7eb', backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   characterCount: { fontSize: 12, textAlign: 'right', marginTop: 5 },
   footer: { padding: 20, paddingBottom: 30, borderTopWidth: 1 },
   nextButton: { backgroundColor: '#1a3fad', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: 14, gap: 8, shadowColor: '#1a56db', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 5 },

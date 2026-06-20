@@ -13,6 +13,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -68,7 +69,6 @@ const PaymentMethodScreen = ({
     {
       id:          'tmoney',
       name:        'Mix By Yas (TOGOCOM)',
-      icon:        'phone-portrait' as const,
       color:       '#FF6B00',
       hint:        'Numéros Togocom : 90, 91, 92, 70, 71…',
       placeholder: '90 00 00 00',
@@ -76,7 +76,6 @@ const PaymentMethodScreen = ({
     {
       id:          'flooz',
       name:        'Flooz (MOOV)',
-      icon:        'phone-portrait' as const,
       color:       '#0066CC',
       hint:        'Numéros Moov : 93, 96, 97, 98…',
       placeholder: '96 00 00 00',
@@ -293,7 +292,11 @@ const PaymentMethodScreen = ({
               >
                 <View style={styles.methodLeft}>
                   <View style={[styles.methodIcon, { backgroundColor: method.color + '18' }]}>
-                    <Ionicons name={method.icon} size={26} color={method.color} />
+                    {method.id === 'tmoney' ? (
+                      <Image source={require('../../assets/yas.png')} style={styles.methodLogo} />
+                    ) : (
+                      <Image source={require('../../assets/flooz.png')} style={styles.methodLogo} />
+                    )}
                   </View>
                   <View>
                     <Text style={[styles.methodName, { color: colors.text }]}>{method.name}</Text>
@@ -355,7 +358,11 @@ const PaymentMethodScreen = ({
             <View style={[styles.handle, { backgroundColor: colors.border }]} />
 
             <View style={[styles.networkBadge, { backgroundColor: (selectedMethodData?.color ?? '#1a56db') + '15' }]}>
-              <Ionicons name="phone-portrait" size={30} color={selectedMethodData?.color ?? '#1a56db'} />
+              {selectedMethod === 'tmoney' ? (
+                <Image source={require('../../assets/yas.png')} style={styles.modalLogo} />
+              ) : (
+                <Image source={require('../../assets/flooz.png')} style={styles.modalLogo} />
+              )}
             </View>
 
             <Text style={[styles.modalTitle, { color: colors.text }]}>
@@ -372,7 +379,7 @@ const PaymentMethodScreen = ({
                 borderColor: paymentPhone.length > 0
                   ? (isPhoneValid() ? '#2ecc71' : '#e63946')
                   : colors.border,
-                backgroundColor: 'rgba(255,255,255,0.88)',
+                backgroundColor: '#fff',
               },
             ]}>
               <Text style={[styles.prefix, { color: colors.subText }]}>+228</Text>
@@ -555,6 +562,7 @@ const styles = StyleSheet.create({
   methodCardActive: { borderColor: '#1a56db', backgroundColor: '#eff6ff' },
   methodLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   methodIcon: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
+  methodLogo: { width: 36, height: 36, borderRadius: 18, resizeMode: 'contain' },
   methodName: { fontSize: 14, fontWeight: '600', marginBottom: 2 },
   methodHint: { fontSize: 11 },
 
@@ -580,6 +588,7 @@ const styles = StyleSheet.create({
   modalSheet:   { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40, alignItems: 'center' },
   handle:       { width: 40, height: 4, borderRadius: 2, marginBottom: 20 },
   networkBadge: { width: 64, height: 64, borderRadius: 32, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  modalLogo:   { width: 44, height: 44, borderRadius: 22, resizeMode: 'contain' },
   modalTitle:   { fontSize: 18, fontWeight: '700', marginBottom: 8, textAlign: 'center' },
   modalSubtitle:{ fontSize: 13, textAlign: 'center', lineHeight: 20, marginBottom: 20, paddingHorizontal: 8 },
 

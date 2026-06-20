@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   stepLineCompleted: { width: 40, height: 2, backgroundColor: '#1a56db', marginHorizontal: 5 },
   infoCard: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 15, borderRadius: 16, marginBottom: 20, borderWidth: 1, borderColor: '#1a56db', backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   infoText: { fontSize: 14, fontWeight: '600', color: '#374151' },
-  searchBar: { flexDirection: 'row', alignItems: 'center', borderRadius: 14, paddingHorizontal: 15, paddingVertical: 12, marginBottom: 20, borderWidth: 1.5, borderColor: '#e5e7eb', backgroundColor: 'rgba(255,255,255,0.88)', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', borderRadius: 14, paddingHorizontal: 15, paddingVertical: 12, marginBottom: 20, borderWidth: 1.5, borderColor: '#e5e7eb', backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
   searchInput: { flex: 1, marginLeft: 10, fontSize: 14 },
   centerContainer: { padding: 40, alignItems: 'center' },
   centerText: { fontSize: 14, textAlign: 'center', marginTop: 12 },

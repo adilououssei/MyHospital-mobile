@@ -107,7 +107,7 @@ const handleDoctorPress = (doctor: Docteur) => {
                 <View style={styles.content}>
 
                     {/* Barre de recherche */}
-                    <View style={[styles.searchBar, { backgroundColor: colors.inputBackground, borderColor: colors.subText }]}>
+                    <View style={[styles.searchBar, { borderColor: colors.subText }]}>
                         <Ionicons name="search-outline" size={20} color={colors.subText} />
                         <TextInput
                             style={[styles.searchInput, { color: colors.text }]}

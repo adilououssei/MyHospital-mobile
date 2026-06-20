@@ -233,107 +233,109 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
         <QuickAccessSection onNavigate={onNavigate} colors={colors} />
 
         {/* ── Médecins recommandés ─────────────────────────────────────────── */}
-        <View style={styles.sectionHeader}>
-          <View>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Médecins recommandés</Text>
-          </View>
-          <TouchableOpacity
-            style={styles.seeAllBtn}
-            onPress={() => onNavigate('doctorsDirectory')}
-          >
-            <Text style={styles.seeAllText}>Voir tout</Text>
-            <Ionicons name="chevron-forward" size={14} color="#1a56db" />
-          </TouchableOpacity>
-        </View>
-
-        {loadingDocs ? (
-          <View style={styles.loaderBox}>
-            <ActivityIndicator size="small" color="#1a56db" />
-          </View>
-        ) : errorDocs ? (
-          <View style={styles.errorBox}>
-            <Text style={{ color: colors.subText, fontSize: 13, textAlign: 'center' }}>{errorDocs}</Text>
-            <TouchableOpacity onPress={loadTopDoctors} style={styles.retryBtn}>
-              <Text style={styles.retryText}>{t('retryButton')}</Text>
+        <View style={styles.sectionWrapper}>
+          <View style={styles.sectionHeader}>
+            <View>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>Médecins recommandés</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.seeAllBtn}
+              onPress={() => onNavigate('doctorsDirectory')}
+            >
+              <Text style={styles.seeAllText}>Voir tout</Text>
+              <Ionicons name="chevron-forward" size={14} color="#1a56db" />
             </TouchableOpacity>
           </View>
-        ) : (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.doctorsList}
-          >
-            {topDoctors.map(doctor => {
-              const photoUrl = doctor.photo ? `${API_BASE_URL}${doctor.photo}` : null;
-              const specialty = getDoctorSpecialty(doctor);
-              const docParams = {
-                doctor: {
-                  id: doctor.id,
-                  name: doctor.nomComplet,
-                  specialty,
-                  rating: doctor.note || 4.5,
-                  note: doctor.note || 0,
-                  nombreAvis: doctor.nombreAvis || 0,
-                  ville: doctor.ville,
-                  photo: doctor.photo,
-                  telephone: doctor.telephone,
-                  email: doctor.email,
-                  adresse: doctor.adresse,
-                  tarifs: doctor.tarifs,
-                },
-              };
 
-              return (
-                <TouchableOpacity
-                  key={doctor.id}
-                  style={[styles.docCard, { backgroundColor: colors.card }]}
-                  onPress={() => onNavigate('doctorProfile', docParams)}
-                  activeOpacity={0.85}
-                >
-                  {/* Photo + badge disponibilité */}
-                  <View style={styles.docAvatarWrap}>
-                    {photoUrl
-                      ? <Image source={{ uri: photoUrl }} style={styles.docAvatar} />
-                      : (
-                        <View style={styles.docAvatarFallback}>
-                          <FontAwesome5 name="user-md" size={30} color="#1a56db" />
-                        </View>
-                      )
-                    }
-                    <View style={styles.docOnlineDot} />
-                  </View>
+          {loadingDocs ? (
+            <View style={styles.loaderBox}>
+              <ActivityIndicator size="small" color="#1a56db" />
+            </View>
+          ) : errorDocs ? (
+            <View style={styles.errorBox}>
+              <Text style={{ color: colors.subText, fontSize: 13, textAlign: 'center' }}>{errorDocs}</Text>
+              <TouchableOpacity onPress={loadTopDoctors} style={styles.retryBtn}>
+                <Text style={styles.retryText}>{t('retryButton')}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.doctorsList}
+            >
+              {topDoctors.map(doctor => {
+                const photoUrl = doctor.photo ? `${API_BASE_URL}${doctor.photo}` : null;
+                const specialty = getDoctorSpecialty(doctor);
+                const docParams = {
+                  doctor: {
+                    id: doctor.id,
+                    name: doctor.nomComplet,
+                    specialty,
+                    rating: doctor.note || 4.5,
+                    note: doctor.note || 0,
+                    nombreAvis: doctor.nombreAvis || 0,
+                    ville: doctor.ville,
+                    photo: doctor.photo,
+                    telephone: doctor.telephone,
+                    email: doctor.email,
+                    adresse: doctor.adresse,
+                    tarifs: doctor.tarifs,
+                  },
+                };
 
-                  {/* Infos */}
-                  <Text style={[styles.docName, { color: colors.text }]} numberOfLines={2}>
-                    {doctor.nomComplet}
-                  </Text>
-                  <Text style={[styles.docSpecialty, { color: colors.subText }]} numberOfLines={1}>
-                    {specialty}
-                  </Text>
-
-                  {/* Note */}
-                  <StarRating note={doctor.note || 0} nombreAvis={doctor.nombreAvis} size={10} showValue showAvisCount />
-
-                  {/* Distance/ville */}
-                  <View style={styles.docMetaRow}>
-                    <Ionicons name="location-outline" size={11} color="#1a56db" />
-                    <Text style={[styles.docCity, { color: colors.subText }]} numberOfLines={1}>
-                      {doctor.ville || 'Non précisé'}
-                    </Text>
-                  </View>
-
-                  {/* CTA */}
+                return (
                   <TouchableOpacity
-                    style={styles.docCta}
+                    key={doctor.id}
+                    style={[styles.docCard, { backgroundColor: colors.card }]}
                     onPress={() => onNavigate('doctorProfile', docParams)}
+                    activeOpacity={0.85}
                   >
-                    <Text style={styles.docCtaText}>Prendre RDV</Text>
+                    {/* Photo + badge disponibilité */}
+                    <View style={styles.docAvatarWrap}>
+                      {photoUrl
+                        ? <Image source={{ uri: photoUrl }} style={styles.docAvatar} />
+                        : (
+                          <View style={styles.docAvatarFallback}>
+                            <FontAwesome5 name="user-md" size={30} color="#1a56db" />
+                          </View>
+                        )
+                      }
+                      <View style={styles.docOnlineDot} />
+                    </View>
+
+                    {/* Infos */}
+                    <Text style={[styles.docName, { color: colors.text }]} numberOfLines={2}>
+                      {doctor.nomComplet}
+                    </Text>
+                    <Text style={[styles.docSpecialty, { color: colors.subText }]} numberOfLines={1}>
+                      {specialty}
+                    </Text>
+
+                    {/* Note */}
+                    <StarRating note={doctor.note || 0} nombreAvis={doctor.nombreAvis} size={10} showValue showAvisCount />
+
+                    {/* Distance/ville */}
+                    <View style={styles.docMetaRow}>
+                      <Ionicons name="location-outline" size={11} color="#1a56db" />
+                      <Text style={[styles.docCity, { color: colors.subText }]} numberOfLines={1}>
+                        {doctor.ville || 'Non précisé'}
+                      </Text>
+                    </View>
+
+                    {/* CTA */}
+                    <TouchableOpacity
+                      style={styles.docCta}
+                      onPress={() => onNavigate('doctorProfile', docParams)}
+                    >
+                      <Text style={styles.docCtaText}>Prendre RDV</Text>
+                    </TouchableOpacity>
                   </TouchableOpacity>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        )}
+                );
+              })}
+            </ScrollView>
+          )}
+        </View>
 
         {/* ── Bannière Gérer RDV ───────────────────────────────────────────── */}
         <ManageAppointmentsBanner onNavigate={onNavigate} colors={colors} />
@@ -499,6 +501,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   qaLabel: { fontSize: 12, fontWeight: '600', textAlign: 'center' },
+
+  // Section wrapper
+  sectionWrapper: { marginBottom: 24 },
 
   // Section header
   sectionHeader: {

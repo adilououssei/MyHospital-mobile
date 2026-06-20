@@ -1,10 +1,10 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
-  FlatList, KeyboardAvoidingView, Keyboard,
+  FlatList, Keyboard,
   Animated, Image, StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp, useAuth } from '../context/AppContext';
 import apiClient from '../services/api.config';
@@ -150,18 +150,19 @@ const SuggestionsGrid = ({ onSelect }: { onSelect: (text: string) => void }) => 
 const ChatbotScreen = ({ onNavigate }: Props) => {
   const { colors, t } = useApp();
   const { user }      = useAuth();
+  const insets = useSafeAreaInsets();
 
   const [messages, setMessages]               = useState<Message[]>([]);
   const [inputText, setInputText]             = useState('');
   const [isLoading, setIsLoading]             = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [showDisclaimer, setShowDisclaimer]   = useState(true);
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight]   = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
-    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
-    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    const show = Keyboard.addListener('keyboardDidShow', e => setKeyboardHeight(e.endCoordinates.height));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardHeight(0));
     return () => { show.remove(); hide.remove(); };
   }, []);
 
@@ -261,49 +262,40 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
       )}
 
       {/* ── Corps : messages + saisie ──────────────────────────────── */}
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior="padding"
-        keyboardVerticalOffset={0}
-      >
-        <View style={{ flex: 1, paddingBottom: keyboardVisible ? 0 : 110 }}>
-          {/* Liste des messages */}
-          <FlatList
-            ref={flatListRef}
-            data={messages}
-            keyExtractor={item => item.id}
-            renderItem={renderItem}
-            style={{ flex: 1 }}
-            contentContainerStyle={styles.messagesList}
-            showsVerticalScrollIndicator={false}
-            onContentSizeChange={scrollToBottom}
-            ListHeaderComponent={<WelcomeCard userName={userName} />}
-            ListFooterComponent={showSuggestions ? <SuggestionsGrid onSelect={sendMessage} /> : null}
-          />
+      <View style={{ flex: 1, paddingBottom: keyboardHeight > 0 ? keyboardHeight + 12 : 0 }}>
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={item => item.id}
+          renderItem={renderItem}
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.messagesList}
+          showsVerticalScrollIndicator={false}
+          onContentSizeChange={scrollToBottom}
+          ListHeaderComponent={<WelcomeCard userName={userName} />}
+          ListFooterComponent={showSuggestions ? <SuggestionsGrid onSelect={sendMessage} /> : null}
+        />
 
-          {/* ── Zone de saisie ────────────────────────────────────────── */}
-          <View style={styles.inputBar}>
-            <TextInput
-              style={styles.textInput}
-              placeholder="Écrivez votre message..."
-              placeholderTextColor="#9ca3af"
-              value={inputText}
-              onChangeText={setInputText}
-              onFocus={() => setKeyboardVisible(true)}
-              multiline
-              maxLength={500}
-              editable={!isLoading}
-            />
-            <TouchableOpacity
-              style={[styles.sendBtn, (!inputText.trim() || isLoading) && styles.sendBtnOff]}
-              onPress={() => sendMessage(inputText)}
-              disabled={!inputText.trim() || isLoading}
-            >
-              <Ionicons name={isLoading ? 'hourglass-outline' : 'send'} size={20} color="#fff" />
-            </TouchableOpacity>
-          </View>
+        <View style={[styles.inputBar, { paddingBottom: Math.max(insets.bottom, 14) }]}>
+          <TextInput
+            style={styles.textInput}
+            placeholder="Écrivez votre message..."
+            placeholderTextColor="#9ca3af"
+            value={inputText}
+            onChangeText={setInputText}
+            multiline
+            maxLength={500}
+            editable={!isLoading}
+          />
+          <TouchableOpacity
+            style={[styles.sendBtn, (!inputText.trim() || isLoading) && styles.sendBtnOff]}
+            onPress={() => sendMessage(inputText)}
+            disabled={!inputText.trim() || isLoading}
+          >
+            <Ionicons name={isLoading ? 'hourglass-outline' : 'send'} size={20} color="#fff" />
+          </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
+      </View>
 
     </SafeAreaView>
   );

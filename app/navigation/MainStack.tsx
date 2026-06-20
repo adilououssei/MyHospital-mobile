@@ -31,6 +31,8 @@ import DoctorsDirectoryScreen from '../components/DoctorsDirectoryScreen';
 
 const Stack = createNativeStackNavigator();
 
+const TAB_SCREENS = ['home', 'chatbot', 'appointments', 'profile'];
+
 const PROTECTED_SCREENS = [
   'appointments', 'profile', 'bookingType', 'paymentMethod',
   'notifications', 'favorites', 'editProfile', 'changePassword',
@@ -42,6 +44,10 @@ function createProtectedNavigate(navigation: any, isAuthenticated: boolean) {
   return (screen: string, params?: any) => {
     if (!isAuthenticated && PROTECTED_SCREENS.includes(screen)) {
       navigation.navigate('login', { returnTo: screen, ...params });
+      return;
+    }
+    if (TAB_SCREENS.includes(screen)) {
+      navigation.navigate('mainTabs', { screen, params });
       return;
     }
     navigation.navigate(screen, params);
