@@ -274,7 +274,7 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
                   style={[styles.primaryBtn, (!isStep1Valid() || isLoading) && styles.primaryBtnDisabled]}
                   onPress={handleNext} disabled={isLoading}
                 >
-                  <Text style={styles.primaryBtnText}>{t('signupNext')}</Text>
+                  <Text style={styles.primaryBtnText}>{t('signupContinue')}</Text>
                   <Ionicons name="arrow-forward" size={18} color="#fff" />
                 </TouchableOpacity>
               </>
@@ -448,21 +448,21 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
               <TouchableOpacity onPress={() => setShowDatePicker(false)}><Ionicons name="close" size={24} color="#374151" /></TouchableOpacity>
             </View>
             <View style={styles.datePickers}>
-              <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+              <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingVertical: 4 }} showsVerticalScrollIndicator={false}>
                 {days.map(d => (
                   <TouchableOpacity key={d} style={[styles.dateItem, selDay === d && styles.dateItemActive]} onPress={() => setSelDay(d)}>
                     <Text style={[styles.dateItemText, selDay === d && styles.dateItemTextActive]}>{d}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
-              <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+              <ScrollView style={{ flex: 2 }} contentContainerStyle={{ paddingVertical: 4 }} showsVerticalScrollIndicator={false}>
                 {months.map(m => (
                   <TouchableOpacity key={m} style={[styles.dateItem, selMonth === m && styles.dateItemActive]} onPress={() => setSelMonth(m)}>
                     <Text style={[styles.dateItemText, selMonth === m && styles.dateItemTextActive]}>{t(monthKeys[m-1])}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
-              <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+              <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingVertical: 4 }} showsVerticalScrollIndicator={false}>
                 {years.map(y => (
                   <TouchableOpacity key={y} style={[styles.dateItem, selYear === y && styles.dateItemActive]} onPress={() => setSelYear(y)}>
                     <Text style={[styles.dateItemText, selYear === y && styles.dateItemTextActive]}>{y}</Text>
@@ -545,7 +545,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     borderWidth: 1.5, borderColor: '#e5e7eb', borderRadius: 14,
     paddingHorizontal: 16, paddingVertical: 14, marginBottom: 14,
-    backgroundColor: 'rgba(255,255,255,0.88)',
+    backgroundColor: '#fff',
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
   dividerLine:{ flex: 1, height: 1, backgroundColor: '#d1d5db' },
   dividerText:{ marginHorizontal: 14, fontSize: 13, color: '#9ca3af', fontWeight: '500' },
 
-  socialBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, borderWidth: 1.5, borderColor: '#e5e7eb', borderRadius: 14, paddingVertical: 14, marginBottom: 20, backgroundColor: 'rgba(255,255,255,0.88)', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3, elevation: 1 },
+  socialBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, borderWidth: 1.5, borderColor: '#e5e7eb', borderRadius: 14, paddingVertical: 14, marginBottom: 20, backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3, elevation: 1 },
   socialBtnText:{ fontSize: 15, fontWeight: '600', color: '#111827' },
 
   switchRow: { flexDirection: 'row', justifyContent: 'center', marginBottom: 10 },
@@ -598,15 +598,15 @@ const styles = StyleSheet.create({
   countryName: { flex: 1, fontSize: 15, color: '#111827' },
   countryCode: { fontSize: 14, fontWeight: '600', color: '#1a56db' },
 
-  datePickers:      { flexDirection: 'row', height: 220, paddingHorizontal: 10, marginBottom: 16 },
-  dateItem:         { paddingVertical: 11, alignItems: 'center', borderRadius: 10 },
+  datePickers:      { flexDirection: 'row', height: 220, paddingHorizontal: 10, marginBottom: 16, gap: 8 },
+  dateItem:         { paddingVertical: 12, alignItems: 'center', borderRadius: 10, marginVertical: 2 },
   dateItemActive:   { backgroundColor: '#1a3fad' },
   dateItemText:     { fontSize: 15, color: '#374151' },
   dateItemTextActive:{ color: '#fff', fontWeight: '700' },
 
-  bloodGrid:    { flexDirection: 'row', flexWrap: 'wrap', padding: 20, gap: 14 },
-  bloodItem:    { width: '22%', aspectRatio: 1, backgroundColor: '#fef2f2', borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
-  bloodItemText:{ fontSize: 15, fontWeight: '700', color: '#111827', marginTop: 4 },
+  bloodGrid:    { flexDirection: 'row', flexWrap: 'wrap', padding: 20, gap: 12 },
+  bloodItem:    { width: '22%', aspectRatio: 1, backgroundColor: '#fef2f2', borderRadius: 14, borderWidth: 1.5, borderColor: '#fecaca', justifyContent: 'center', alignItems: 'center' },
+  bloodItemText:{ fontSize: 15, fontWeight: '700', color: '#dc2626', marginTop: 4 },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 28 },
   modalCard:    { backgroundColor: '#fff', borderRadius: 24, padding: 32, width: '100%', alignItems: 'center' },

@@ -7,7 +7,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp, useAuth } from '../context/AppContext';
-import BottomNavigation from '../tabs/BottomNavigation';
 import apiClient from '../services/api.config';
 
 interface Message {
@@ -267,7 +266,7 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
         behavior="padding"
         keyboardVerticalOffset={0}
       >
-        <View style={{ flex: 1, paddingBottom: keyboardVisible ? 0 : 65 }}>
+        <View style={{ flex: 1, paddingBottom: keyboardVisible ? 0 : 110 }}>
           {/* Liste des messages */}
           <FlatList
             ref={flatListRef}
@@ -305,9 +304,6 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
           </View>
         </View>
       </KeyboardAvoidingView>
-
-      {/* ── Navigation bas (absolute) ── */}
-      <BottomNavigation currentScreen="chatbot" onNavigate={onNavigate} />
 
     </SafeAreaView>
   );

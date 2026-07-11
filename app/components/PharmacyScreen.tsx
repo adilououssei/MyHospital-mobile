@@ -7,7 +7,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useApp } from '../context/AppContext';
-import BottomNavigation from '../tabs/BottomNavigation';
 import ScreenHeader from '../tabs/ScreenHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -516,7 +515,6 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
           Chargement des pharmacies de garde...
         </Text>
       </View>
-      <BottomNavigation currentScreen="pharmacy" onNavigate={onNavigate} />
     </SafeAreaView>
   );
 
@@ -532,7 +530,6 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
           <Text style={styles.retryButtonText}>Réessayer</Text>
         </TouchableOpacity>
       </View>
-      <BottomNavigation currentScreen="pharmacy" onNavigate={onNavigate} />
     </SafeAreaView>
   );
 
@@ -728,7 +725,6 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      <BottomNavigation currentScreen="pharmacy" onNavigate={onNavigate} />
     </SafeAreaView>
   );
 };

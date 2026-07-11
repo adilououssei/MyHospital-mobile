@@ -34,7 +34,6 @@ const BottomNavigation = ({ currentScreen, onNavigate }: BottomNavigationProps) 
     <View style={[styles.bottomNav, {
       backgroundColor: '#fff',
       borderTopColor: '#e5e7eb',
-      paddingBottom: 10,
     }]}>
       {navItems.map((item) => {
         const isActive = currentScreen === item.screen;
@@ -47,7 +46,7 @@ const BottomNavigation = ({ currentScreen, onNavigate }: BottomNavigationProps) 
             <View style={styles.iconWrapper}>
               <Ionicons
                 name={isActive ? item.icon as any : item.iconOutline as any}
-                size={24}
+                size={26}
                 color={isActive ? '#1a56db' : '#6b7280'}
               />
               {item.screen === 'home' && unreadCount > 0 && (
@@ -75,7 +74,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingTop: 8,
+    paddingTop: 10,
+    paddingBottom: 50,
     borderTopWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
@@ -85,7 +85,9 @@ const styles = StyleSheet.create({
   },
   navItem: {
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 3,
+    paddingVertical: 4,
     paddingHorizontal: 12,
   },
   iconWrapper: {
@@ -111,8 +113,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   label: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '500',
+    marginTop: 1,
   },
 });
 

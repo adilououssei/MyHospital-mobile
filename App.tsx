@@ -1,65 +1,23 @@
-// App.tsx - Version corrigée (sans DoctorBookingScreen)
-
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { useState, useEffect, useCallback } from 'react';
-import { BackHandler, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SplashScreen from 'expo-splash-screen';
-import { AppProvider, useApp, useAuth } from './app/context/AppContext';
+import { NavigationContainer } from '@react-navigation/native';
+import { AppProvider, useAuth } from './app/context/AppContext';
 import { NotificationProvider } from './app/context/NotificationContext';
 import apiClient from './app/services/api.config';
 import { secureStorage } from './app/services/secureStorage';
 import CustomSplashScreen from './app/components/SplashScreen';
-import WelcomeScreen from './app/components/WelcomeScreen';
-import LoginScreen from './app/components/LoginScreen';
-import SignUpScreen from './app/components/SignUpScreen';
-import ForgotPasswordScreen from './app/components/ForgotPasswordScreen';
-import VerificationCodeScreen from './app/components/VerificationCodeScreen';
-import CreateNewPasswordScreen from './app/components/CreateNewPasswordScreen';
-import HomeScreen from './app/components/HomeScreen';
-import ProfileScreen from './app/components/ProfileScreen';
-import PharmacyScreen from './app/components/PharmacyScreen';
-import HospitalScreen from './app/components/HospitalScreen';
-import AppointmentsScreen from './app/components/AppointmentsScreen';
-import BookingTypeScreen from './app/components/BookingTypeScreen';
-import DoctorsListScreen from './app/components/DoctorsListScreen';
-import DoctorDetailScreen from './app/components/DoctorDetailScreen';
-import PaymentMethodScreen from './app/components/PaymentMethodScreen';
-import NotificationsScreen from './app/components/NotificationsScreen';
-import NotificationDetailScreen from './app/components/NotificationDetailScreen';
-import FavoritesScreen from './app/components/FavoritesScreen';
-import LanguageScreen from './app/components/LanguageScreen';
-import ThemeScreen from './app/components/ThemeScreen';
-import SavedPaymentMethodsScreen from './app/components/SavedPaymentMethodsScreen';
-import FAQsScreen from './app/components/FAQsScreen';
-import EmergencyScreen from './app/components/EmergencyScreen';
-import HealthInfoScreen from './app/components/HealthInfoScreen';
-import SettingsScreen from './app/components/SettingsScreen';
-import EditProfileScreen from './app/components/EditProfileScreen';
-import PrivacySecurityScreen from './app/components/PrivacySecurityScreen';
-import ChangePasswordScreen from './app/components/ChangePasswordScreen';
-import TermsScreen from './app/components/TermsScreen';
-import PrivacyPolicyScreen from './app/components/PrivacyPolicyScreen';
-import RateAppScreen from './app/components/RateAppScreen';
-import TransactionHistoryScreen from './app/components/TransactionHistoryScreen';
-import PrescriptionsScreen from './app/components/PrescriptionsScreen';
-import ChatbotScreen from './app/components/ChatbotScreen';
-import VideoCallScreen from './app/components/VideoCallScreen';
-import DoctorsDirectoryScreen from './app/components/DoctorsDirectoryScreen';
-import DoctorProfileScreen from './app/components/DoctorProfileScreen';
+import RootNavigator from './app/navigation/RootNavigator';
 
 SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
-  const { language } = useApp();
   const { login: authLogin, logout: authLogout, isAuthenticated } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [appIsReady, setAppIsReady] = useState(false);
-
-  const [currentScreen, setCurrentScreen] = useState('home');
-  const [screenParams, setScreenParams] = useState<any>({});
-  const [navigationHistory, setNavigationHistory] = useState<string[]>(['home']);
 
   useEffect(() => {
     async function prepare() {
@@ -77,13 +35,10 @@ function AppContent() {
         }
         apiClient.setOnSessionExpired(async () => {
           await authLogout();
-          setCurrentScreen('login');
-          setNavigationHistory(['login']);
-          setScreenParams({});
         });
         await new Promise(resolve => setTimeout(resolve, 200));
       } catch (e) {
-        console.error('❌ Erreur initialisation:', e);
+        console.error('Erreur initialisation:', e);
       } finally {
         setAppIsReady(true);
       }
@@ -91,196 +46,28 @@ function AppContent() {
     prepare();
   }, []);
 
-  const onLayoutRootView = useCallback(async () => {
-    if (appIsReady) await SplashScreen.hideAsync();
-  }, [appIsReady]);
-
-  const PROTECTED_SCREENS = [
-    'appointments', 'profile', 'bookingType', 'paymentMethod',
-    'notifications', 'favorites', 'editProfile', 'changePassword',
-    'prescriptions', 'savedPaymentMethods', 'transactionHistory',
-    'doctorProfile', 'pharmacy', 'hospital',
-  ];
-
-  const handleNavigation = (screen: string, params?: any) => {
-    if (!isAuthenticated && PROTECTED_SCREENS.includes(screen)) {
-      setCurrentScreen('login');
-      setNavigationHistory(prev => [...prev, 'login']);
-      setScreenParams({ returnTo: screen, ...params });
-      return;
-    }
-    setCurrentScreen(screen);
-    setNavigationHistory(prev => [...prev, screen]);
-    if (params) setScreenParams(params);
-  };
-
-  const handleBack = () => {
-    if (navigationHistory.length > 1) {
-      const newHistory = [...navigationHistory];
-      newHistory.pop();
-      setNavigationHistory(newHistory);
-      setCurrentScreen(newHistory[newHistory.length - 1]);
-      if (screenParams) setScreenParams({});
-      return true;
-    }
-    return false;
-  };
-
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBack);
-    return () => backHandler.remove();
-  }, [navigationHistory]);
-
-  const getStatusBarStyle = () => currentScreen === 'profile' ? 'light' : 'dark';
+    if (appIsReady) {
+      SplashScreen.hideAsync();
+    }
+  }, [appIsReady]);
 
   if (!appIsReady) return null;
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      <View style={{ flex: 1 }}>
         <CustomSplashScreen onFinish={() => setIsLoading(false)} />
       </View>
     );
   }
 
-  const renderScreen = () => {
-    switch (currentScreen) {
-      case 'welcome':
-        return <WelcomeScreen onNavigate={handleNavigation} />;
-      case 'login':
-        return (
-          <LoginScreen
-            onNavigate={handleNavigation}
-            returnTo={screenParams.returnTo}
-            forwardParams={screenParams}
-          />
-        );
-      case 'signup':
-        return <SignUpScreen onNavigate={handleNavigation} />;
-      case 'forgotPassword':
-        return <ForgotPasswordScreen onNavigate={handleNavigation} />;
-      case 'verification':
-        return (
-          <VerificationCodeScreen
-            onNavigate={handleNavigation}
-            contact={screenParams.contact || ''}
-            type={screenParams.type || 'email'}
-          />
-        );
-      case 'createNewPassword':
-        return <CreateNewPasswordScreen onNavigate={handleNavigation} />;
-      case 'home':
-        return <HomeScreen onNavigate={handleNavigation} />;
-      case 'chatbot':
-        return <ChatbotScreen onNavigate={handleNavigation} />;
-      case 'profile':
-        return <ProfileScreen key={language} onNavigate={handleNavigation} />;
-      case 'pharmacy':
-        return <PharmacyScreen onNavigate={handleNavigation} />;
-      case 'hospital':
-        return <HospitalScreen onNavigate={handleNavigation} />;
-      case 'appointments':
-        return <AppointmentsScreen onNavigate={handleNavigation} />;
-      case 'bookingType':
-        return <BookingTypeScreen onNavigate={handleNavigation} />;
-      case 'doctorsList':
-        return (
-          <DoctorsListScreen
-            onNavigate={handleNavigation}
-            consultationType={screenParams.consultationType}
-            description={screenParams.description}
-          />
-        );
-      case 'doctorDetail':
-        return (
-          <DoctorDetailScreen
-            onNavigate={handleNavigation}
-            doctor={screenParams.doctor}
-            consultationType={screenParams.consultationType}
-            description={screenParams.description}
-          />
-        );
-      case 'videoCall':
-        return (
-          <VideoCallScreen
-            onNavigate={handleNavigation}
-            jitsiUrl={screenParams.jitsiUrl}
-            doctorName={screenParams.doctorName}
-            patientName={screenParams.patientName}
-          />
-        );
-      case 'paymentMethod':
-        return (
-          <PaymentMethodScreen
-            onNavigate={handleNavigation}
-            doctor={screenParams.doctor}
-            consultationType={screenParams.consultationType}
-            description={screenParams.description}
-            date={screenParams.date}
-            time={screenParams.time}
-            consultationPrice={screenParams.consultationPrice}
-            confirmationFee={screenParams.confirmationFee}
-          />
-        );
-      case 'notifications':
-        return <NotificationsScreen onNavigate={handleNavigation} />;
-      case 'notificationDetail':
-        return (
-          <NotificationDetailScreen
-            onNavigate={handleNavigation}
-            notification={screenParams.notification}
-          />
-        );
-      case 'doctorProfile':
-        return (
-          <DoctorProfileScreen
-            onNavigate={handleNavigation}
-            doctor={screenParams.doctor}
-          />
-        );
-      case 'favorites':
-        return <FavoritesScreen onNavigate={handleNavigation} />;
-      case 'language':
-        return <LanguageScreen onNavigate={handleNavigation} />;
-      case 'theme':
-        return <ThemeScreen onNavigate={handleNavigation} />;
-      case 'savedPaymentMethods':
-        return <SavedPaymentMethodsScreen onNavigate={handleNavigation} />;
-      case 'faqs':
-        return <FAQsScreen onNavigate={handleNavigation} />;
-      case 'emergency':
-        return <EmergencyScreen onNavigate={handleNavigation} />;
-      case 'healthInfo':
-        return <HealthInfoScreen onNavigate={handleNavigation} />;
-      case 'editProfile':
-        return <EditProfileScreen onNavigate={handleNavigation} />;
-      case 'settings':
-        return <SettingsScreen onNavigate={handleNavigation} />;
-      case 'privacySecurity':
-        return <PrivacySecurityScreen onNavigate={handleNavigation} />;
-      case 'changePassword':
-        return <ChangePasswordScreen onNavigate={handleNavigation} />;
-      case 'terms':
-        return <TermsScreen onNavigate={handleNavigation} />;
-      case 'privacyPolicy':
-        return <PrivacyPolicyScreen onNavigate={handleNavigation} />;
-      case 'rateApp':
-        return <RateAppScreen onNavigate={handleNavigation} />;
-      case 'transactionHistory':
-        return <TransactionHistoryScreen onNavigate={handleNavigation} />;
-      case 'prescriptions':
-        return <PrescriptionsScreen onNavigate={handleNavigation} />;
-      case 'doctorsDirectory':
-        return <DoctorsDirectoryScreen onNavigate={handleNavigation} />;
-      default:
-        return <WelcomeScreen onNavigate={handleNavigation} />;
-    }
-  };
-
   return (
-    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-      <StatusBar style={getStatusBarStyle()} />
-      {renderScreen()}
+    <View style={{ flex: 1 }}>
+      <StatusBar style="dark" />
+      <NavigationContainer>
+        <RootNavigator />
+      </NavigationContainer>
     </View>
   );
 }

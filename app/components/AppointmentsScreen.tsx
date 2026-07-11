@@ -12,7 +12,6 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { useApp, useAuth } from '../context/AppContext';
 import { useNotifications } from '../context/NotificationContext';
 import ScreenHeader from '../tabs/ScreenHeader';
-import BottomNavigation from '../tabs/BottomNavigation';
 import rendezVousService from '../services/rendezvous.service';
 import evaluationService from '../services/evaluation.service';
 import EvaluationDocteurModal from './EvaluationDocteurModal';
@@ -105,7 +104,8 @@ const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
                 docteurConsultationLocation: rdv.docteurConsultationLocation ?? null,
             }));
             setAppointments(mapped);
-        } catch {
+        } catch (error: any) {
+            console.error('❌ loadAppointments error:', error?.response?.data || error.message);
             Alert.alert(t('error'), t('aptErrLoad'));
         } finally {
             setLoading(false);
@@ -450,7 +450,6 @@ const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
                     <ActivityIndicator size="large" color="#1a56db" />
                     <Text style={[styles.loadingText, { color: colors.subText }]}>{t('aptLoading')}</Text>
                 </View>
-                <BottomNavigation currentScreen="appointments" onNavigate={onNavigate} />
             </SafeAreaView>
         );
     }
@@ -489,6 +488,7 @@ const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
             </ScrollView>
 
             <ScrollView showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 110 }}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#1a56db']} tintColor="#1a56db" />}>
                 <View style={styles.appointmentsList}>
                     {filteredAppointments.length > 0 ? filteredAppointments.map(appointment => (
@@ -650,7 +650,6 @@ const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
                         </View>
                     )}
                 </View>
-                <View style={{ height: 80 }} />
             </ScrollView>
 
             {/* ── FAB Nouveau RDV ── */}
@@ -672,7 +671,6 @@ const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
                     }}
                 />
             )}
-            <BottomNavigation currentScreen="appointments" onNavigate={onNavigate} />
         </SafeAreaView>
     );
 };
@@ -819,7 +817,7 @@ const styles = StyleSheet.create({
     emptyStateText: { fontSize: 16, marginTop: 15, color: '#111827' },
 
     fab: {
-        position: 'absolute', bottom: 100, right: 20,
+        position: 'absolute', bottom: 130, right: 20,
         width: 60, height: 60, borderRadius: 30, backgroundColor: '#1a56db',
         justifyContent: 'center', alignItems: 'center',
         shadowColor: '#1a56db', shadowOffset: { width: 0, height: 4 },

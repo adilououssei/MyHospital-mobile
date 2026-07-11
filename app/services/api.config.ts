@@ -3,6 +3,7 @@
 
 export const API_BASE_URL = 'http://192.168.1.71:8000';
 
+
 // ─────────────────────────────────────────────────────────────
 // 📋 TOUS LES ENDPOINTS DE L'APPLICATION
 // ─────────────────────────────────────────────────────────────
@@ -92,12 +93,18 @@ class ApiClient {
   }
 
   private buildUrl(url: string, params?: Record<string, any>): string {
-    const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
-    if (!params) return fullUrl;
+    let fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
+    if (!params) {
+      // Ajoute un cache buster pour éviter les réponses mises en cache par LiteSpeed
+      fullUrl += `${fullUrl.includes('?') ? '&' : '?'}_=${Date.now()}`;
+      return fullUrl;
+    }
     const queryString = Object.entries(params)
       .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
       .join('&');
-    return queryString ? `${fullUrl}?${queryString}` : fullUrl;
+    const result = queryString ? `${fullUrl}?${queryString}` : fullUrl;
+    // Ajoute le cache buster
+    return `${result}${result.includes('?') ? '&' : '?'}_=${Date.now()}`;
   }
 
   private async makeRequest<T = any>(
@@ -124,6 +131,7 @@ class ApiClient {
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
+      console.log(`📡 API ${method} ${fullUrl}`);
       const response = await fetch(fullUrl, {
         method,
         headers: mergedHeaders,
@@ -131,6 +139,7 @@ class ApiClient {
         signal: controller.signal,
       });
 
+      console.log(`📡 API response ${response.status} for ${fullUrl}`);
       clearTimeout(timeoutId);
 
       let responseData;
@@ -148,9 +157,15 @@ class ApiClient {
           }
         }
 
-        const errorMessage = responseData?.message || responseData?.error || response.statusText;
+        // Sanitize non-JSON error responses (e.g. HTML 404 pages)
+        let safeErrorData = responseData;
+        if (typeof responseData === 'string' && responseData.trim().startsWith('<!')) {
+          safeErrorData = { message: `Serveur a retourné ${response.status} (erreur inattendue)` };
+        }
+
+        const errorMessage = safeErrorData?.message || safeErrorData?.error || response.statusText;
         throw {
-          response: { data: responseData, status: response.status, statusText: response.statusText },
+          response: { data: safeErrorData, status: response.status, statusText: response.statusText },
           message: errorMessage,
           config,
         };
