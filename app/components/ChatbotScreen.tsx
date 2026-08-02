@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TextInput, TouchableOpacity,
   FlatList, KeyboardAvoidingView, Keyboard,
-  Animated, Image, StatusBar,
+  Animated, Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -217,7 +217,8 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
     <SafeAreaView style={styles.container} edges={['left', 'right']}>
 
       {/* ── Header ───────────────────────────────────────────────── */}
-      <View style={[styles.header, { paddingTop: (StatusBar.currentHeight ?? 24) + 10 }]}>
+      <SafeAreaView edges={['top']} style={styles.headerSafeArea}>
+      <View style={styles.header}>
         <TouchableOpacity style={styles.headerBack} onPress={() => onNavigate('home')}>
           <Ionicons name="arrow-back" size={22} color="#374151" />
         </TouchableOpacity>
@@ -244,6 +245,7 @@ const ChatbotScreen = ({ onNavigate }: Props) => {
           <Ionicons name="refresh-outline" size={22} color="#6b7280" />
         </TouchableOpacity>
       </View>
+      </SafeAreaView>
 
       {/* ── Disclaimer ───────────────────────────────────────────── */}
       {showDisclaimer && (
@@ -314,9 +316,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f0f4f8' },
 
   // Header
+  headerSafeArea: {
+    backgroundColor: '#fff',
+  },
   header: {
     flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 16, paddingBottom: 12,
+    paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12,
     backgroundColor: '#fff',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06, shadowRadius: 6, elevation: 4,

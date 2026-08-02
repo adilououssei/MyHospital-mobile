@@ -38,10 +38,20 @@ const PROTECTED_SCREENS = [
   'doctorProfile', 'pharmacy', 'hospital',
 ];
 
+// Écrans imbriqués dans le tab navigator "mainTabs" — inatteignables par un
+// navigate() direct depuis un écran frère de MainStack (ex: pharmacy → home).
+// React Navigation ne "descend" pas automatiquement dans les navigateurs
+// enfants d'un frère ; il faut cibler explicitement le parent + l'écran.
+const TAB_SCREENS = ['home', 'chatbot', 'appointments', 'profile'];
+
 function createProtectedNavigate(navigation: any, isAuthenticated: boolean) {
   return (screen: string, params?: any) => {
     if (!isAuthenticated && PROTECTED_SCREENS.includes(screen)) {
       navigation.navigate('login', { returnTo: screen, ...params });
+      return;
+    }
+    if (TAB_SCREENS.includes(screen)) {
+      navigation.navigate('mainTabs', { screen, params });
       return;
     }
     navigation.navigate(screen, params);
@@ -69,8 +79,11 @@ export default function MainStack() {
         )}
       </Stack.Screen>
       <Stack.Screen name="bookingType">
-        {({ navigation }: any) => (
-          <BookingTypeScreen onNavigate={createProtectedNavigate(navigation, isAuthenticated)} />
+        {({ navigation, route }: any) => (
+          <BookingTypeScreen
+            onNavigate={createProtectedNavigate(navigation, isAuthenticated)}
+            doctor={route.params?.doctor}
+          />
         )}
       </Stack.Screen>
       <Stack.Screen name="doctorsList">
@@ -218,8 +231,11 @@ export default function MainStack() {
         )}
       </Stack.Screen>
       <Stack.Screen name="doctorsDirectory">
-        {({ navigation }: any) => (
-          <DoctorsDirectoryScreen onNavigate={createProtectedNavigate(navigation, isAuthenticated)} />
+        {({ navigation, route }: any) => (
+          <DoctorsDirectoryScreen
+            onNavigate={createProtectedNavigate(navigation, isAuthenticated)}
+            initialQuery={route.params?.initialQuery}
+          />
         )}
       </Stack.Screen>
     </Stack.Navigator>

@@ -12,9 +12,10 @@ import ScreenHeader from '../tabs/ScreenHeader';
 
 interface BookingTypeScreenProps {
   onNavigate: (screen: string, params?: any) => void;
+  doctor?: any;
 }
 
-const BookingTypeScreen = ({ onNavigate }: BookingTypeScreenProps) => {
+const BookingTypeScreen = ({ onNavigate, doctor }: BookingTypeScreenProps) => {
   const { colors, t } = useApp();
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [description, setDescription] = useState('');
@@ -30,12 +31,18 @@ const BookingTypeScreen = ({ onNavigate }: BookingTypeScreenProps) => {
       alert(t('bkValidationMsg'));
       return;
     }
-    onNavigate('doctorsList', { consultationType: selectedType, description });
+    if (doctor) {
+      // Médecin déjà choisi (carte "Prendre RDV" depuis l'accueil) : on saute
+      // l'étape de sélection du médecin et on va droit à ses disponibilités.
+      onNavigate('doctorDetail', { doctor, consultationType: selectedType, description });
+    } else {
+      onNavigate('doctorsList', { consultationType: selectedType, description });
+    }
   };
 
   return (
     <SafeAreaView edges={['bottom', 'left', 'right']} style={styles.container}>
-      <ScreenHeader title={t('bkTitle')} onBack={() => onNavigate('appointments')} />
+      <ScreenHeader title={t('bkTitle')} onBack={() => onNavigate(doctor ? 'home' : 'appointments')} />
 
       <KeyboardAvoidingView behavior="padding"
         style={styles.keyboardAvoidingView} keyboardVerticalOffset={0}>

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Image, Animated, StatusBar } from 'react-native';
+import { View, Text, StyleSheet, Image, Animated } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 
 interface SplashScreenProps {
   onFinish: () => void;
@@ -48,7 +49,7 @@ const SplashScreen = ({ onFinish }: SplashScreenProps) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar style="light" backgroundColor="#1a56db" />
       <View style={styles.content}>
         {/* Anneau d'ondulation */}
         <Animated.View

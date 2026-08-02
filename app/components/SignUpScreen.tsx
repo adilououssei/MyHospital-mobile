@@ -390,18 +390,6 @@ const SignUpScreen = ({ onNavigate }: SignUpScreenProps) => {
               </>
             )}
 
-            {/* ── Divider + Google ──────────────────────────────── */}
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>{t('loginOr')}</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            <TouchableOpacity style={styles.socialBtn} disabled={isLoading} activeOpacity={0.8}>
-              <Ionicons name="logo-google" size={22} color="#DB4437" />
-              <Text style={styles.socialBtnText}>{t('loginGoogle')}</Text>
-            </TouchableOpacity>
-
             <View style={styles.switchRow}>
               <Text style={styles.switchText}>{t('signupHaveAccount')} </Text>
               <TouchableOpacity onPress={() => onNavigate('login')} disabled={isLoading}>
@@ -577,13 +565,6 @@ const styles = StyleSheet.create({
   primaryBtn:        { backgroundColor: '#1a3fad', borderRadius: 14, paddingVertical: 16, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 20, shadowColor: '#1a56db', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.28, shadowRadius: 8, elevation: 5 },
   primaryBtnDisabled:{ backgroundColor: '#9ca3af', shadowOpacity: 0 },
   primaryBtnText:    { color: '#fff', fontSize: 16, fontWeight: '700' },
-
-  divider:    { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  dividerLine:{ flex: 1, height: 1, backgroundColor: '#d1d5db' },
-  dividerText:{ marginHorizontal: 14, fontSize: 13, color: '#9ca3af', fontWeight: '500' },
-
-  socialBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, borderWidth: 1.5, borderColor: '#e5e7eb', borderRadius: 14, paddingVertical: 14, marginBottom: 20, backgroundColor: '#fff', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3, elevation: 1 },
-  socialBtnText:{ fontSize: 15, fontWeight: '600', color: '#111827' },
 
   switchRow: { flexDirection: 'row', justifyContent: 'center', marginBottom: 10 },
   switchText:{ fontSize: 14, color: '#6b7280' },

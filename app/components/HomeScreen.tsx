@@ -161,7 +161,7 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
     <SafeAreaView style={[styles.container, { backgroundColor: '#f0f4f8' }]} edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 90 }]}
+        contentContainerStyle={styles.scrollContent}
       >
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <View style={styles.header}>
@@ -213,8 +213,13 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
             placeholderTextColor="#9ca3af"
             value={searchQuery}
             onChangeText={setSearchQuery}
+            onSubmitEditing={() => onNavigate('doctorsDirectory', { initialQuery: searchQuery })}
+            returnKeyType="search"
           />
-          <TouchableOpacity style={styles.filterBtn}>
+          <TouchableOpacity
+            style={styles.filterBtn}
+            onPress={() => onNavigate('doctorsDirectory', { initialQuery: searchQuery })}
+          >
             <Ionicons name="options-outline" size={20} color="#6b7280" />
           </TouchableOpacity>
         </View>
@@ -325,7 +330,7 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
                   {/* CTA */}
                   <TouchableOpacity
                     style={styles.docCta}
-                    onPress={() => onNavigate('doctorProfile', docParams)}
+                    onPress={() => onNavigate('bookingType', docParams)}
                   >
                     <Text style={styles.docCtaText}>Prendre RDV</Text>
                   </TouchableOpacity>

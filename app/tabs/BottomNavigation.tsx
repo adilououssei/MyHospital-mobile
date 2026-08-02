@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AppContext';
-import { useNotifications } from '../context/NotificationContext';
 
 interface BottomNavigationProps {
   currentScreen: string;
@@ -19,7 +18,6 @@ const navItems = [
 ];
 
 const BottomNavigation = ({ currentScreen, onNavigate }: BottomNavigationProps) => {
-  const { unreadCount } = useNotifications();
   const { isAuthenticated } = useAuth();
 
   const handleNav = (screen: string) => {
@@ -49,13 +47,6 @@ const BottomNavigation = ({ currentScreen, onNavigate }: BottomNavigationProps) 
                 size={26}
                 color={isActive ? '#1a56db' : '#6b7280'}
               />
-              {item.screen === 'home' && unreadCount > 0 && (
-                <View style={styles.navBadge}>
-                  <Text style={styles.navBadgeText}>
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </Text>
-                </View>
-              )}
             </View>
             <Text style={[styles.label, { color: isActive ? '#1a56db' : '#6b7280' }]}>
               {item.label}
@@ -92,25 +83,6 @@ const styles = StyleSheet.create({
   },
   iconWrapper: {
     position: 'relative',
-  },
-  navBadge: {
-    position: 'absolute',
-    top: -6,
-    right: -10,
-    backgroundColor: '#FF6B6B',
-    borderRadius: 9,
-    minWidth: 18,
-    height: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  navBadgeText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: 'bold',
   },
   label: {
     fontSize: 11,

@@ -39,7 +39,7 @@ export interface NotificationListResponse {
 }
 
 export interface UnreadCountResponse {
-  count: number;
+  unreadCount: number;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -142,7 +142,7 @@ export async function getUnreadCount(userId: number): Promise<number> {
       NOTIFICATION_ENDPOINTS.UNREAD_COUNT(userId),
       { timeout: 5000 }
     );
-    return response.data.count ?? 0;
+    return response.data.unreadCount ?? 0;
   } catch {
     return 0;
   }

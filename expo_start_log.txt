@@ -1,0 +1,6 @@
+env: load .env.local
+env: export REACT_NATIVE_PACKAGER_HOSTNAME
+Starting project at F:\ReactNative\MyHospital-mobile
+Starting Metro Bundler
+Waiting on http://localhost:8081
+Logs for your project will appear below.

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -10,7 +10,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as LocalAuthentication from 'expo-local-authentication';
 import { useApp } from '../context/AppContext';
+import { BIOMETRIC_LOCK_KEY } from '../constants/security';
 
 interface PrivacySecurityScreenProps {
     onNavigate: (screen: string) => void;
@@ -25,6 +28,36 @@ const PrivacySecurityScreen = ({ onNavigate }: PrivacySecurityScreenProps) => {
     const [shareHealthData, setShareHealthData] = useState(false);
     const [locationTracking, setLocationTracking] = useState(true);
 
+    useEffect(() => {
+        AsyncStorage.getItem(BIOMETRIC_LOCK_KEY).then(v => setFaceId(v === 'true'));
+    }, []);
+
+    const handleToggleFaceId = async (value: boolean) => {
+        if (!value) {
+            setFaceId(false);
+            await AsyncStorage.setItem(BIOMETRIC_LOCK_KEY, 'false');
+            return;
+        }
+
+        const hasHardware = await LocalAuthentication.hasHardwareAsync();
+        const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+        if (!hasHardware || !isEnrolled) {
+            Alert.alert(
+                'Non disponible',
+                "Aucune empreinte digitale ou Face ID n'est configuré sur cet appareil. Ajoutez-en un dans les réglages de votre téléphone pour activer cette option."
+            );
+            return;
+        }
+
+        const result = await LocalAuthentication.authenticateAsync({
+            promptMessage: 'Confirmez votre identité',
+        });
+        if (result.success) {
+            setFaceId(true);
+            await AsyncStorage.setItem(BIOMETRIC_LOCK_KEY, 'true');
+        }
+    };
+
     const handleDeleteAccount = () => {
         Alert.alert(
             'Supprimer le compte',
@@ -36,7 +69,6 @@ const PrivacySecurityScreen = ({ onNavigate }: PrivacySecurityScreenProps) => {
                     style: 'destructive',
                     onPress: () => {
                         Alert.alert('Compte supprimé', 'Votre compte a été supprimé avec succès');
-                        onNavigate('welcome');
                     },
                 },
             ]
@@ -150,7 +182,7 @@ const PrivacySecurityScreen = ({ onNavigate }: PrivacySecurityScreenProps) => {
                         title="Authentification biométrique"
                         subtitle="Utiliser Face ID ou empreinte digitale"
                         value={faceId}
-                        onValueChange={setFaceId}
+                        onValueChange={handleToggleFaceId}
                     />
                 </SettingsSection>
 

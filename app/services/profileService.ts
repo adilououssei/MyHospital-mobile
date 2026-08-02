@@ -12,6 +12,7 @@ export const PROFILE_ENDPOINTS = {
   UPLOAD_PHOTO:  (patientId: number) => `/api/profile/upload-photo/${patientId}`,
   HEALTH_STATS:  (patientId: number) => `/api/profile/health-stats/${patientId}`,
   DELETE:        (patientId: number) => `/api/profile/delete/${patientId}`,
+  CHANGE_PASSWORD: (patientId: number) => `/api/profile/change-password/${patientId}`,
 };
 
 // ─────────────────────────────────────────────────────────────
@@ -133,6 +134,22 @@ export async function uploadProfilePhoto(
   const data = await response.json();
   if (!data.success) throw new Error(data.error || 'Erreur upload photo');
   return data;
+}
+
+export async function changePassword(
+  patientId: number,
+  currentPassword: string,
+  newPassword: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await apiClient.post<{ success: boolean; message?: string }>(
+      PROFILE_ENDPOINTS.CHANGE_PASSWORD(patientId),
+      { currentPassword, newPassword }
+    );
+    return { success: response.data.success };
+  } catch (error: any) {
+    return { success: false, error: error?.response?.data?.error ?? 'Erreur lors du changement de mot de passe' };
+  }
 }
 
 export async function getHealthStats(patientId: number): Promise<HealthStats> {

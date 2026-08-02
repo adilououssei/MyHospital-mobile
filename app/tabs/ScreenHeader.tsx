@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { useNotifications } from '../context/NotificationContext';
@@ -27,52 +28,57 @@ const ScreenHeader = ({
   const { unreadCount: ctxCount } = useNotifications();
   const unreadCount = explicitCount ?? ctxCount;
   return (
-    <View style={[styles.header, {
-      backgroundColor: '#fff',
-      borderBottomColor: '#f3f4f6',
-      paddingTop: (StatusBar.currentHeight ?? 24) + 15,
-    }]}>
-      {/* Left Button (Back or Empty) */}
-      {onBack ? (
-        <TouchableOpacity style={styles.button} onPress={onBack}>
-          <Ionicons name="arrow-back" size={24} color="#374151" />
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.placeholder} />
-      )}
+    <SafeAreaView edges={['top']} style={styles.safeArea}>
+      <View style={[styles.header, {
+        backgroundColor: '#fff',
+        borderBottomColor: '#f3f4f6',
+      }]}>
+        {/* Left Button (Back or Empty) */}
+        {onBack ? (
+          <TouchableOpacity style={styles.button} onPress={onBack}>
+            <Ionicons name="arrow-back" size={24} color="#374151" />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.placeholder} />
+        )}
 
-      {/* Title */}
-      <Text style={[styles.title, { color: '#111827' }]}>{title}</Text>
+        {/* Title */}
+        <Text style={[styles.title, { color: '#111827' }]}>{title}</Text>
 
-      {/* Right Button (Notification, Custom Icon, or Empty) */}
-      {showNotification ? (
-        <TouchableOpacity style={styles.button} onPress={onNotificationPress}>
-          <Ionicons name="notifications-outline" size={24} color="#374151" />
-          {unreadCount > 0 && (
-            <View style={styles.notificationBadge}>
-              <Text style={styles.notificationBadgeText}>
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      ) : rightIcon ? (
-        <TouchableOpacity style={styles.button} onPress={onRightPress}>
-          <Ionicons name={rightIcon as any} size={24} color="#374151" />
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.placeholder} />
-      )}
-    </View>
+        {/* Right Button (Notification, Custom Icon, or Empty) */}
+        {showNotification ? (
+          <TouchableOpacity style={styles.button} onPress={onNotificationPress}>
+            <Ionicons name="notifications-outline" size={24} color="#374151" />
+            {unreadCount > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        ) : rightIcon ? (
+          <TouchableOpacity style={styles.button} onPress={onRightPress}>
+            <Ionicons name={rightIcon as any} size={24} color="#374151" />
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.placeholder} />
+        )}
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    backgroundColor: '#fff',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
+    paddingTop: 15,
     paddingBottom: 15,
     borderBottomWidth: 1,
   },

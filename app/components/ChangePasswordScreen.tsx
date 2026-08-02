@@ -1,13 +1,14 @@
 // app/components/ChangePasswordScreen.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, TextInput,
-    Alert, KeyboardAvoidingView, ScrollView,
+    Alert, KeyboardAvoidingView, ScrollView, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useApp } from '../context/AppContext';
+import { useApp, useAuth } from '../context/AppContext';
+import { getProfileByUserId, changePassword } from '../services/profileService';
 
 interface ChangePasswordScreenProps {
     onNavigate: (screen: string) => void;
@@ -15,12 +16,20 @@ interface ChangePasswordScreenProps {
 
 const ChangePasswordScreen = ({ onNavigate }: ChangePasswordScreenProps) => {
     const { colors, t } = useApp();
+    const { user } = useAuth();
+    const [patientId, setPatientId]                      = useState<number | null>(null);
+    const [saving, setSaving]                             = useState(false);
     const [currentPassword, setCurrentPassword]         = useState('');
     const [newPassword, setNewPassword]                 = useState('');
     const [confirmPassword, setConfirmPassword]         = useState('');
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword]         = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    useEffect(() => {
+        if (!user?.id) return;
+        getProfileByUserId(user.id).then(p => setPatientId(p.id)).catch(() => {});
+    }, [user?.id]);
 
     const getPasswordStrength = (password: string) => {
         if (password.length === 0) return { strength: 0, label: '', color: '' };
@@ -31,13 +40,23 @@ const ChangePasswordScreen = ({ onNavigate }: ChangePasswordScreenProps) => {
 
     const passwordStrength = getPasswordStrength(newPassword);
 
-    const handleChangePassword = () => {
+    const handleChangePassword = async () => {
         if (!currentPassword) { Alert.alert(t('error'), t('cpErrCurrent')); return; }
         if (!newPassword)     { Alert.alert(t('error'), t('cpErrNew'));     return; }
         if (newPassword.length < 8) { Alert.alert(t('error'), t('cpErrLen')); return; }
         if (newPassword !== confirmPassword) { Alert.alert(t('error'), t('cpNoMatch')); return; }
         if (currentPassword === newPassword) { Alert.alert(t('error'), t('cpErrSame')); return; }
-        Alert.alert(t('success'), t('cpSuccess'), [{ text: 'OK', onPress: () => onNavigate('settings') }]);
+        if (!patientId) { Alert.alert(t('error'), t('epErrLoad')); return; }
+
+        setSaving(true);
+        const result = await changePassword(patientId, currentPassword, newPassword);
+        setSaving(false);
+
+        if (result.success) {
+            Alert.alert(t('success'), t('cpSuccess'), [{ text: 'OK', onPress: () => onNavigate('settings') }]);
+        } else {
+            Alert.alert(t('error'), result.error ?? t('epErrSave'));
+        }
     };
 
     return (
@@ -127,8 +146,8 @@ const ChangePasswordScreen = ({ onNavigate }: ChangePasswordScreenProps) => {
                             ) : null}
                         </View>
 
-                        <TouchableOpacity style={styles.saveButton} onPress={handleChangePassword}>
-                            <Text style={styles.saveButtonText}>{t('cpSave')}</Text>
+                        <TouchableOpacity style={[styles.saveButton, saving && { opacity: 0.7 }]} onPress={handleChangePassword} disabled={saving}>
+                            {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveButtonText}>{t('cpSave')}</Text>}
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.cancelButton, { borderColor: colors.border }]} onPress={() => onNavigate('privacySecurity')}>
                             <Text style={[styles.cancelButtonText, { color: colors.text }]}>{t('cancel')}</Text>

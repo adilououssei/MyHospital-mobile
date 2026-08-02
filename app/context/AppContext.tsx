@@ -318,7 +318,6 @@ const translations = {
     loginNoAccount: 'Vous n\'avez pas de compte ? ',
     loginSignup: 'Inscription',
     loginOr: 'OU',
-    loginGoogle: 'Se connecter avec Google',
     loginApple: 'Se connecter avec Apple',
     loginFacebook: 'Se connecter avec Facebook',
     loginErrEmail: 'Email invalide',
@@ -546,7 +545,7 @@ const translations = {
     loginTitle: 'Login', loginWelcome: 'Welcome back!', loginSubtitle: 'Sign in to access your account',
     loginEmailPlaceholder: 'Enter your email', loginPasswordPlaceholder: 'Enter your password',
     loginForgotPassword: 'Forgot password?', loginBtn: 'Sign in', loginNoAccount: 'Don\'t have an account? ',
-    loginSignup: 'Sign up', loginOr: 'OR', loginGoogle: 'Sign in with Google', loginApple: 'Sign in with Apple',
+    loginSignup: 'Sign up', loginOr: 'OR', loginApple: 'Sign in with Apple',
     loginFacebook: 'Sign in with Facebook', loginErrEmail: 'Invalid email', loginErrPassword: 'Password too short',
     loginErrServer: 'Server connection error', loginSuccessTitle: 'Welcome back!',
     loginSuccessDesc1: 'You have successfully signed in', loginSuccessDesc2: 'to the MyHospital app',
@@ -752,7 +751,7 @@ const translations = {
     loginTitle: 'Anmeldung', loginWelcome: 'Willkommen zurück!', loginSubtitle: 'Melden Sie sich an, um auf Ihr Konto zuzugreifen',
     loginEmailPlaceholder: 'Geben Sie Ihre E-Mail ein', loginPasswordPlaceholder: 'Geben Sie Ihr Passwort ein',
     loginForgotPassword: 'Passwort vergessen?', loginBtn: 'Anmelden', loginNoAccount: 'Noch kein Konto? ',
-    loginSignup: 'Registrieren', loginOr: 'ODER', loginGoogle: 'Mit Google anmelden', loginApple: 'Mit Apple anmelden',
+    loginSignup: 'Registrieren', loginOr: 'ODER', loginApple: 'Mit Apple anmelden',
     loginFacebook: 'Mit Facebook anmelden', loginErrEmail: 'Ungültige E-Mail', loginErrPassword: 'Passwort zu kurz',
     loginErrServer: 'Server-Verbindungsfehler', loginSuccessTitle: 'Willkommen zurück!',
     loginSuccessDesc1: 'Sie haben sich erfolgreich angemeldet', loginSuccessDesc2: 'bei der MyHospital-App',
@@ -970,7 +969,10 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   };
 
-  const updateUser = (userData: User) => setUser(userData);
+  const updateUser = (userData: User) => {
+    setUser(userData);
+    AsyncStorage.setItem('user', JSON.stringify(userData));
+  };
 
   const toggleTheme = () => {
     const newDark = !isDarkMode;
