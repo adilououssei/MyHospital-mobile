@@ -45,14 +45,18 @@ export default function AuthStack() {
         {({ navigation, route }: any) => (
           <VerificationCodeScreen
             onNavigate={createOnNavigate(navigation)}
-            contact={route.params?.contact || ''}
+            contact={route.params?.email || route.params?.contact || ''}
             type={route.params?.type || 'email'}
           />
         )}
       </Stack.Screen>
       <Stack.Screen name="createNewPassword">
-        {({ navigation }: any) => (
-          <CreateNewPasswordScreen onNavigate={createOnNavigate(navigation)} />
+        {({ navigation, route }: any) => (
+          <CreateNewPasswordScreen
+            onNavigate={createOnNavigate(navigation)}
+            token={route.params?.token || ''}
+            email={route.params?.email || ''}
+          />
         )}
       </Stack.Screen>
     </Stack.Navigator>

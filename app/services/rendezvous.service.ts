@@ -34,8 +34,10 @@ export interface CreateRendezVousResponse {
 }
 
 export interface RendezVous {
-  jitsiRoom: null;
-  jitsiUrl:  null;
+  jitsiRoom: string | null;
+  jitsiUrl:  string | null;
+  peutRejoindre?: boolean;      // ✅ fenêtre d'accès 24h ouverte
+  accessDeadline?: string | null;
   id:                number;
   docteurId:         number;
   docteurNom:        string;
