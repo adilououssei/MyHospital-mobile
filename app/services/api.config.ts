@@ -3,6 +3,11 @@
 
 export const API_BASE_URL = 'http://192.168.1.70:8000';
 
+// Domaine du serveur Jitsi. En prod, mettre ici votre Jitsi auto-hébergé
+// (ex: 'visio.mondomaine.com') — DOIT correspondre à JITSI_DOMAIN du backend.
+// 'meet.jit.si' = serveur public (limité, coupe après quelques minutes).
+export const JITSI_DOMAIN = 'meet.jit.si';
+
 
 // ─────────────────────────────────────────────────────────────
 // 📋 TOUS LES ENDPOINTS DE L'APPLICATION

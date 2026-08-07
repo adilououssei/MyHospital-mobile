@@ -11,6 +11,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import WebView, { WebViewNavigation } from 'react-native-webview';
+import { JITSI_DOMAIN } from '../services/api.config';
 
 interface VideoCallScreenProps {
     onNavigate: (screen: string) => void;
@@ -37,8 +38,8 @@ const VideoCallScreen = ({
     // ── URL Jitsi avec configuration ──────────────────────────────────────────
     const buildJitsiUrl = (): string => {
         if (!jitsiUrl) {
-            // URL de démo si aucune URL fournie
-            return 'https://meet.jit.si/myhospital-demo-' + Date.now();
+            // URL de démo si aucune URL fournie (utilise le domaine configuré)
+            return `https://${JITSI_DOMAIN}/myhospital-demo-` + Date.now();
         }
 
         // Ajouter config si l'URL ne contient pas déjà de #
