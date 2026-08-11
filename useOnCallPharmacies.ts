@@ -13,7 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // ─── Config ────────────────────────────────────────────────────────────────────
 const API_BASE_URL = __DEV__
   ? 'http://127.0.0.1:8000'      // ← Remplace X.X par ton IP locale (ex: 192.168.1.12)
-  : 'https://ton-serveur.com';      // ← Remplace par ton URL de production
+  : 'https://myhospital.frenchcercle.com/';      // ← Remplace par ton URL de production
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 export interface Pharmacy {
