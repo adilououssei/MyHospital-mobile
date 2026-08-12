@@ -10,6 +10,15 @@ export const PHARMACY_ENDPOINTS = {
   REFRESH:         '/api/pharmacies/on-call/refresh',
 };
 
+/** Position du patient, utilisée par le backend pour calculer la distance routière réelle */
+export interface Coords { latitude: number; longitude: number; }
+
+function withCoords(url: string, coords?: Coords): string {
+  if (!coords) return url;
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}lat=${coords.latitude}&lon=${coords.longitude}`;
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface PharmacyHoraire {
@@ -40,6 +49,10 @@ export interface Pharmacy {
   horaires: PharmacyHoraire[];
   gardeFrom: string | null;
   gardeTo: string | null;
+  // ← nouveau : distance routière réelle (OSRM), fournie par le backend quand lat/lon sont passés
+  distanceKm?: number | null;
+  durationMin?: number | null;
+  distanceReal?: boolean;
 }
 
 export interface PharmacyApiResponse {
@@ -52,25 +65,26 @@ export interface PharmacyApiResponse {
 
 // ─── Appels API ────────────────────────────────────────────────────────────────
 
-/** Pharmacies de garde (aujourd'hui) */
-export async function getOnCallPharmacies(): Promise<Pharmacy[]> {
-  const res = await apiClient.get<PharmacyApiResponse>(PHARMACY_ENDPOINTS.ON_CALL);
+/** Pharmacies de garde (aujourd'hui). Si `coords` est fourni, le backend renvoie
+ *  la liste triée par distance routière réelle (distanceKm/durationMin remplis). */
+export async function getOnCallPharmacies(coords?: Coords): Promise<Pharmacy[]> {
+  const res = await apiClient.get<PharmacyApiResponse>(withCoords(PHARMACY_ENDPOINTS.ON_CALL, coords));
   return res.data.data;
 }
 
 /** Pharmacies de garde pour une date précise */
-export async function getOnCallPharmaciesByDate(date: string): Promise<Pharmacy[]> {
-  const res = await apiClient.get<PharmacyApiResponse>(PHARMACY_ENDPOINTS.ON_CALL_BY_DATE(date));
+export async function getOnCallPharmaciesByDate(date: string, coords?: Coords): Promise<Pharmacy[]> {
+  const res = await apiClient.get<PharmacyApiResponse>(withCoords(PHARMACY_ENDPOINTS.ON_CALL_BY_DATE(date), coords));
   return res.data.data;
 }
 
 /** Toutes les pharmacies (+ liste des régions disponibles) */
-export async function getAllPharmacies(region?: string): Promise<{
+export async function getAllPharmacies(region?: string, coords?: Coords): Promise<{
   pharmacies: Pharmacy[];
   regions: string[];
 }> {
   const url = region ? PHARMACY_ENDPOINTS.ALL_BY_REGION(region) : PHARMACY_ENDPOINTS.ALL;
-  const res  = await apiClient.get<PharmacyApiResponse>(url);
+  const res  = await apiClient.get<PharmacyApiResponse>(withCoords(url, coords));
   return {
     pharmacies: res.data.data,
     regions:    res.data.regions ?? [],

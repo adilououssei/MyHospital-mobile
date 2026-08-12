@@ -118,7 +118,12 @@ const NotificationDetailScreen = ({ onNavigate, notification }: NotificationDeta
           {notification?.type === 'general' && (
             <View style={styles.actionsContainer}>
               <Text style={styles.actionsLabel}>{t('ndLearnMore')}</Text>
-              <TouchableOpacity style={styles.actionButton} onPress={() => onNavigate('home')}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => onNavigate(
+                  notification?.metadata?.action === 'view_ordonnance' ? 'prescriptions' : 'home'
+                )}
+              >
                 <Ionicons name="information-circle" size={20} color="#1a56db" />
                 <Text style={styles.actionButtonText}>{t('ndMoreInfo')}</Text>
                 <Ionicons name="chevron-forward" size={20} color="#9ca3af" />

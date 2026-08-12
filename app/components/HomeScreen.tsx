@@ -126,6 +126,106 @@ const ManageAppointmentsBanner = ({ onNavigate, colors }: { onNavigate: (s: stri
 const getDoctorSpecialty = (doctor: Docteur): string => docteurService.getSpecialite(doctor);
 
 // ─── Composant principal ──────────────────────────────────────────────────────
+// ── Rappel accueil : prochain rendez-vous confirmé imminent + compte à rebours ──
+// Autonome : récupère les RDV, choisit le plus proche dans les 24h, et se met à
+// jour chaque seconde. Disparaît tout seul quand le rendez-vous est passé (>30 min).
+const NextAppointmentReminder = ({
+  t, onNavigate,
+}: { t: (k: string) => string; onNavigate: (s: string, p?: any) => void }) => {
+  const [list, setList] = useState<any[]>([]);
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    let mounted = true;
+    rendezVousService.getMesRendezVous()
+      .then((r: any) => { if (mounted) setList(Array.isArray(r) ? r : []); })
+      .catch(() => {});
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Choisir le rendez-vous confirmé le plus proche dans la fenêtre [-30 min, +24 h]
+  let best: any = null;
+  let bestTarget = 0;
+  for (const rdv of list) {
+    if (rdv?.statut !== 'accepted') continue;
+    const tgt = new Date(rdv.dateRendezVous).getTime();
+    if (isNaN(tgt)) continue;
+    const diff = tgt - now;
+    if (diff > 24 * 3600 * 1000 || diff < -30 * 60 * 1000) continue;
+    if (!best || tgt < bestTarget) { best = rdv; bestTarget = tgt; }
+  }
+  if (!best) return null;
+
+  const diff = bestTarget - now;
+  const started = diff <= 0;
+  let timeStr = '';
+  if (!started) {
+    const totalSec = Math.floor(diff / 1000);
+    const h = Math.floor(totalSec / 3600);
+    const m = Math.floor((totalSec % 3600) / 60);
+    const s = totalSec % 60;
+    timeStr = h >= 1
+      ? `${h}h ${m.toString().padStart(2, '0')}min`
+      : `${m}min ${s.toString().padStart(2, '0')}s`;
+  }
+
+  const d = new Date(bestTarget);
+  const timeLabel = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+  const docName = `Dr. ${best.docteurPrenom ?? ''} ${best.docteurNom ?? ''}`.trim();
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.9}
+      onPress={() => onNavigate('appointments')}
+      style={[reminderStyles.banner, started && reminderStyles.bannerNow]}
+    >
+      <View style={reminderStyles.iconWrap}>
+        <Ionicons name={started ? 'videocam' : 'alarm-outline'} size={22} color="#fff" />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={reminderStyles.label}>{started ? t('aptStartingNow') : t('aptStartsIn')}</Text>
+        <Text style={reminderStyles.doc} numberOfLines={1}>{docName}</Text>
+        <Text style={reminderStyles.meta} numberOfLines={1}>
+          {timeLabel}{best.docteurSpecialite ? ` · ${best.docteurSpecialite}` : ''}
+        </Text>
+      </View>
+      {!started ? <Text style={reminderStyles.time}>{timeStr}</Text> : null}
+      <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.9)" />
+    </TouchableOpacity>
+  );
+};
+
+const reminderStyles = StyleSheet.create({
+  banner: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#1a3fad', borderRadius: 16,
+    paddingVertical: 14, paddingHorizontal: 16,
+    marginHorizontal: 20, marginBottom: 14,
+    shadowColor: '#1a3fad', shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25, shadowRadius: 12, elevation: 5,
+  },
+  bannerNow: { backgroundColor: '#198754', shadowColor: '#198754' },
+  iconWrap: {
+    width: 42, height: 42, borderRadius: 21,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  label: { color: 'rgba(255,255,255,0.9)', fontSize: 11.5, fontWeight: '600' },
+  doc: { color: '#fff', fontSize: 15, fontWeight: '800', marginTop: 1 },
+  meta: { color: 'rgba(255,255,255,0.85)', fontSize: 12, marginTop: 1 },
+  time: {
+    color: '#fff', fontSize: 14, fontWeight: '800',
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10,
+    fontVariant: ['tabular-nums'],
+  },
+});
+
 const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
   const { unreadCount } = useNotifications();
   const { colors, t, language, setLanguage } = useApp();
@@ -161,7 +261,7 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
     <SafeAreaView style={[styles.container, { backgroundColor: '#f0f4f8' }]} edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 90 }]}
+        contentContainerStyle={styles.scrollContent}
       >
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <View style={styles.header}>
@@ -204,6 +304,9 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
         </View>
         <Text style={styles.greetSub}>Comment puis-je vous aider aujourd'hui ?</Text>
 
+        {/* ── Rappel de rendez-vous imminent (compte à rebours) ───────────── */}
+        <NextAppointmentReminder t={t} onNavigate={onNavigate} />
+
         {/* ── Barre de recherche ──────────────────────────────────────────── */}
         <View style={[styles.searchBar, { backgroundColor: colors.card }]}>
           <Ionicons name="search-outline" size={20} color="#9ca3af" />
@@ -213,8 +316,13 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
             placeholderTextColor="#9ca3af"
             value={searchQuery}
             onChangeText={setSearchQuery}
+            onSubmitEditing={() => onNavigate('doctorsDirectory', { initialQuery: searchQuery })}
+            returnKeyType="search"
           />
-          <TouchableOpacity style={styles.filterBtn}>
+          <TouchableOpacity
+            style={styles.filterBtn}
+            onPress={() => onNavigate('doctorsDirectory', { initialQuery: searchQuery })}
+          >
             <Ionicons name="options-outline" size={20} color="#6b7280" />
           </TouchableOpacity>
         </View>
@@ -285,12 +393,7 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
                 };
 
                 return (
-                  <TouchableOpacity
-                    key={doctor.id}
-                    style={[styles.docCard, { backgroundColor: colors.card }]}
-                    onPress={() => onNavigate('doctorProfile', docParams)}
-                    activeOpacity={0.85}
-                  >
+                  <View key={doctor.id} style={[styles.docCard, { backgroundColor: colors.card }]}>
                     {/* Photo + badge disponibilité */}
                     <View style={styles.docAvatarWrap}>
                       {photoUrl
@@ -326,11 +429,12 @@ const HomeScreen = ({ onNavigate }: HomeScreenProps) => {
                     {/* CTA */}
                     <TouchableOpacity
                       style={styles.docCta}
-                      onPress={() => onNavigate('doctorProfile', docParams)}
+                      onPress={() => onNavigate('bookingType', docParams)}
+                      activeOpacity={0.85}
                     >
                       <Text style={styles.docCtaText}>Prendre RDV</Text>
                     </TouchableOpacity>
-                  </TouchableOpacity>
+                  </View>
                 );
               })}
             </ScrollView>

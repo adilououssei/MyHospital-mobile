@@ -37,15 +37,6 @@ interface PharmacyScreenProps {
 
 // ─── Utilitaires ──────────────────────────────────────────────────────────────
 
-function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R    = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a    = Math.sin(dLat / 2) ** 2
-    + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
 function formatDistance(km: number | null): string {
   if (km === null) return '';
   return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
@@ -331,15 +322,12 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
   // ── États de chargement séparés ─────────────────────────────────────────────
   const [loadingOnCall, setLoadingOnCall]       = useState(true);   // bloquant
   const [loadingAll, setLoadingAll]             = useState(false);  // silencieux
+  const [distanceLoading, setDistanceLoading]   = useState(false);  // recalcul des distances réelles
   const [error, setError]                       = useState<string | null>(null);
 
   // ── Localisation ────────────────────────────────────────────────────────────
   const [userLocation, setUserLocation]         = useState<UserLocation | null>(null);
   const [locationStatus, setLocationStatus]     = useState<'pending' | 'granted' | 'denied'>('pending');
-  const [geocodingProgress, setGeocodingProgress] = useState<'idle' | 'loading' | 'done'>('idle');
-  const [recalcKey, setRecalcKey] = useState(0);
-  const geocodedCache = useRef<Record<string, { latitude: number; longitude: number }>>({});
-  const geocodingRef  = useRef(false); // verrou pour éviter les doubles runs
 
   // ── Localisation ────────────────────────────────────────────────────────────
   const requestLocation = useCallback(async () => {
@@ -355,27 +343,6 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
   }, []);
 
   useEffect(() => { requestLocation(); }, [requestLocation]);
-
-  // ── Distances ───────────────────────────────────────────────────────────────
-  const withDistances = useCallback((list: Pharmacy[], loc: UserLocation | null): Pharmacy[] =>
-    list.map((p) => ({
-      ...p,
-      distanceKm: loc && p.coordinates.latitude && p.coordinates.longitude
-        ? haversineDistance(loc.latitude, loc.longitude, p.coordinates.latitude, p.coordinates.longitude)
-        : null,
-    })), []);
-
-  const sortByDistance = useCallback((arr: Pharmacy[]): Pharmacy[] =>
-    [...arr].sort((a, b) => (a.distanceKm ?? 9999) - (b.distanceKm ?? 9999)), []);
-
-  // Recalcul distances dès que la position OU les données sont disponibles
-  useEffect(() => {
-    if (!userLocation) return;
-    if (onCallPharmacies.length === 0 && allPharmaciesData.length === 0) return;
-    const recalc = (arr: Pharmacy[]) => sortByDistance(withDistances(arr, userLocation));
-    setOnCallPharmacies((p) => recalc(p));
-    setAllPharmaciesData((p) => recalc(p));
-  }, [userLocation, onCallPharmacies.length, allPharmaciesData.length, recalcKey]);
 
   // ── Favoris ─────────────────────────────────────────────────────────────────
   const loadFavorites = async (): Promise<string[]> => {
@@ -395,91 +362,41 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
   }, []);
 
   // ── Format une liste brute → Pharmacy[] ─────────────────────────────────────
+  // La distance (distanceKm/durationMin) est calculée côté backend — distance
+  // ROUTIÈRE réelle (OSRM) dès que la position du patient lui est transmise —
+  // on se contente ici de la reporter telle quelle.
   const formatList = useCallback((
     list: ApiPharmacy[],
     favorites: string[],
     onDutySlugs: Set<string>,
-    loc: UserLocation | null,
     forceOnDuty = false,
-  ): Pharmacy[] => {
-    const mapped: Pharmacy[] = list.map((p) => ({
-      ...p,
-      isOnDuty:   forceOnDuty || onDutySlugs.has(p.slug),
-      isFavorite: favorites.includes(p.id),
-      distanceKm: null,
-    }));
-    return sortByDistance(withDistances(mapped, loc));
-  }, [withDistances, sortByDistance]);
-
-  // ── Géocodage Nominatim ──────────────────────────────────────────────────────
-  const geocodeAddress = useCallback(async (address: string) => {
-    const key = address.trim().toLowerCase();
-    if (geocodedCache.current[key]) return geocodedCache.current[key];
-    try {
-      const q   = encodeURIComponent(address + ', Togo');
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1&countrycodes=tg`,
-        { headers: { 'User-Agent': 'PharmacieTogoApp/2.0', 'Accept-Language': 'fr' } }
-      );
-      const data = await res.json();
-      if (data?.[0]) {
-        const coords = { latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) };
-        geocodedCache.current[key] = coords;
-        return coords;
-      }
-    } catch { /* silencieux */ }
-    return null;
-  }, []);
-
-  const runGeocoding = useCallback(async (
-    list: Pharmacy[],
-    setter: React.Dispatch<React.SetStateAction<Pharmacy[]>>,
-    loc: UserLocation | null,
-  ) => {
-    if (geocodingRef.current) return;
-    const toGeocode = list.filter((p) => !p.coordinates.latitude && p.address);
-    if (!toGeocode.length) { setGeocodingProgress('done'); setRecalcKey((k) => k + 1); return; }
-
-    geocodingRef.current = true;
-    setGeocodingProgress('loading');
-
-    for (const pharmacy of toGeocode) {
-      await new Promise((r) => setTimeout(r, 1200));
-      const coords = await geocodeAddress(pharmacy.address);
-      if (!coords) continue;
-
-      setter((prev) => {
-        const updated = prev.map((p) => {
-          if (p.id !== pharmacy.id) return p;
-          return { ...p, coordinates: coords, distanceKm: null };
-        });
-        return sortByDistance(updated);
-      });
-    }
-
-    geocodingRef.current = false;
-    setGeocodingProgress('done');
-    setRecalcKey((k) => k + 1);
-  }, [geocodeAddress, sortByDistance]);
+  ): Pharmacy[] => list.map((p) => ({
+    ...p,
+    isOnDuty:   forceOnDuty || onDutySlugs.has(p.slug),
+    isFavorite: favorites.includes(p.id),
+    distanceKm: p.distanceKm ?? null,
+  })), []);
 
   // ── ÉTAPE 1 : Charger uniquement les pharmacies de garde (rapide, bloquant) ─
-  const fetchOnCall = useCallback(async (forceRefresh = false) => {
-    setLoadingOnCall(true);
+  // `silent` évite de ré-afficher l'écran de chargement plein écran quand cet
+  // appel sert juste à rafraîchir les distances une fois le GPS disponible.
+  const fetchOnCall = useCallback(async (forceRefresh = false, coords?: UserLocation | null, silent = false) => {
+    if (!silent) setLoadingOnCall(true);
     setError(null);
     try {
       if (forceRefresh) await refreshPharmacyCache().catch(() => {});
       const [onCallData, favorites] = await Promise.all([
-        getOnCallPharmacies(),
+        getOnCallPharmacies(coords ?? undefined),
         loadFavorites(),
       ]);
-      const formatted = formatList(onCallData, favorites, new Set(), null, true);
+      const formatted = formatList(onCallData, favorites, new Set(), true);
       setOnCallPharmacies(formatted);
       return { onCallData, favorites };
     } catch (err: any) {
-      setError(err?.response?.data?.error || err.message || 'Connexion impossible');
+      if (!silent) setError(err?.response?.data?.error || err.message || 'Connexion impossible');
       return null;
     } finally {
-      setLoadingOnCall(false);
+      if (!silent) setLoadingOnCall(false);
     }
   }, [formatList]);
 
@@ -487,13 +404,14 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
   const fetchAllBackground = useCallback(async (
     onCallData: ApiPharmacy[],
     favorites: string[],
+    coords?: UserLocation | null,
   ) => {
     setLoadingAll(true);
     try {
-      const { pharmacies: allData, regions: availableRegions } = await getAllPharmacies();
+      const { pharmacies: allData, regions: availableRegions } = await getAllPharmacies(undefined, coords ?? undefined);
       setRegions(availableRegions);
       const onDutySlugs = new Set(onCallData.map((p) => p.slug));
-      const formatted   = formatList(allData, favorites, onDutySlugs, null);
+      const formatted   = formatList(allData, favorites, onDutySlugs);
       setAllPharmaciesData(formatted);
 
       // Enrichit aussi la liste on-call avec images/région récupérés du catalogue complet
@@ -513,38 +431,42 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
     return null;
   }, [formatList]);
 
-  // ── Initialisation ───────────────────────────────────────────────────────────
+  // ── Initialisation (chargement rapide, sans position) ───────────────────────
   useEffect(() => {
     fetchOnCall().then((result) => {
       if (!result) return;
       const { onCallData, favorites } = result;
-
-      // Lance le géocodage des on-call immédiatement
-      runGeocoding(
-        onCallData.map((p) => ({ ...p, isFavorite: false, distanceKm: null })),
-        setOnCallPharmacies,
-        null,
-      );
-
       // Charge la liste complète en arrière-plan avec un léger délai
-      setTimeout(() => {
-        fetchAllBackground(onCallData, favorites).then((allList) => {
-          if (allList) {
-            setTimeout(() => runGeocoding(allList, setAllPharmaciesData, null), 3000);
-          }
-        });
-      }, 800);
+      setTimeout(() => { fetchAllBackground(onCallData, favorites); }, 800);
     });
   }, []);
 
+  // ── Distances réelles ────────────────────────────────────────────────────────
+  // Dès que la position GPS du patient est connue, on redemande les listes au
+  // backend avec lat/lon : il calcule alors la distance ROUTIÈRE réelle (OSRM)
+  // de chaque pharmacie et renvoie la liste déjà triée par proximité.
+  useEffect(() => {
+    if (!userLocation) return;
+    let cancelled = false;
+    (async () => {
+      setDistanceLoading(true);
+      try {
+        const result = await fetchOnCall(false, userLocation, true);
+        if (cancelled || !result) return;
+        await fetchAllBackground(result.onCallData, result.favorites, userLocation);
+      } finally {
+        if (!cancelled) setDistanceLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userLocation]);
+
   // ── Rafraîchissement complet ─────────────────────────────────────────────────
   const handleRefresh = useCallback(async () => {
-    geocodingRef.current = false;
-    setGeocodingProgress('idle');
-    const result = await fetchOnCall(true);
+    const result = await fetchOnCall(true, userLocation);
     if (!result) return;
-    fetchAllBackground(result.onCallData, result.favorites);
-  }, [fetchOnCall, fetchAllBackground]);
+    fetchAllBackground(result.onCallData, result.favorites, userLocation);
+  }, [fetchOnCall, fetchAllBackground, userLocation]);
 
   // ── Accordéon ────────────────────────────────────────────────────────────────
   const toggleExpand = useCallback((id: string) => {
@@ -657,11 +579,11 @@ const PharmacyScreen = ({ onNavigate }: PharmacyScreenProps) => {
           <View style={styles.locationGranted}>
             <Ionicons name="location" size={13} color="#1a56db" />
             <Text style={styles.locationGrantedText}>
-              {geocodingProgress === 'loading'
-                ? 'Calcul des distances...'
-                : 'Triées par distance depuis votre position'}
+              {distanceLoading
+                ? 'Calcul des distances réelles...'
+                : 'Triées par distance routière réelle depuis votre position'}
             </Text>
-            {geocodingProgress === 'loading' && (
+            {distanceLoading && (
               <ActivityIndicator size="small" color="#1a56db" style={{ marginLeft: 6 }} />
             )}
           </View>

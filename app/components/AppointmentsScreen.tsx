@@ -35,6 +35,7 @@ interface Appointment {
     // ✅ Jitsi
     jitsiUrl: string | null;
     jitsiRoom: string | null;
+    peutRejoindre: boolean;   // ✅ true tant que la fenêtre d'accès de 24h est ouverte
     // ✅ Paiement
     transactionId?: string | null;
     montantPaiement?: number;
@@ -55,6 +56,45 @@ interface Appointment {
 interface AppointmentsScreenProps {
     onNavigate: (screen: string, params?: any) => void;
 }
+
+// ── Bannière de rappel : compte à rebours vers un rendez-vous imminent ──
+// Affichée dans les 24h qui précèdent l'heure prévue, jusqu'à 30 min après.
+const CountdownBanner = ({ rawDate, t }: { rawDate?: string; t: (k: string) => string }) => {
+    const [now, setNow] = useState(Date.now());
+    useEffect(() => {
+        const id = setInterval(() => setNow(Date.now()), 1000);
+        return () => clearInterval(id);
+    }, []);
+
+    if (!rawDate) return null;
+    const target = new Date(rawDate).getTime();
+    if (isNaN(target)) return null;
+
+    const diff = target - now;
+    if (diff > 24 * 3600 * 1000 || diff < -30 * 60 * 1000) return null;
+
+    const started = diff <= 0;
+    let timeStr = '';
+    if (!started) {
+        const totalSec = Math.floor(diff / 1000);
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+        timeStr = h >= 1
+            ? `${h}h ${m.toString().padStart(2, '0')}min`
+            : `${m}min ${s.toString().padStart(2, '0')}s`;
+    }
+
+    return (
+        <View style={[styles.countdownBanner, started && styles.countdownBannerNow]}>
+            <Ionicons name={started ? 'videocam' : 'alarm-outline'} size={18} color="#fff" />
+            <Text style={styles.countdownLabel}>
+                {started ? t('aptStartingNow') : t('aptStartsIn')}
+            </Text>
+            {!started && <Text style={styles.countdownTime}>{timeStr}</Text>}
+        </View>
+    );
+};
 
 const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
     const { unreadCount } = useNotifications();
@@ -95,6 +135,7 @@ const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
                 doctorPhone:      rdv.docteurTelephone ?? '+228 00 00 00 00',
                 jitsiUrl:         rdv.jitsiUrl  ?? null,
                 jitsiRoom:        rdv.jitsiRoom ?? null,
+                peutRejoindre:    rdv.peutRejoindre ?? false,
                 transactionId:    rdv.paiement?.transactionId ?? null,
                 montantPaiement:  rdv.paiement?.montant,
                 latitude:               rdv.latitude ?? null,
@@ -337,14 +378,11 @@ const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
             </View>
         );
 
-        // ✅ Confirmé + consultation en ligne → bouton Jitsi
-        if (appointment.status === 'confirmed' && appointment.consultationType === 'online') return (
+        // ✅ Confirmé + consultation en ligne + fenêtre d'accès 24h ouverte → bouton Jitsi
+        if (appointment.status === 'confirmed' && appointment.consultationType === 'online' && appointment.peutRejoindre) return (
             <View style={styles.appointmentActions}>
                 <TouchableOpacity
-                    style={[
-                        styles.joinVideoButton,
-                        !appointment.jitsiUrl && styles.joinVideoButtonDisabled
-                    ]}
+                    style={styles.joinVideoButton}
                     onPress={() => handleJoinVideoCall(appointment)}
                 >
                     <Ionicons name="videocam" size={20} color="#fff" />
@@ -387,6 +425,17 @@ const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
             const needsEval = pendingEvalIds.has(parseInt(appointment.id));
             return (
                 <View style={styles.appointmentActions}>
+                    {/* ✅ Consultation en ligne terminée mais encore dans la fenêtre de 24h :
+                        le patient peut se reconnecter (ex: coupure réseau). */}
+                    {appointment.consultationType === 'online' && appointment.peutRejoindre && (
+                        <TouchableOpacity
+                            style={styles.joinVideoButton}
+                            onPress={() => handleJoinVideoCall(appointment)}
+                        >
+                            <Ionicons name="videocam" size={20} color="#fff" />
+                            <Text style={styles.joinVideoButtonText}>{t('aptJoinVideo')}</Text>
+                        </TouchableOpacity>
+                    )}
                     {needsEval && (
                         <TouchableOpacity
                             style={styles.evaluateButton}
@@ -469,7 +518,7 @@ const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
     // ── Tabs disponibles ────────────────────────────────────────────────────────
     const tabs: Array<{ key: Appointment['status']; label: string }> = [
         { key: 'pending',         label: t('aptPending') },
-        { key: 'pending_payment', label: '💳 Paiement' },
+        { key: 'pending_payment', label: 'Paiement' },
         { key: 'confirmed',       label: t('aptConfirmed') },
         { key: 'past',            label: t('aptPast') },
         { key: 'rejected',        label: t('aptRejected') },
@@ -533,6 +582,11 @@ const AppointmentsScreen = ({ onNavigate }: AppointmentsScreenProps) => {
                             // Bordure spéciale pour les en attente de paiement
                             appointment.status === 'pending_payment' && styles.pendingPaymentCard
                         ]}>
+
+                            {/* ── Rappel compte à rebours (rendez-vous confirmé imminent) ── */}
+                            {appointment.status === 'confirmed' && (
+                                <CountdownBanner rawDate={appointment.rawDate} t={t} />
+                            )}
 
                             {/* ── En-tête docteur ── */}
                             <View style={styles.appointmentHeader}>
@@ -720,35 +774,44 @@ const styles = StyleSheet.create({
     loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingVertical: 40 },
     loadingText: { marginTop: 15, fontSize: 14 },
 
-    // Tabs horizontaux (scrollables)
-    tabsContainer: {
-        marginHorizontal: 16, marginTop: 14, borderRadius: 25,
-        backgroundColor: '#eff6ff', overflow: 'hidden',
+    // Tabs horizontaux (scrollables) — hauteur FIXE pour éviter l'étirement vertical
+    tabsScroll: {
+        height: 56, flexGrow: 0, flexShrink: 0,
+        backgroundColor: '#eff6ff', borderRadius: 28,
+        marginHorizontal: 20, marginTop: 14,
     },
-    tabsContent: {
-        flexDirection: 'row', paddingHorizontal: 8, paddingVertical: 6, gap: 6,
-    },
+    tabsContent: { paddingHorizontal: 6, alignItems: 'center' },
     tab: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-        paddingVertical: 7, paddingHorizontal: 14,
-        borderRadius: 20, minWidth: 80, height: 34,
+        flexDirection: 'row', alignItems: 'center', flexShrink: 0,
+        height: 44, paddingHorizontal: 16,
+        borderRadius: 22, marginRight: 6,
     },
-    inactiveTab: { backgroundColor: '#e8edf5' },
-    activeTab: { backgroundColor: '#1a56db' },
-    inactiveTabText: { color: '#374151', fontSize: 13, fontWeight: '600' },
-    activeTabText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+    activeTab: { backgroundColor: '#1a3fad' },
+    tabText: { fontSize: 13, fontWeight: '600' },
+    activeTabText: { color: '#fff', fontWeight: '700' },
     tabBadge: {
-        marginLeft: 6,
-        backgroundColor: '#6b7280', borderRadius: 10,
-        minWidth: 20, height: 20,
-        paddingHorizontal: 5,
-        alignItems: 'center', justifyContent: 'center',
+        backgroundColor: '#9aa7bd', borderRadius: 10, marginLeft: 7,
+        minWidth: 18, height: 18, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4,
     },
     tabBadgeActive: { backgroundColor: '#fff' },
     tabBadgeText: { fontSize: 11, fontWeight: '700', color: '#fff' },
     tabBadgeTextActive: { color: '#1a56db' },
 
     appointmentsList: { paddingHorizontal: 20 },
+
+    // Bannière compte à rebours (rappel RDV)
+    countdownBanner: {
+        flexDirection: 'row', alignItems: 'center', gap: 8,
+        backgroundColor: '#1a3fad', borderRadius: 12,
+        paddingVertical: 10, paddingHorizontal: 14, marginBottom: 12,
+    },
+    countdownBannerNow: { backgroundColor: '#198754' },
+    countdownLabel: { color: '#fff', fontSize: 12.5, fontWeight: '600', flex: 1 },
+    countdownTime: {
+        color: '#fff', fontSize: 14, fontWeight: '800',
+        backgroundColor: 'rgba(255,255,255,0.18)', paddingHorizontal: 10, paddingVertical: 3,
+        borderRadius: 8, fontVariant: ['tabular-nums'],
+    },
     appointmentCard: {
         backgroundColor: '#fff', borderRadius: 16, padding: 15, marginBottom: 15,
         shadowColor: '#000', shadowOffset: { width: 0, height: 2 },

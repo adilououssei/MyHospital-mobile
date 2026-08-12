@@ -119,7 +119,23 @@ const PrescriptionsScreen = ({ onNavigate }: PrescriptionsScreenProps) => {
     // Parser le texte des médicaments en objet structuré
     const parseMedications = (medicamentsText: string): Medication[] => {
         if (!medicamentsText) return [];
-        
+
+        // Nouveau format structuré (JSON): [{nom, posologie, duree}, ...]
+        try {
+            const parsed = JSON.parse(medicamentsText);
+            if (Array.isArray(parsed)) {
+                return parsed.map((m: any) => ({
+                    name: m.nom ?? '',
+                    dosage: m.posologie ?? '',
+                    frequency: '',
+                    duration: m.duree ?? '',
+                    instructions: '',
+                }));
+            }
+        } catch {
+            // Pas du JSON : ancien format texte libre, on continue ci-dessous.
+        }
+
         const lines = medicamentsText.split('\n');
         const medications: Medication[] = [];
         
@@ -495,12 +511,17 @@ Ordonnance médicale - Mon Hôpital Mobile
                                                 <Text style={[styles.medicationName, { color: colors.text }]}>
                                                     {med.name}
                                                 </Text>
-                                                {med.dosage ? (
-                                                    <Text style={[styles.medicationDosage, { color: '#1a56db' }]}>
-                                                        {med.dosage}
+                                                {med.duration ? (
+                                                    <Text style={[styles.medicationDosage, { color: colors.subText }]}>
+                                                        {med.duration}
                                                     </Text>
                                                 ) : null}
                                             </View>
+                                            {med.dosage ? (
+                                                <Text style={{ fontSize: 13, color: colors.subText }}>
+                                                    {med.dosage}
+                                                </Text>
+                                            ) : null}
                                         </View>
                                     ))}
                                 </View>

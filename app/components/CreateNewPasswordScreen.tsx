@@ -3,32 +3,54 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, TextInput,
-  Modal, KeyboardAvoidingView, ScrollView,
+  Modal, KeyboardAvoidingView, ScrollView, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
+import authService from '../services/authService';
 
 interface CreateNewPasswordScreenProps {
-  onNavigate: (screen: string) => void;
+  onNavigate: (screen: string, params?: any) => void;
+  token?: string;
+  email?: string;
 }
 
-const CreateNewPasswordScreen = ({ onNavigate }: CreateNewPasswordScreenProps) => {
+const CreateNewPasswordScreen = ({ onNavigate, token = '', email = '' }: CreateNewPasswordScreenProps) => {
   const { t } = useApp();
   const [password, setPassword]               = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword]       = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showSuccessModal, setShowSuccessModal]       = useState(false);
+  const [isLoading, setIsLoading]             = useState(false);
   const [passwordError, setPasswordError]     = useState('');
   const [confirmError, setConfirmError]       = useState('');
 
-  const handleCreatePassword = () => {
+  const handleCreatePassword = async () => {
     setPasswordError('');
     setConfirmError('');
-    if (password.length < 6) { setPasswordError(t('cnpErrLen')); return; }
+    if (password.length < 8) { setPasswordError(t('cnpErrLen')); return; }
     if (password !== confirmPassword) { setConfirmError(t('cnpErrMatch')); return; }
-    setShowSuccessModal(true);
+
+    if (!token || !email) {
+      setPasswordError(t('cnpErrSession') || 'Session expirée. Veuillez recommencer.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await authService.resetPassword(token, email, password, confirmPassword);
+      if (response?.success) {
+        setShowSuccessModal(true);
+      } else {
+        setPasswordError(response?.error || t('cnpError') || 'Erreur lors de la réinitialisation');
+      }
+    } catch (error: any) {
+      setPasswordError(error?.error || t('cnpError') || 'Erreur lors de la réinitialisation');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -69,8 +91,15 @@ const CreateNewPasswordScreen = ({ onNavigate }: CreateNewPasswordScreenProps) =
             </View>
             {confirmError ? <Text style={styles.errorText}>{confirmError}</Text> : null}
 
-            <TouchableOpacity style={styles.createButton} onPress={handleCreatePassword}>
-              <Text style={styles.createButtonText}>{t('cnpCreate')}</Text>
+            <TouchableOpacity
+              style={[styles.createButton, isLoading && styles.createButtonDisabled]}
+              onPress={handleCreatePassword}
+              disabled={isLoading}>
+              {isLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.createButtonText}>{t('cnpCreate')}</Text>
+              )}
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -104,10 +133,10 @@ const styles = StyleSheet.create({
   description: { fontSize: 14, color: '#6b7280', marginBottom: 40 },
   inputContainer: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.88)', borderRadius: 14,
-    paddingHorizontal: 20, paddingVertical: 15,
-    marginBottom: 15, borderWidth: 1.5, borderColor: '#e5e7eb',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3
+    backgroundColor: '#fff', borderRadius: 14,
+    paddingHorizontal: 16, paddingVertical: 14,
+    marginBottom: 14, borderWidth: 1.5, borderColor: '#e5e7eb',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2
   },
   inputError: { borderColor: '#FF6B6B', borderWidth: 2 },
   input: { flex: 1, marginLeft: 10, fontSize: 14, color: '#111827' },
@@ -116,6 +145,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a3fad', paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginTop: 20,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3
   },
+  createButtonDisabled: { backgroundColor: '#B0B0B0' },
   createButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 30 },
   modalContent: { backgroundColor: '#fff', borderRadius: 16, padding: 35, width: '100%', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },

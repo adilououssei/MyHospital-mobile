@@ -110,6 +110,7 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
       const fileName = uri.split('/').pop() ?? 'photo.jpg';
       const uploaded = await uploadProfilePhoto(profile.id, uri, fileName);
       setProfile(prev => prev ? { ...prev, personal_info: { ...prev.personal_info, photo: uploaded.photo_url } } : prev);
+      if (user) updateUser({ ...user, photo: uploaded.photo_url });
       Alert.alert(t('success'), t('epPhotoUpdated'));
     } catch {
       Alert.alert(t('error'), t('epErrPhoto')); setProfileImage(null);
@@ -172,7 +173,7 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
   }) => (
     <View style={styles.inputContainer}>
       <Text style={styles.inputLabel}>{label}</Text>
-      <View style={styles.inputWrapper}>
+      <View style={[styles.inputWrapper, { backgroundColor: colors.inputBackground, borderColor: colors.border }]}>
         <Ionicons name={icon as any} size={20} color={colors.subText} style={styles.inputIcon} />
         <TextInput style={[styles.input, { color: colors.text }]} value={value}
           onChangeText={text => setFormData(p => ({ ...p, [field]: text }))}
@@ -235,7 +236,7 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
           {/* Date naissance */}
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>{t('epDateBirth')}</Text>
-            <TouchableOpacity style={styles.inputWrapper} onPress={() => setShowDatePicker(true)}>
+            <TouchableOpacity style={[styles.inputWrapper, { backgroundColor: colors.inputBackground, borderColor: colors.border }]} onPress={() => setShowDatePicker(true)}>
               <Ionicons name="calendar-outline" size={20} color={colors.subText} style={styles.inputIcon} />
               <Text style={[styles.input, { color: formData.dateOfBirth ? colors.text : colors.subText }]}>
                 {formData.dateOfBirth || t('epDatePlaceholder')}
@@ -264,7 +265,7 @@ const EditProfileScreen = ({ onNavigate }: EditProfileScreenProps) => {
           {/* Groupe sanguin */}
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>{t('epBloodGroup')}</Text>
-            <TouchableOpacity style={styles.inputWrapper} onPress={() => setShowBloodGroupPicker(true)}>
+            <TouchableOpacity style={[styles.inputWrapper, { backgroundColor: colors.inputBackground, borderColor: colors.border }]} onPress={() => setShowBloodGroupPicker(true)}>
               <Ionicons name="water-outline" size={20} color={colors.subText} style={styles.inputIcon} />
               <Text style={[styles.input, { color: formData.bloodGroup ? colors.text : colors.subText }]}>
                 {formData.bloodGroup || t('epBloodSelect')}

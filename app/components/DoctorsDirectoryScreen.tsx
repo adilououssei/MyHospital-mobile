@@ -15,11 +15,12 @@ import { API_BASE_URL } from '../services/api.config';
 
 interface DoctorsDirectoryScreenProps {
     onNavigate: (screen: string, params?: any) => void;
+    initialQuery?: string;
 }
 
-const DoctorsDirectoryScreen = ({ onNavigate }: DoctorsDirectoryScreenProps) => {
+const DoctorsDirectoryScreen = ({ onNavigate, initialQuery }: DoctorsDirectoryScreenProps) => {
     const { colors, t } = useApp();
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState(initialQuery ?? '');
     const [doctors, setDoctors] = useState<Docteur[]>([]);
     const [filteredDoctors, setFilteredDoctors] = useState<Docteur[]>([]);
     const [loading, setLoading] = useState(true);

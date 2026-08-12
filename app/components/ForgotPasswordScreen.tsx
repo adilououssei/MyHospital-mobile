@@ -37,7 +37,7 @@ const ForgotPasswordScreen = ({ onNavigate }: ForgotPasswordScreenProps) => {
             Alert.alert(
                 t('forgotEmailSent'),
                 t('forgotEmailSentDesc'),
-                [{ text: 'OK', onPress: () => onNavigate('verificationCode', { email }) }]
+                [{ text: 'OK', onPress: () => onNavigate('verification', { email }) }]
             );
         } catch (error: any) {
             setErrorMessage(error.error || t('forgotError'));
@@ -104,9 +104,9 @@ const ForgotPasswordScreen = ({ onNavigate }: ForgotPasswordScreenProps) => {
                                 autoCapitalize="none"
                                 editable={!isLoading}
                             />
-                            {email && validateEmail(email) && (
+                            {!!email && validateEmail(email) ? (
                                 <Ionicons name="checkmark" size={20} color="#1a56db" />
-                            )}
+                            ) : null}
                         </View>
 
                         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
@@ -143,10 +143,10 @@ const styles = StyleSheet.create({
     subtitle: { fontSize: 14, color: '#6b7280', marginBottom: 40, lineHeight: 20 },
     inputContainer: {
         flexDirection: 'row', alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.88)', borderRadius: 14,
-        paddingHorizontal: 20, paddingVertical: 15,
-        marginBottom: 15, borderWidth: 1.5, borderColor: '#e5e7eb',
-        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3
+        backgroundColor: '#fff', borderRadius: 14,
+        paddingHorizontal: 16, paddingVertical: 14,
+        marginBottom: 14, borderWidth: 1.5, borderColor: '#e5e7eb',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2
     },
     inputError: { borderColor: '#FF6B6B', borderWidth: 2 },
     input: { flex: 1, marginLeft: 10, fontSize: 14, color: '#111827' },

@@ -3,6 +3,7 @@
 
 export const API_BASE_URL = 'https://myhospital.frenchcercle.com';
 
+
 // ─────────────────────────────────────────────────────────────
 // 📋 TOUS LES ENDPOINTS DE L'APPLICATION
 // ─────────────────────────────────────────────────────────────

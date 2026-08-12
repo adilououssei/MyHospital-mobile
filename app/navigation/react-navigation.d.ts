@@ -1,6 +1,6 @@
 declare module '@react-navigation/native' {
   import React from 'react';
-  export const NavigationContainer: React.FC<{ children: React.ReactNode; linking?: any; onStateChange?: (state: any) => void; initialState?: any }>;
+  export const NavigationContainer: React.FC<{ children: React.ReactNode; linking?: any; onStateChange?: (state: any) => void; initialState?: any; theme?: any }>;
   export const useNavigation: () => any;
   export const useRoute: () => any;
   export const useFocusEffect: (effect: () => void | (() => void)) => void;

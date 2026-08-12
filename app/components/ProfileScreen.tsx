@@ -3,8 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Modal, Image, ActivityIndicator, StatusBar,
+  Modal, Image, ActivityIndicator,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -47,7 +48,6 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
   const handleLogout = async () => {
     setShowLogoutModal(false);
     await logout();
-    onNavigate('welcome');
   };
 
   const photoUrl = profile?.personal_info.photo
@@ -162,7 +162,7 @@ const ProfileScreen = ({ onNavigate }: ProfileScreenProps) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
 
-      <StatusBar barStyle="light-content" backgroundColor="#1a56db" />
+      <StatusBar style="light" backgroundColor="#1a56db" />
       {/* ── Header gradient ──────────────────────────────── */}
       <LinearGradient colors={['#1a56db', '#1e40af']} style={styles.headerGradient}>
         <SafeAreaView edges={['top']} style={styles.safeArea}>

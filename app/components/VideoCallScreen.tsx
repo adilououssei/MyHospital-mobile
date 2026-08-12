@@ -5,8 +5,9 @@
 import React, { useState, useRef } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity,
-    Alert, ActivityIndicator, StatusBar,
+    Alert, ActivityIndicator,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import WebView, { WebViewNavigation } from 'react-native-webview';
@@ -42,11 +43,19 @@ const VideoCallScreen = ({
 
         // Ajouter config si l'URL ne contient pas déjà de #
         if (!jitsiUrl.includes('#')) {
+            // Pas de bouton "raccrocher" natif Jitsi dans la page : il mettrait fin
+            // à la conférence sans possibilité de revenir. Seuls les boutons "Quitter"
+            // de l'app (recoverable, ne fait que fermer cet écran) doivent servir à sortir.
+            const toolbarButtons = JSON.stringify([
+                'microphone', 'camera', 'desktop', 'fullscreen', 'chat',
+                'raisehand', 'videoquality', 'filmstrip', 'tileview',
+            ]);
             const config = [
                 'config.prejoinPageEnabled=false',
                 'config.disableDeepLinking=true',
                 'config.startWithAudioMuted=false',
                 'config.startWithVideoMuted=false',
+                `config.toolbarButtons=${encodeURIComponent(toolbarButtons)}`,
                 `userInfo.displayName=${encodeURIComponent(patientName)}`,
             ].join('&');
             return `${jitsiUrl}#${config}`;
@@ -146,7 +155,7 @@ const VideoCallScreen = ({
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#000" />
+            <StatusBar style="light" backgroundColor="#000000" />
 
             {/* ── Header ──────────────────────────────────────────────────── */}
             <SafeAreaView edges={['top']} style={styles.header}>
