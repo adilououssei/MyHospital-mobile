@@ -33,7 +33,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "eced3d8c-02f4-41ff-93ad-16b60d81fdae"
+        "projectId": "3f4734d8-5bf9-4871-93bc-7359d4042679"
       }
     },
     "plugins": [
@@ -42,6 +42,6 @@
       "expo-splash-screen",
       "expo-sharing"
     ],
-    "owner": "ouss_adilou"
+    "owner": "koffi-didier"
   }
 }
