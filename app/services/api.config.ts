@@ -1,7 +1,7 @@
 // app/services/api.config.ts
 // ✅ FICHIER CENTRAL - Modifier seulement ici pour changer l'URL du serveur
 
-export const API_BASE_URL = 'https://myhospital.frenchcercle.com/';
+export const API_BASE_URL = 'https://myhospital.frenchcercle.com';
 
 
 // ─────────────────────────────────────────────────────────────
